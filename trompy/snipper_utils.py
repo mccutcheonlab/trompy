@@ -10,7 +10,7 @@ import numpy as np
 def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
                  adjustBaseline = True,
                  bins = 0):
-"""
+    """
     Makes 'snips' of a data file aligned to an event of interest.
 
     If a timelocked map is needed to align data precisely (e.g. with TDT equipment)
@@ -43,6 +43,7 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
         Points-per-second
 
     """
+
     if len(timelock) == 0:
         print('No events to analyse! Quitting function.')
         raise Exception('no events')
@@ -271,3 +272,59 @@ def zscore(snips, baseline_points=100):
         
     return z_snips
 
+def findnoise(data, background_events, t2sMap = [], fs = 1, bins=0, method='sd'):
+    """
+    Identifies snips that are classed as noisy due to exceeding a threshold based on background.
+
+    Parameters
+    ----------
+    data : List or 1D array of Floats
+        Data stream from entire session.
+    background_events : List
+        Timestamps from which background snips will be made.
+    t2sMap : List of floats, optional
+        Time-to-samples map. The default is [].
+    fs : Float, optional
+        Sampling frequency. The default is 1.
+    bins : Int, optional
+        Number of bins to be used for snips. The default is 0.
+    method : String ('sd' or 'sum'), optional
+        Method of calculating noise - standard deviation or sum. The default is 'sd'.
+
+    Returns
+    -------
+    bgMAD : Float
+        Median absoluate deviation of background trials.
+
+    """
+    
+    bgSnips, _ = snipper(data, background, t2sMap=t2sMap, fs=fs, bins=bins)
+    
+    if method == 'sum':
+        bgSum = [np.sum(abs(i)) for i in bgSnips]
+        bgMAD = med_abs_dev(bgSum)
+    elif method == 'sd':
+        bgSD = [np.std(i) for i in bgSnips]
+        bgMAD = med_abs_dev(bgSD)
+   
+    return bgMAD
+
+def removenoise(snipsIn, noiseindex):
+    """
+    Removes snips that have been classified as noisy.
+
+    Parameters
+    ----------
+    snipsIn : List of lists or Numpy array
+        Snips (generally list of binned data).
+    noiseindex : List of Boolean values
+        Should be the same length as first dimension of snipsIn.
+
+    Returns
+    -------
+    snipsOut : List of lists
+        Snips with noisy snips removed.
+
+    """
+    snipsOut = np.array([x for (x,v) in zip(snipsIn, noiseindex) if not v])   
+    return snipsOut
