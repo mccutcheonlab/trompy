@@ -328,3 +328,10 @@ def removenoise(snipsIn, noiseindex):
     """
     snipsOut = np.array([x for (x,v) in zip(snipsIn, noiseindex) if not v])   
     return snipsOut
+
+def med_abs_dev(data, b=1.4826):
+    median = np.median(data)
+    devs = [abs(i-median) for i in data]
+    mad = np.median(devs)*b
+                   
+    return mad
