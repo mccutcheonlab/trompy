@@ -330,8 +330,57 @@ def removenoise(snipsIn, noiseindex):
     return snipsOut
 
 def med_abs_dev(data, b=1.4826):
+    """
+    Calcuates median absolute deviation. See doi:10.1016/j.jesp.2013.03.013
+
+    Parameters
+    ----------
+    data : List or 1D array
+        Data to be analyzed.
+    b : Float, optional
+        Constant for calcuation. The default is 1.4826.
+
+    Returns
+    -------
+    mad : Float
+        Median absolute deviation of data.
+
+    """
     median = np.median(data)
     devs = [abs(i-median) for i in data]
     mad = np.median(devs)*b
                    
     return mad
+
+def makerandomevents(minTime, maxTime, spacing = 77, n=100):
+    """
+    Generates pseudorandom event timestamps in between a start and stop time.
+    Rather than using purely random selection should ensure events are tiled.
+
+    Parameters
+    ----------
+    minTime : Int
+        Minimum time (in seconds).
+    maxTime : Int
+        Maximum time (in seconds).
+    spacing : Int, optional
+        Time (in seconds) between consecutive events. Provides pseudorandom timing. The default is 77.
+    n : Int, optional
+        Number of timestamps to generate. The default is 100.
+
+    Returns
+    -------
+    events : List
+        Pseudorandonm timestamps.
+
+    """
+    events = []
+    total = maxTime-minTime
+    start = 0
+    for i in np.arange(0,n):
+        if start > total:
+            start = start - total
+        events.append(start)
+        start = start + spacing
+    events = [i+minTime for i in events]
+    return events
