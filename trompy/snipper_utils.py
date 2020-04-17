@@ -414,7 +414,7 @@ def time2samples(data, tick, fs):
         
     return t2sMap    
     
-def event2sample(EOI):
+def event2sample(EOI, t2sMap):
     """
     Returns sample number for an event.
 
@@ -422,6 +422,9 @@ def event2sample(EOI):
     ----------
     EOI : Float
         Timestamp of an event (in seconds).
+        
+    t2sMap : 1D array
+        Array of times to convert to sample number
 
     Returns
     -------
