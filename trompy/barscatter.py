@@ -7,7 +7,6 @@ Created on Fri Apr 17 09:19:56 2020
 import numpy as np
 import matplotlib.pyplot as plt
 from itertools import chain, count
-from collections import Sequence
 
 def barscatter(data, transpose = False, unequal=False,
                 groupwidth = .75,
