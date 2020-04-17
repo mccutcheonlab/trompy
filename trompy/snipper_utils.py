@@ -384,3 +384,50 @@ def makerandomevents(minTime, maxTime, spacing = 77, n=100):
         start = start + spacing
     events = [i+minTime for i in events]
     return events
+
+def time2samples(data, tick, fs):
+    """
+    Makes time2samples map (t2sMap) used to convert from timestamps to sample number.
+
+    Parameters
+    ----------
+    data : List or 1D array
+        Streamed photometry data.
+    tick : List or 1D array
+        Ticks spaced 1 second apart.
+    fs : Float
+        Sample frequency.
+
+    Returns
+    -------
+    t2sMap : 1D array
+        Array of time (in second) for  number of samples in data.
+
+    """
+    maxsamples = len(tick)*int(fs)
+    if (len(data) - maxsamples) > 2*int(fs):
+        print('Something may be wrong with conversion from time to samples')
+        print(str(len(data) - maxsamples) + ' samples left over. This is more than double fs.')
+        t2sMap = np.linspace(min(tick), max(tick), maxsamples)
+    else:
+        t2sMap = np.linspace(min(tick), max(tick), maxsamples)
+        
+    return t2sMap    
+    
+def event2sample(EOI):
+    """
+    Returns sample number for an event.
+
+    Parameters
+    ----------
+    EOI : Float
+        Timestamp of an event (in seconds).
+
+    Returns
+    -------
+    idx : Int
+        Index for event of interest in t2sMap, e.g. sample number.
+
+    """
+    idx = (np.abs(t2sMap - EOI)).argmin()   
+    return idx
