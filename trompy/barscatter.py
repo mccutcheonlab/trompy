@@ -43,6 +43,52 @@ def barscatter(data, transpose = False, unequal=False,
                 legendloc='upper right',
                 xfontsize=8,
                 ax=[]):
+    """
+    Description: Creates a bar graph with data points shown as overlaid circles.
+    
+    Args:
+        data - Required. Should be a list (or list of lists) or an array. Will try to convert if needed.
+        barwidth - width if bars, default=0.9
+        paired - attempts to add lines between paired data points, default=False
+        spaced - spaces out data points so that they are not at an identical x value, default=False
+        yspace - used in conjunction with spaced to determine spacing of data points, defalt=20
+        xspace - used in conjunction with spaced to determine spacing of data points, defalt=0.1
+        barfacecoloroption - chooses bar color option, default='same' other options are 'between' or 'individual'
+        barfacecolor - list of bar face colors, if 'between' or 'individual' is chosen for above option then number of colors needs to match number of bars or groups. defalt=['white']
+        baredgecoloroption - chooses bar edge option, default='same', see notes on barfacecoloroption
+        baredgecolor - list of bar edge colors, defalt=['black'], see notes on barfacecolor
+        baralpha - sets opacity of bars, default=1
+        scatterfacecoloroption - chooses scatter face option, default='same', see notes on barfacecoloroption
+        scatterfacecolor - list of scatter face colors, defalt=['white'], see notes on barfacecolor
+        scatteredgecoloroption - chooses scatter edge option, default='same', see notes on barfacecoloroption
+        scatteredgecolor - list of scatter face colors, defalt=['grey'], see notes on barfacecolor
+        scatterlinecolor - color of lines connecting related data points, should not be in a list, default='grey'
+        scattersize - size of datapoints, default=80
+        scatteralpha -sets opacity of scatter points, default=1
+        spreadscatters - to be checked!
+        linewidth - width of lines, default=1
+        xlim - sets x limits, default=[]
+        ylim - sets y limits, default=[]
+        ylabel - sets y axis label, default='none'
+        xlabel - sets x axis label, default='none',
+        grouplabel - sets labels for each group, default='auto'
+        itemlabel - to be checked! default='none',
+        barlabels - sets labels for each bar, default=[]
+        barlabeloffset - sets barlabels offset to x baseline, default=0.025
+        grouplabeloffset - sets grouplabels offset to x baseline, default=0.0250,
+        yaxisparams - to be checked!
+        show_legend - shows legend, default='none'
+        legendloc - sets legend location, default='upper right'
+        xfontsize - sets x axis font size, default=8
+        ax - plots in axis object if provided, default=[]
+    
+    Returns:
+        ax - axis object
+        barx - x values where each bar is plotted
+        barlist - list of bar containers (can be modified)
+        sclist - list of scatter containers (can be modified)
+    
+    """
 
     if unequal == True:
         dims = np.ndim(data)
