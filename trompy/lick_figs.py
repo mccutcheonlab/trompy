@@ -51,3 +51,37 @@ def ibiFig(ax, data, contents = ''):
     ax.hist(data['bILIs'], range(0, 20), normed=1)
     ax.set_xlabel('Interburst intervals')
     ax.set_ylabel('Frequency')
+    
+def burstprobFig(ax, data):
+    
+#    figlabel = '{:d} total bursts\n{:.2f} licks/burst'.format(
+#            data['bNum'], data['bMean'])
+    x=data['burstprob'][0]
+    y=data['burstprob'][1]
+    alpha=data['weib_alpha']
+    beta=data['weib_beta']
+    rsq=data['weib_rsq']
+#    x, y = calculate_burst_prob(data['bLicks'])
+    ax.scatter(x,y,color='none', edgecolors='grey')
+    
+#    alpha, beta, r_squared = fit_weibull(x, y)
+    ax.plot(x, weib_davis(x, alpha, beta), c='orange')
+          
+    figlabel = 'Fitted values:\nalpha={:.2f}\nbeta={:.2f}\nrsq={:.2f}'.format(
+            alpha, beta, rsq)
+
+    ax.set_xlabel('Burst size (n)')
+    ax.set_ylabel('Probability of burst>n')
+    ax.text(0.9, 0.9, figlabel, ha='right', va='top', transform = ax.transAxes)
+    
+#    return {'alpha': alpha, 'beta': beta, 'rsq': r_squared}
+    
+def sessionlicksFig(ax, licks):
+    ax.hist(licks, range(0,3600,60), color='grey', alpha=0.4)
+    yraster = [ax.get_ylim()[1]] * len(licks)
+    ax.scatter(licks, yraster, s=50, facecolors='none', edgecolors='grey')
+
+    ax.set_xticks(np.multiply([0, 10, 20, 30, 40, 50, 60],60))
+    ax.set_xticklabels(['0', '10', '20', '30', '40', '50', '60'])
+    ax.set_xlabel('Time (min)')
+    ax.set_ylabel('Licks per min')
