@@ -9,10 +9,7 @@ import numpy as np
 import scipy.optimize as opt
 import scipy.stats as stats
 
-"""
-This function will calculate data for bursts from a train of licks. The threshold
-for bursts and clusters can be set. It returns all data as a dictionary.
-"""
+
 def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
              binsize=60, histDensity = False):
@@ -57,24 +54,22 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         'bInd' - list of indices of licks that start a burst
         'bEnd' - list of indices of licks that end a burst
         'bLicks' - list with numbers of licks in each burst
-        'bTime' - 
-        'bMean' - 
-        'bMean-first3' - 
-        'bILIs' - 
-        'rStart' - 
-        'rInd' - 
-        'rEnd' - 
-        'rLicks'
-        'rTime' - 
-        'rNum' -
-        'rILIs' -
-        'weib_alpha' - 
-        'weib_beta' - 
-        'weib_rsq' -
-        'burstprob' -
+        'bTime' - Array of Floats with time (in seconds) of each burst
+        'bMean' - Float, mean of all bursts
+        'bMean-first3' - Float, mean of first three bursts
+        'IBIs' - List of interburst intervals
+        'rStart' - List of start times for all runs
+        'rInd' - List of lick indices where runs start
+        'rEnd' - List of end times for all runs
+        'rLicks' - List of numbers of licks per run
+        'rTime' - Array of floats with time (in seconds) of each run
+        'rNum' - Int, number of runs
+        'weib_alpha' - Float, alpha parameter with fitted Weibull function
+        'weib_beta' - Float, beta parameter of Weibull
+        'weib_rsq' - Float, rsq of Weibull fit
+        'burstprob' - List with xdata and ydata of cumulative burst probability
         'hist' - Histogram of licks over time
         
-
     """
     # makes dictionary of data relating to licks and bursts
     if type(licks) != np.ndarray or type(offset) != np.ndarray:
@@ -126,8 +121,11 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         lickData['bMean'] = 0
         lickData['bMean-first3'] = 0
     
-    lickData['bILIs'] = [x for x in lickData['ilis'] if x > burstThreshold]
-
+    lickData['IBIs'] = []
+    for bEnd in lickData['bEnd'][:-1]:
+        nextlick = [lick for lick in licks if lick > bEnd][0]
+        lickData['IBIs'].append(nextlick - bEnd)
+        
     # Calculates start, end, number of licks and time for each RUN
     lickData['rStart'] = [val for i, val in enumerate(lickData['licks']) if (val - lickData['licks'][i-1] > runThreshold)]  
     lickData['rInd'] = [i for i, val in enumerate(lickData['licks']) if (val - lickData['licks'][i-1] > runThreshold)]
@@ -138,12 +136,14 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     lickData['rTime'] = np.subtract(lickData['rEnd'], lickData['rStart'])
     lickData['rNum'] = len(lickData['rStart'])
 
-    lickData['rILIs'] = [x for x in lickData['ilis'] if x > runThreshold]
     try:
         xdata, ydata = calculate_burst_prob(lickData['bLicks'])
         try:
             lickData['weib_alpha'], lickData['weib_beta'], lickData['weib_rsq'] = fit_weibull(xdata, ydata)
         except RuntimeError:
+            print('Optimal fit parameters not found')
+            lickData['weib_alpha'], lickData['weib_beta'], lickData['weib_rsq'] = [0, 0, 0]
+        except TypeError:
             print('Optimal fit parameters not found')
             lickData['weib_alpha'], lickData['weib_beta'], lickData['weib_rsq'] = [0, 0, 0]
             
@@ -208,10 +208,12 @@ def calculate_burst_prob(bursts):
     
     return x, y
 
-def weib_davis(x, alpha, beta): 
+def weib_davis(x, alpha, beta):
+    '''Weibull function as used in Davis (1998) DOI: 10.1152/ajpregu.1996.270.4.R793'''
     return (np.exp(-(alpha*x)**beta))
 
 def fit_weibull(xdata, ydata):
+    '''Fits Weibull function to xdata and ydata and returns fit parameters.'''
     x0=np.array([0.1, 1])
     fit=opt.curve_fit(weib_davis, xdata, ydata, x0)
     alpha=fit[0][0]
@@ -220,3 +222,12 @@ def fit_weibull(xdata, ydata):
     r_squared=r_value**2
     
     return alpha, beta, r_squared
+
+if __name__ == '__main__':
+    print('Testing functions')
+    import trompy as tp
+    filename = "C:\Github\Lick-Calc-GUI\data\!2017-07-28_09h46m.Subject pcf1.06"
+
+    data = tp.medfilereader(filename)[4][1:]
+
+    lickdata = lickCalc(data)
