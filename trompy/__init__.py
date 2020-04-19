@@ -8,4 +8,4 @@ from trompy.stats_utils import sidakcorr, mean_and_sem, bonferroni_corrected_tte
 from trompy.fig_utils import setsameaxislimits, invisible_axes, shadedError, ax2prop, lighten_color, get_violinstats
 from trompy.lick_figs import licklengthFig, iliFig, burstlengthFig, ibiFig, burstprobFig, sessionlicksFig
 from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trialsMultShadedFig, trialstiledFig
-from trompy.lick_gui import Window, get_location, alert, checknsessions, medfilereader_licks, tstamp_to_tdate, start_gui
+from trompy.lick_gui import Window, get_location, alert, checknsessions, medfilereader_licks, tstamp_to_tdate, start_lickcalc_gui
