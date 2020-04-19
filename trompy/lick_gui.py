@@ -39,7 +39,8 @@ class Window(Frame):
         f2 = ttk.Style()
         f2.configure('inner.TFrame', background='light cyan')
         
-        ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))               
+        ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))
+      
         self.master = master
         
         self.init_window()
@@ -181,7 +182,7 @@ class Window(Frame):
         self.f2.grid(column=0, row=5, columnspan=7, sticky=(N,S,E,W))
                     
     def openfile(self):
-        self.filename = filedialog.askopenfilename(initialdir=currdir, title='Select a file.')
+        self.filename = filedialog.askopenfilename(initialdir=os.getcwd(), title='Select a file.')
         self.list_of_files = []
         ff = self.fileformat.get()
         if ff == 'Med Associates':
@@ -511,18 +512,14 @@ def tstamp_to_tdate(timestamp, fmt):
     except ValueError:
         return
 
-def start_gui():
+def start_lickcalc_gui():
     root = Tk()
-    
-    currdir = os.getcwd()
-    currdir = 'C:\\Github\\Lick-Calc-GUI\\output\\'
-    
     app = Window(root)
     root.lift()
     root.mainloop()
     
 if __name__ == '__main__':
-    start_gui()
+    start_lickcalc_gui()
 
 # Files for for testing
 #        self.filename = 'C:\\Users\\jaimeHP\\Dropbox\\Python\\cas9\\cas9_medfiles\\!2016-07-19_09h16m.Subject 4'

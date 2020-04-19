@@ -6,6 +6,7 @@ Created on Fri Apr 17 16:22:10 2020
 """
 import matplotlib.pyplot as plt
 import numpy as np
+from trompy import weib_davis
 
 def licklengthFig(ax, data, contents = '', color='grey'):          
     if len(data['longlicks']) > 0:
@@ -36,7 +37,7 @@ def burstlengthFig(ax, data, contents='', color3rdbar=False):
     figlabel = (str(data['bNum']) + ' total bursts\n' +
                 str('%.2f' % data['bMean']) + ' licks/burst.')
                                                 
-    n, bins, patches = ax.hist(data['bLicks'], range(0, 20), normed=1)
+    n, bins, patches = ax.hist(data['bLicks'], range(0, 20), density=True)
     ax.set_xticks(range(1,20))
     ax.set_xlabel('Licks per burst')
     ax.set_ylabel('Frequency')
@@ -54,17 +55,14 @@ def ibiFig(ax, data, contents = ''):
     
 def burstprobFig(ax, data):
     
-#    figlabel = '{:d} total bursts\n{:.2f} licks/burst'.format(
-#            data['bNum'], data['bMean'])
     x=data['burstprob'][0]
     y=data['burstprob'][1]
     alpha=data['weib_alpha']
     beta=data['weib_beta']
     rsq=data['weib_rsq']
-#    x, y = calculate_burst_prob(data['bLicks'])
+
     ax.scatter(x,y,color='none', edgecolors='grey')
-    
-#    alpha, beta, r_squared = fit_weibull(x, y)
+
     ax.plot(x, weib_davis(x, alpha, beta), c='orange')
           
     figlabel = 'Fitted values:\nalpha={:.2f}\nbeta={:.2f}\nrsq={:.2f}'.format(
@@ -73,8 +71,6 @@ def burstprobFig(ax, data):
     ax.set_xlabel('Burst size (n)')
     ax.set_ylabel('Probability of burst>n')
     ax.text(0.9, 0.9, figlabel, ha='right', va='top', transform = ax.transAxes)
-    
-#    return {'alpha': alpha, 'beta': beta, 'rsq': r_squared}
     
 def sessionlicksFig(ax, licks):
     ax.hist(licks, range(0,3600,60), color='grey', alpha=0.4)
