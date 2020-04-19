@@ -478,6 +478,7 @@ def medfilereader_licks(filename,
                   sessionToExtract = 1,
                   verbose = False,
                   remove_var_header = True):
+    '''Gets lick data from Med Associates file.'''
     
     f = open(filename, 'r')
     f.seek(0)
