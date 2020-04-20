@@ -6,6 +6,7 @@ Created on Fri Apr 17 11:51:29 2020
 """
 
 import numpy as np
+import scipy.signal as sig
 
 def processdata(data, datauv, method='konanur', normalize=True):
     """
@@ -24,6 +25,8 @@ def processdata(data, datauv, method='konanur', normalize=True):
         
         'lerner' was developed by Talia Lerner and uses regression as described in
         doi: 10.1016/j.cell.2015.07.014
+    normalize : Bool, optional
+        Normalizes signal by dividing by 3*standard deviation. The default is True.
 
     Returns
     -------

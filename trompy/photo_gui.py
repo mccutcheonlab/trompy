@@ -23,7 +23,6 @@ import ntpath
 import csv
 import collections
 import tdt
-import scipy.signal as sig
 import xlsxwriter as xl
 
 from trompy import *
