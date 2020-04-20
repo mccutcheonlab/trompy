@@ -7,6 +7,57 @@ Created on Fri Apr 17 11:51:29 2020
 
 import numpy as np
 
+def processdata(data, datauv, method='konanur', normalize=True):
+    """
+    Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
+
+    Parameters
+    ----------
+    data : List or 1D array of Floats
+        Primary data stream (Ca-modulated).
+    datauv : List or 1D array of Floats
+        Secondary data stream (non-Ca modulated).
+    method : String ('konanur' or 'lerner'), optional
+        Chooses method to correct. The default is 'konanur'.
+        'konanur' was developed by Vaibhav Konanur and uses FFT as described in
+        doi: 10.1016/j.physbeh.2019.112771
+        
+        'lerner' was developed by Talia Lerner and uses regression as described in
+        doi: 10.1016/j.cell.2015.07.014
+
+    Returns
+    -------
+    datafilt : List or 1D array of Floats
+        Filtered signal (.
+
+    """
+    if method == 'konanur':
+        pt = len(data)
+        X = np.fft.rfft(datauv, pt)
+        Y = np.fft.rfft(data, pt)
+        Ynet = Y-X
+    
+        datafilt = np.fft.irfft(Ynet) 
+        datafilt = sig.detrend(datafilt)
+    
+        b, a = sig.butter(9, 0.012, 'low', analog=True)
+        datafilt = sig.filtfilt(b, a, datafilt)
+    elif method == 'lerner':
+        x = np.array(data)
+        y = np.array(datauv)
+        bls = np.polyfit(x, y, 1)
+        Y_fit_all = np.multiply(bls[0], x) + bls[1]
+        Y_dF_all = y - Y_fit_all
+        datafilt = np.multiply(100, np.divide(Y_dF_all, Y_fit_all))
+    else:
+        print(method, 'is not a valid method.')
+        
+    if normalize==True:
+        sd=np.std(datafilt)
+        datafilt=np.divide(datafilt, sd*3)
+    
+    return datafilt
+
 def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
                  adjustBaseline = True,
                  bins = 0):
@@ -93,11 +144,10 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
               
     return snips, pps
 
-
-
 def mastersnipper(data, dataUV, data_filt,
-                  t2sMap, fs, bgMAD,
+                  t2sMap, fs,
                   events,
+                  bgMAD=[],
                   bins=300,
                   baselinebins=100,
                   preTrial=10,
@@ -123,8 +173,6 @@ def mastersnipper(data, dataUV, data_filt,
         Time-to-sample map.
     fs : Float
         Sample frequency.
-    bgMAD : Float
-        Median absolute debiation of background noise.
     events : List
         Timestamps of events for data to be aligned to.
     bins : Int, optional
@@ -156,7 +204,6 @@ def mastersnipper(data, dataUV, data_filt,
             output['uv'] = snips of secondary data stream
             output['filt'] = snips of filtered data stream
             output['filt_z'] = snips of Z-scores of filtered data stream
-            output['filt_z_adjBL'] = snips of Z-scores of filtered data stream with adjusted baseline
             output['filt_avg'] = average of filtered snips
             output['filt_avg_z'] = average of filtered snips converted to Z-score
             output['noise'] = Boolean list of noisy trials
@@ -191,20 +238,21 @@ def mastersnipper(data, dataUV, data_filt,
                                    trialLength=trialLength,
                                    adjustBaseline=False)
         
-        filtTrials_z = zscore(filtTrials, baseline_points=baselinebins)
-        filtTrials_z_adjBL = zscore(filtTrials, baseline_points=50)
+        filtTrials_z = np.asarray(zscore(filtTrials, baseline_points=baselinebins))
+        
+        if bgMAD == []:
+            bgMAD = findnoise(data, makerandomevents(120, max(t2sMap)-120),
+                                  t2sMap=t2sMap, fs=fs, bins=bins,
+                                  method='sum')
 
-        sigSum = [np.sum(abs(i)) for i in filtTrials]
-        sigSD = [np.std(i) for i in filtTrials]
+        sigSum = [np.sum(abs(i)) for i in blueTrials]
 
         noiseindex = [i > bgMAD*threshold for i in sigSum]
-                        
-        # do i need to remove noise trials first before averages
-        filt_avg = np.mean(removenoise(filtTrials, noiseindex), axis=0)
-        if verbose: print('{} noise trials removed'.format(sum(noiseindex)))
-        filt_avg_z = zscore(filt_avg)
 
-    
+        filt_avg = np.mean(removenoise(filtTrials, noiseindex), axis=0)
+        filt_avg_z = [(x-np.mean(filt_avg))/np.std(filt_avg) for x in filt_avg]
+        if verbose: print('{} noise trials removed from averages'.format(sum(noiseindex)))
+
         bin2s = bins/trialLength
         peakbins = [int((preTrial+peak_between_time[0])*bin2s),
                     int((preTrial+peak_between_time[1])*bin2s)]
@@ -237,7 +285,6 @@ def mastersnipper(data, dataUV, data_filt,
     output['uv'] = uvTrials
     output['filt'] = filtTrials
     output['filt_z'] = filtTrials_z
-    output['filt_z_adjBL'] = filtTrials_z_adjBL
     output['filt_avg'] = filt_avg
     output['filt_avg_z'] = filt_avg_z
     output['noise'] = noiseindex
@@ -298,7 +345,7 @@ def findnoise(data, background_events, t2sMap = [], fs = 1, bins=0, method='sd')
 
     """
     
-    bgSnips, _ = snipper(data, background, t2sMap=t2sMap, fs=fs, bins=bins)
+    bgSnips, _ = snipper(data, background_events, t2sMap=t2sMap, fs=fs, bins=bins)
     
     if method == 'sum':
         bgSum = [np.sum(abs(i)) for i in bgSnips]
@@ -385,16 +432,16 @@ def makerandomevents(minTime, maxTime, spacing = 77, n=100):
     events = [i+minTime for i in events]
     return events
 
-def time2samples(data, tick, fs):
+def time2samples(data, fs):
     """
     Makes time2samples map (t2sMap) used to convert from timestamps to sample number.
+    
+    Edited 20-04-2020 - removed Tick as necessary argument.
 
     Parameters
     ----------
     data : List or 1D array
         Streamed photometry data.
-    tick : List or 1D array
-        Ticks spaced 1 second apart.
     fs : Float
         Sample frequency.
 
@@ -404,15 +451,17 @@ def time2samples(data, tick, fs):
         Array of time (in second) for  number of samples in data.
 
     """
-    maxsamples = len(tick)*int(fs)
-    if (len(data) - maxsamples) > 2*int(fs):
-        print('Something may be wrong with conversion from time to samples')
-        print(str(len(data) - maxsamples) + ' samples left over. This is more than double fs.')
-        t2sMap = np.linspace(min(tick), max(tick), maxsamples)
-    else:
-        t2sMap = np.linspace(min(tick), max(tick), maxsamples)
+    t2sMap = np.linspace(1, len(data), len(data)) / fs
+    
+    # maxsamples = len(tick)*int(fs)
+    # if (len(data) - maxsamples) > 2*int(fs):
+    #     print('Something may be wrong with conversion from time to samples')
+    #     print(str(len(data) - maxsamples) + ' samples left over. This is more than double fs.')
+    #     t2sMap = np.linspace(min(tick), max(tick), maxsamples)
+    # else:
+    #     t2sMap = np.linspace(min(tick), max(tick), maxsamples)
         
-    return t2sMap    
+    return t2sMap
     
 def event2sample(EOI, t2sMap):
     """
