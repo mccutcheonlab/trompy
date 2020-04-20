@@ -25,7 +25,7 @@ import csv
 import xlsxwriter as xl
 import datetime
 
-import trompy as tp
+from trompy import alert, get_location, lickCalc, sessionlicksFig, iliFig, burstlengthFig, burstprobFig, licklengthFig, isnumeric
 
 # Main class for GUI
 class Window_lick(Frame):
@@ -316,11 +316,11 @@ class Window_lick(Frame):
                 self.onsetArray = self.loaded_vars[self.onset.get().split(':')[0]]
                 try:
                     self.offsetArray = self.loaded_vars[self.offset.get().split(':')[0]]
-                    self.lickdata = tp.lickCalc(self.onsetArray, offset=self.offsetArray, burstThreshold = burstTH, runThreshold = runTH,
+                    self.lickdata = lickCalc(self.onsetArray, offset=self.offsetArray, burstThreshold = burstTH, runThreshold = runTH,
                                              ignorelongilis=self.nolongILIs.get(),
                                              minburstlength=int(self.minburst.get()))
                 except:
-                    self.lickdata = tp.lickCalc(self.onsetArray, burstThreshold = burstTH, runThreshold = runTH,
+                    self.lickdata = lickCalc(self.onsetArray, burstThreshold = burstTH, runThreshold = runTH,
                                              ignorelongilis=self.nolongILIs.get(),
                                              minburstlength=int(self.minburst.get()))
 
@@ -346,17 +346,17 @@ class Window_lick(Frame):
         ax4 = f.add_subplot(grid[1,2])
 
         # Licks over session 
-        tp.sessionlicksFig(ax1, self.onsetArray)
+        sessionlicksFig(ax1, self.onsetArray)
         
         # Lick parameter figures
-        tp.iliFig(ax2, self.lickdata)
+        iliFig(ax2, self.lickdata)
         
         if self.plotburstprob.get() == False:
-            tp.burstlengthFig(ax3, self.lickdata)
+            burstlengthFig(ax3, self.lickdata)
         else:
-            self.weibull_fit = tp.burstprobFig(ax3, self.lickdata)
+            self.weibull_fit = burstprobFig(ax3, self.lickdata)
             
-        tp.licklengthFig(ax4, self.lickdata)
+        licklengthFig(ax4, self.lickdata)
         
         canvas = FigureCanvasTkAgg(f, self)
         #canvas.show()
@@ -462,7 +462,7 @@ def checknsessions(filename):
     f = open(filename, 'r')
     f.seek(0)
     filerows = f.readlines()[8:]
-    datarows = [tp.isnumeric(x) for x in filerows]
+    datarows = [isnumeric(x) for x in filerows]
     matches = [i for i,x in enumerate(datarows) if x == 0.3]
     return matches
 
@@ -475,7 +475,7 @@ def medfilereader_licks(filename,
     f = open(filename, 'r')
     f.seek(0)
     filerows = f.readlines()[8:]
-    datarows = [tp.isnumeric(x) for x in filerows]
+    datarows = [isnumeric(x) for x in filerows]
     matches = [i for i,x in enumerate(datarows) if x == 0.3]
     if sessionToExtract > len(matches):
         print('Session ' + str(sessionToExtract) + ' does not exist.')
@@ -512,6 +512,7 @@ def start_lickcalc_gui():
     root.mainloop()
     
 if __name__ == '__main__':
+    os.chdir("C:\\Github\\Lick-Calc-GUI\\output\\")
     start_lickcalc_gui()
 
 # Files for for testing
