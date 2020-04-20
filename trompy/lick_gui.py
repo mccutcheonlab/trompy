@@ -28,7 +28,7 @@ import datetime
 import trompy as tp
 
 # Main class for GUI
-class Window(Frame):
+class Window_lick(Frame):
 
     def __init__(self, master=None):
         f1 = ttk.Style()
@@ -458,14 +458,6 @@ class Window(Frame):
                  ('Weibull: beta',self.lickdata['weib_beta']),
                  ('Weibull: rsquared',self.lickdata['weib_rsq'])]
 
-def get_location():
-    loc = filedialog.askdirectory(initialdir=currdir, title='Select a save folder.')
-    return loc
-
-def alert(msg):
-    print(msg)
-    messagebox.showinfo('Error', msg)
-
 def checknsessions(filename):
     f = open(filename, 'r')
     f.seek(0)
@@ -515,7 +507,7 @@ def tstamp_to_tdate(timestamp, fmt):
 
 def start_lickcalc_gui():
     root = Tk()
-    app = Window(root)
+    app = Window_lick(root)
     root.lift()
     root.mainloop()
     
