@@ -163,3 +163,26 @@ def trialstiledFig(gs, trials, pps = 1, preTrial = 10):
         ax.spines['right'].set_visible(False)
         ax.spines['top'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
+
+def makeheatmap(ax, data, trial_to_plot, events=None, ylabel='Trial'):
+    ntrials = np.shape(data)[0]
+    xvals = np.linspace(-9.9,20,300)
+    yvals = np.arange(1, ntrials+2)
+    xx, yy = np.meshgrid(xvals, yvals)
+    
+    mesh = ax.pcolormesh(xx, yy, data, cmap='jet', shading = 'flat')
+    
+    if events:
+        ax.vlines(events, yvals[:-1], yvals[1:], color='w')
+    else:
+        print('No events')
+        
+    ax.set_ylabel(ylabel)
+    if trial_to_plot == 'all':
+        ax.set_yticks([1, ntrials])
+    else:
+        ax.set_yticks([1, trial_to_plot+1, ntrials])
+    ax.set_xticks([])
+    ax.invert_yaxis()
+    
+    return ax, mesh
