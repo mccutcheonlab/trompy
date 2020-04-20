@@ -24,6 +24,7 @@ import csv
 import collections
 import tdt
 import xlsxwriter as xl
+from pathlib import Path
 
 from trompy import *
 
@@ -471,7 +472,7 @@ class Window_photo(Frame):
         canvas.get_tk_widget().grid(row=0, column=0, sticky=(N,S,E,W))
     
     def chooseexportfolder(self):
-        self.savefolder = get_location()
+        self.savefolder = Path(get_location())
     
     def makefilename(self):
         self.fileinfo = f"_{self.eventsVar.get()}{self.snipsVar.get()}_{self.suffix.get()}"
@@ -481,7 +482,7 @@ class Window_photo(Frame):
             self.chooseexportfolder()
         
         self.makefilename()
-        savexlfile = f"{self.savefolder}//output{self.fileinfo}.xlsx"
+        savexlfile = self.savefolder / f"output{self.fileinfo}.xlsx"
         
         print('File saved as', savexlfile)
 
@@ -536,9 +537,9 @@ class Window_photo(Frame):
                 
         self.makefilename()
         
-        self.f_trials.savefig(f"{self.savefolder}//trials{self.fileinfo}.pdf")
-        self.f_heatmap.savefig(f"{self.savefolder}//heatmap{self.fileinfo}.pdf")
-        self.f_avgsnips.savefig(f"{self.savefolder}//averagesnips{self.fileinfo}.pdf")
+        self.f_trials.savefig(self.savefolder / f"trials{self.fileinfo}.pdf")
+        self.f_heatmap.savefig(self.savefolder / f"heatmap{self.fileinfo}.pdf")
+        self.f_avgsnips.savefig(self.savefolder / f"averagesnips{self.fileinfo}.pdf")
 
 def start_photo_gui():
     root = Tk()
