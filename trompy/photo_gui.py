@@ -71,6 +71,7 @@ class Window_photo(Frame):
         self.refreshBtn = ttk.Button(self, text='Refresh', command=self.makesnips)
         self.defaultfolderBtn = ttk.Button(self, text='Default folder', command=self.chooseexportfolder)
         self.makeexcelBtn = ttk.Button(self, text='Make Excel', command=self.makeExcel)
+        self.savefigsBtn = ttk.Button(self, text='Save Figs', command=self.savefigs)
 
         # Label definitions
         self.shortfilename = StringVar(self.master)
@@ -153,6 +154,7 @@ class Window_photo(Frame):
         self.suffixField.grid(column=3, row=12, sticky=(W, E))
         self.defaultfolderBtn.grid(column=4, row=12, sticky=(W, E))
         self.makeexcelBtn.grid(column=5, row=12, sticky=(W, E))
+        self.savefigsBtn.grid(column=6, row=12, sticky=(W, E))
      
         self.blue = StringVar(self.master)       
         self.uv = StringVar(self.master)  
@@ -410,9 +412,9 @@ class Window_photo(Frame):
         self.updateeventoptions()
 
     def singletrialviewer(self):
-        f = Figure(figsize=(2.67,2.67)) # 5,3
-        f.subplotpars.left=0.3
-        ax = f.subplots()
+        self.f_trials = Figure(figsize=(2.67,2.67)) # 5,3
+        self.f_trials.subplotpars.left=0.3
+        ax = self.f_trials.subplots()
         
         if self.trial_to_plot != 'all':
             trialsFig(ax, self.snips_to_plot[self.trial_to_plot][:], pps=self.pps,
@@ -428,63 +430,69 @@ class Window_photo(Frame):
                 trialsFig(ax, snips, pps=self.pps, eventText = self.eventsVar.get(),
                           ylabel=self.ylabel)
      
-        canvas = FigureCanvasTkAgg(f, self.f4)
+        canvas = FigureCanvasTkAgg(self.f_trials, self.f4)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=0, sticky=(N,S,E,W))
         
     def heatmapviewer(self):
-        f = Figure(figsize=(2.67,2.67))
-        f.subplotpars.left=0.2
-        ax = f.add_subplot(111)
+        self.f_heatmap = Figure(figsize=(2.67,2.67))
+        self.f_heatmap.subplotpars.left=0.2
+        ax = self.f_heatmap.add_subplot(111)
         
         if self.noise:
             snips=self.snips_to_plot
         else:
-            snips=np.asarray([i for (i,v) in zip(self.snips_to_plot, self.noiseindex) if not v])
+            snips=removenoise(self.snips_to_plot, self.noiseindex)
         
         makeheatmap(ax, snips, self.trial_to_plot)
         
-        canvas = FigureCanvasTkAgg(f, self.f5)
+        canvas = FigureCanvasTkAgg(self.f_heatmap, self.f5)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=0, sticky=(N,S,E,W))
         
     def averagesnipsviewer(self):
         
-        f = Figure(figsize=(2.67,2.67)) # 5.3
-        f.subplotpars.left=0.3
-        ax = f.subplots()
+        self.f_avgsnips = Figure(figsize=(2.67,2.67)) # 5.3
+        self.f_avgsnips.subplotpars.left=0.3
+        ax = self.f_avgsnips.subplots()
  
         if self.noise:
             snips=self.snips_to_plot
         else:
-            snips=np.asarray([i for (i,v) in zip(self.snips_to_plot, self.noiseindex) if not v])
+            snips=removenoise(self.snips_to_plot, self.noiseindex)
 
         trialsShadedFig(ax, snips,
                           self.pps,
                           eventText = self.eventsVar.get(),
                           ylabel=self.ylabel)
         
-        canvas = FigureCanvasTkAgg(f, self.f6)
+        canvas = FigureCanvasTkAgg(self.f_avgsnips, self.f6)
         canvas.draw()
         canvas.get_tk_widget().grid(row=0, column=0, sticky=(N,S,E,W))
     
     def chooseexportfolder(self):
         self.savefolder = get_location()
-        
-        print(self.shortfilename.get())
+    
+    def makefilename(self):
+        self.fileinfo = f"_{self.eventsVar.get()}{self.snipsVar.get()}_{self.suffix.get()}"
         
     def makeExcel(self):
         if not hasattr(self, 'savefolder'):
             self.chooseexportfolder()
-            
-        savefile = self.savefolder + '//' + 'output_' + self.suffix.get() + '.xlsx'
         
-        print(savefile)
+        self.makefilename()
+        savexlfile = f"{self.savefolder}//output{self.fileinfo}.xlsx"
         
-#        try:
+        print('File saved as', savexlfile)
+
         self.makesummarysheet()
+
+        if self.noise:
+            snips_to_write=self.snips_to_plot
+        else:
+            snips_to_write=removenoise(self.snips_to_plot, self.noiseindex)
         
-        wb = xl.Workbook(savefile)
+        wb = xl.Workbook(savexlfile)
         # worksheet with summary data
         sh = wb.add_worksheet('Summary')
         
@@ -499,23 +507,18 @@ class Window_photo(Frame):
         
         # # worksheet with average trace
         sh = wb.add_worksheet('Average')
-        self.makeaveragesnips()
         
-        for idx, val in enumerate(self.averagesnips):
+        for idx, val in enumerate(np.mean(snips_to_write, axis=0)):
             sh.write(idx, 0, val)
         
-        # sh = wb.add_worksheet('ILIs')
-        # for idx, val in enumerate(self.lickdata['ilis']):
-        #     sh.write(idx, 0, val)
+        # # worksheet with average trace
+        sh = wb.add_worksheet('All trials')
+        for idx in np.arange(len(snips_to_write[0])):
+            for col, snip in enumerate(snips_to_write):
+                sh.write(idx, col, snip[idx])
 
-        # sh = wb.add_worksheet('Bursts')
-        # for idx, val in enumerate(self.lickdata['bLicks']):
-        #     sh.write(idx, 0, val)
-            
         wb.close()
-#        except:
-#            alert('Working on making an Excel file')
-
+        
     def makesummarysheet(self):
         
         self.d = [('Filename',self.tdtfile),
@@ -526,14 +529,16 @@ class Window_photo(Frame):
                   ('Data type',self.snipsVar.get()),
                   ('Noise threshold',self.noisethVar.get()),
                   ('Noise on',self.noise)]
-
-    def makeaveragesnips(self):
-        if self.noise:
-            snips=self.snips_to_plot
-        else:
-            snips=np.asarray([i for (i,v) in zip(self.snips_to_plot, self.noiseindex) if not v])
-            
-        self.averagesnips = np.mean(snips, axis=0)
+        
+    def savefigs(self):
+        if not hasattr(self, 'savefolder'):
+            self.chooseexportfolder()
+                
+        self.makefilename()
+        
+        self.f_trials.savefig(f"{self.savefolder}//trials{self.fileinfo}.pdf")
+        self.f_heatmap.savefig(f"{self.savefolder}//heatmap{self.fileinfo}.pdf")
+        self.f_avgsnips.savefig(f"{self.savefolder}//averagesnips{self.fileinfo}.pdf")
 
 def start_photo_gui():
     root = Tk()
@@ -542,5 +547,6 @@ def start_photo_gui():
     root.mainloop()
 
 if __name__ == '__main__':
+    os.chdir("C:\\Github\\PPP_analysis\\data\\Eelke-171027-111329\\")
     start_photo_gui()
     
