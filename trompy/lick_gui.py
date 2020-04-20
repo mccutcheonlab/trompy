@@ -24,6 +24,7 @@ import ntpath
 import csv
 import xlsxwriter as xl
 import datetime
+from pathlib import Path
 
 from trompy import alert, get_location, lickCalc, sessionlicksFig, iliFig, burstlengthFig, burstprobFig, licklengthFig, isnumeric
 
@@ -365,13 +366,13 @@ class Window_lick(Frame):
         return f
     
     def setsavefolder(self):
-        self.savefolder = get_location()
+        self.savefolder = Path(get_location())
     
     def makePDF(self):
         if not hasattr(self, 'savefolder'):
             self.setsavefolder()
             
-        savefile = self.savefolder + '//' + self.shortfilename.get() + self.suffix.get() + '.pdf'
+        savefile = self.savefolder / f"{self.shortfilename.get()}_{self.suffix.get()}.pdf"
         try:
             pdfFig = self.makegraphs()
             pdf_pages = PdfPages(savefile)
@@ -385,9 +386,8 @@ class Window_lick(Frame):
         if not hasattr(self, 'savefolder'):
             self.setsavefolder()
             
-        savefile = self.savefolder + '//' + self.shortfilename.get() + self.suffix.get() + '.xlsx'
-        
-#        try:
+        savefile = self.savefolder / f"{self.shortfilename.get()}_{self.suffix.get()}.xlsx"
+
         self.makesummarydictionary()
         
         wb = xl.Workbook(savefile)
@@ -424,7 +424,7 @@ class Window_lick(Frame):
         if not hasattr(self, 'savefolder'):
             self.setsavefolder()
             
-        savefile = self.savefolder + '//' + self.shortfilename.get() + self.suffix.get() + '-text_summary.csv'
+        savefile = self.savefolder / f"{self.shortfilename.get()}_{self.suffix.get()}-text_summary.csv"
         try:
             self.makesummarydictionary()
             
@@ -438,8 +438,8 @@ class Window_lick(Frame):
             print("Error:", sys.exc_info()[0])
             
     def licksperburstsummary(self):
-        self.folder = get_location()
-        savefile = self.folder + '//' + self.shortfilename.get() + '-licks-per-burst.csv'
+        self.folder = Path(get_location())
+        savefile = self.folder / f"{self.shortfilename.get()}-licks-per-burst.csv"
         try:
             d = self.data['bLicks']
         except:
