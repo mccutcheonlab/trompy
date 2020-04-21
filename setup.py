@@ -2,18 +2,27 @@
 """
 setup file for trompy pypi package
 """
+from setuptools import setup
+
+# read the contents of your README file
+from os import path
+this_directory = path.abspath(path.dirname(__file__))
+with open(path.join(this_directory, 'README.md'), encoding='utf-8') as f:
+    long_description = f.read()
 
 from distutils.core import setup
 setup(
   name = 'trompy',         # How you named your package folder (MyLib)
   packages = ['trompy'],   # Chose the same as "name"
-  version = '0.8.0',      # Start with a small number and increase it with every change you make
+  version = '0.8.1',      # Start with a small number and increase it with every change you make
   license='MIT',        # Chose a license from here: https://help.github.com/articles/licensing-a-repository
   description = 'A collection of tools for data analysis and plotting that originated in the McCutcheon Lab (UiT, Tromso)',   # Give a short description about your library
+  long_description = long_description,
+  long_description_content_type = 'text/markdown',
   author = 'James E McCutcheon',                   # Type in your name
   author_email = 'j.mccutcheon@uit.no',      # Type in your E-Mail
   url = 'https://github.com/mccutcheonlab',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/mccutcheonlab/trompy/archive/v0.8.0-alpha.tar.gz',    # I explain this later on
+  download_url = 'https://github.com/mccutcheonlab/trompy/archive/v0.8.1-alpha.tar.gz',    # I explain this later on
   keywords = ['neuroscience', 'behavior'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'numpy',

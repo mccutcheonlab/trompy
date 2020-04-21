@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.8.1
+
+21/04/20
+
+- Updated to include README description on PyPi be changing setup.py
+
 ## 0.8.0
 
 21/04/20
