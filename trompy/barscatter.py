@@ -292,7 +292,7 @@ def barscatter(data, transpose = False, unequal=False,
             for i in range(barspergroup):
                 legendbar.append(barlist[i])
                 legendtext.append(itemlabel[i])
-            plt.legend(legendbar, legendtext, loc=legendloc)
+            ax.legend(legendbar, legendtext, loc=legendloc)
     
     return ax, barx, barlist, sclist
       
