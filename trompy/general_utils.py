@@ -157,3 +157,9 @@ def findpercentilevalue(data, percentile):
     value = sorteddata[position-1]
     
     return value
+
+def logical_subset(data, logical, condition=True):
+    if condition:
+        return [d for d, L in zip(data, logical) if L]
+    else:
+        return [d for d, L in zip(data, logical) if not L]
