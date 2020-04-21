@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.8.2
+
+21/04/20
+
+- Fixed typo in __init__.py (trompy.roc_utils instead of roc_utils)
+
 ## 0.8.1
 
 21/04/20
