@@ -259,6 +259,11 @@ class Window_photo(Frame):
             
             tmp = tdt.read_block(self.tdtfile, evtype=['streams'], store=self.uv.get())
             self.datauv = getattr(tmp.streams, self.uv.get())['data']
+        except AttributeError: # This is necessary as a workaround for streams that begin with an underscore
+            tmp = tdt.read_block(self.tdtfile, evtype=['streams'])
+            self.data = getattr(tmp.streams, self.blue.get())['data']
+            self.fs = getattr(tmp.streams, self.blue.get())['fs']
+            self.datauv = getattr(tmp.streams, self.uv.get())['data']
         except:
             print('No file chosen yet or problem extracting signals')
 
@@ -549,5 +554,6 @@ def start_photo_gui():
 
 if __name__ == '__main__':
     os.chdir("C:\\Github\\PPP_analysis\\data\\Eelke-171027-111329\\")
+    os.chdir("C:\\Test Data\\data\\FiPho-180416\\")
     start_photo_gui()
     
