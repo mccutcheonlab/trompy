@@ -1,0 +1,12 @@
+# useful commands for maintaining trompy package
+
+## For uploading new pypi release
+1. Ensure that setup.py and __init__.py are up-to-date
+2. Navigate to trompy folder and run: python setup.py sdist
+3. twine dist/* (need to enter pypi username and password)
+
+## To use pypitest
+
+
+
+## For converting readme.md to readme.rst
