@@ -1,5 +1,11 @@
 # trompy changelog
 
-## 0.7.1
+## 0.8.0
 
 21/04/20
+
+- Updated save paths for exporting from GUIs - using pathlib for Mac/Linux compatibility
+- Added ROC utilities
+- Added additional files for pypi documentation (e.g. README.rst, MANIFEST.in, changelog.txt)
+- Added documentation folders and files using Sphinx (in process)
+- Made minor change to barscatter (replaced plt. with ax. in code that makes legend)
