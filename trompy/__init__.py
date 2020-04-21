@@ -11,4 +11,4 @@ from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trials
 from trompy.gui_utils import get_location, alert
 from trompy.lick_gui import Window_lick, checknsessions, medfilereader_licks, tstamp_to_tdate, start_lickcalc_gui
 from trompy.photo_gui import Window_photo, start_photo_gui
-from roc_utils import rocN, rocshuf, nanroc, plot_ROC_and_line
+from trompy.roc_utils import rocN, rocshuf, nanroc, plot_ROC_and_line
