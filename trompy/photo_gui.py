@@ -78,10 +78,14 @@ class Window_photo(Frame):
         self.shortfilename = StringVar(self.master)
         self.shortfilename.set('No tank chosen')
         self.filenameLbl = ttk.Label(self, textvariable=self.shortfilename, wraplength=200)
+        self.timelockLbl = ttk.Label(self, text='--Timelocked event--')
+        
+        self.primarysigLbl = ttk.Label(self, text='Primary signal')
+        self.autofsigLbl = ttk.Label(self, text='AutoFl. signal')
         
         self.baselineLbl = ttk.Label(self, text='Baseline (s)')
-        self.lengthLbl = ttk.Label(self, text='Snipit length (s)')
-        self.nbinsLbl = ttk.Label(self, text='No. of bins')
+        self.lengthLbl = ttk.Label(self, text='Snip length (s)')
+        self.fsnipLbl = ttk.Label(self, text='Snip freq (Hz)')
         self.noisethLbl = ttk.Label(self, text='Noise threshold')
         
         self.suffixLbl = ttk.Label(self, text='File suffix')
@@ -95,9 +99,9 @@ class Window_photo(Frame):
         self.lengthField = ttk.Entry(self, textvariable=self.length)
         self.lengthField.insert(END, '30')
         
-        self.nbins = StringVar(self.master)
-        self.nbinsField = ttk.Entry(self, textvariable=self.nbins)
-        self.nbinsField.insert(END, '300')
+        self.fsnip = StringVar(self.master)
+        self.fsnipField = ttk.Entry(self, textvariable=self.fsnip)
+        self.fsnipField.insert(END, '10')
         
         self.noiseth = StringVar(self.master)
         self.noisethField = ttk.Entry(self, textvariable=self.noiseth)
@@ -113,49 +117,53 @@ class Window_photo(Frame):
         # Progress bar and about label
         self.progress = ttk.Progressbar(self, orient=HORIZONTAL, length=200, mode='determinate')
 
-        self.aboutLbl = ttk.Label(self, text='Photometry Analyzer-2.3 by J McCutcheon')
+        self.aboutLbl = ttk.Label(self, text='Photometry Analyzer-3.0 by J McCutcheon')
 
         
         # Packing grid with widgets
-        self.f2.grid(column=2, row=0, columnspan=3, rowspan=3, sticky=(N,S,E,W))
-        self.f3.grid(column=5, row=0, columnspan=3, rowspan=3, sticky=(N,S,E,W))
-        self.f4.grid(column=2, row=4, columnspan=2, rowspan=5, sticky=(N,S,E,W))
-        self.f5.grid(column=4, row=4, columnspan=2, rowspan=5, sticky=(N,S,E,W))
-        self.f6.grid(column=6, row=4, columnspan=2, rowspan=5, sticky=(N,S,E,W))
+        self.f2.grid(column=2, row=0, columnspan=3, rowspan=5, sticky=(N,S,E,W))
+        self.f3.grid(column=5, row=0, columnspan=3, rowspan=5, sticky=(N,S,E,W))
+        self.f4.grid(column=2, row=7, columnspan=2, rowspan=5, sticky=(N,S,E,W))
+        self.f5.grid(column=4, row=7, columnspan=2, rowspan=5, sticky=(N,S,E,W))
+        self.f6.grid(column=6, row=7, columnspan=2, rowspan=5, sticky=(N,S,E,W))
         
-        self.choosefileBtn.grid(column=0, row=0)
-        self.loaddataBtn.grid(column=0, row=1)
-        self.filenameLbl.grid(column=0, row=2, columnspan=2, sticky=W)
+        self.choosefileBtn.grid(column=0, row=0, rowspan=2, sticky=(N,S,E,W))
+        self.loaddataBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
+        self.filenameLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
+        self.timelockLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         
-        self.makelickrunsBtn.grid(column=1, row=4)
+        self.primarysigLbl.grid(column=1, row=0)
+        self.autofsigLbl.grid(column=1, row=2)
         
-        self.baselineLbl.grid(column=0, row=5, sticky=E)
-        self.baselineField.grid(column=1, row=5)
-        self.lengthLbl.grid(column=0, row=6, sticky=E)
-        self.lengthField.grid(column=1, row=6)
-        self.nbinsLbl.grid(column=0, row=7, sticky=E)
-        self.nbinsField.grid(column=1, row=7)
-        self.noisethLbl.grid(column=0, row=8, sticky=E)
-        self.noisethField.grid(column=1, row=8)
+        self.makelickrunsBtn.grid(column=1, row=7)
         
-        self.prevtrialBtn.grid(column=2, row=9)
-        self.nexttrialBtn.grid(column=2, row=10)
-        self.currenttrialField.grid(column=3, row=9)
-        self.showallBtn.grid(column=3, row=10, sticky=(W, E))
+        self.baselineLbl.grid(column=0, row=8, sticky=E)
+        self.baselineField.grid(column=1, row=8)
+        self.lengthLbl.grid(column=0, row=9, sticky=E)
+        self.lengthField.grid(column=1, row=9)
+        self.fsnipLbl.grid(column=0, row=10, sticky=E)
+        self.fsnipField.grid(column=1, row=10)
+        self.noisethLbl.grid(column=0, row=11, sticky=E)
+        self.noisethField.grid(column=1, row=11)
         
-        self.refreshBtn.grid(column=7, row=9, sticky=(W, E))
+        self.prevtrialBtn.grid(column=2, row=12)
+        self.nexttrialBtn.grid(column=2, row=13)
+        self.currenttrialField.grid(column=3, row=12)
+        self.showallBtn.grid(column=3, row=13, sticky=(W, E))
         
-        self.makesnipsBtn.grid(column=9, row=4, rowspan=2, sticky=(N, S, W,E))
-        self.noiseBtn.grid(column=9, row=6, rowspan=2, sticky=(N, S, W,E))
+        self.refreshBtn.grid(column=7, row=12, sticky=(W, E))
         
-        self.aboutLbl.grid(column=0, row=11, columnspan=3, sticky=W)
-        self.progress.grid(column=0, row=12, columnspan=2, sticky=(W, E))
+        self.makesnipsBtn.grid(column=9, row=7, rowspan=2, sticky=(N, S, W,E))
+        self.noiseBtn.grid(column=9, row=9, rowspan=2, sticky=(N, S, W,E))
         
-        self.suffixLbl.grid(column=2, row=12, sticky=E)
-        self.suffixField.grid(column=3, row=12, sticky=(W, E))
-        self.defaultfolderBtn.grid(column=4, row=12, sticky=(W, E))
-        self.makeexcelBtn.grid(column=5, row=12, sticky=(W, E))
-        self.savefigsBtn.grid(column=6, row=12, sticky=(W, E))
+        self.aboutLbl.grid(column=0, row=14, columnspan=3, sticky=W)
+        self.progress.grid(column=0, row=15, columnspan=2, sticky=(W, E))
+        
+        self.suffixLbl.grid(column=2, row=15, sticky=E)
+        self.suffixField.grid(column=3, row=15, sticky=(W, E))
+        self.defaultfolderBtn.grid(column=4, row=15, sticky=(W, E))
+        self.makeexcelBtn.grid(column=5, row=15, sticky=(W, E))
+        self.savefigsBtn.grid(column=6, row=15, sticky=(W, E))
      
         self.blue = StringVar(self.master)       
         self.uv = StringVar(self.master)  
@@ -206,8 +214,8 @@ class Window_photo(Frame):
         self.chooseblueMenu = ttk.OptionMenu(self, self.blue, sigOptions[0], *sigOptions)
         self.chooseuvMenu = ttk.OptionMenu(self, self.uv, sigOptions[0], *sigOptions)
         
-        self.chooseblueMenu.grid(column=1, row=0)
-        self.chooseuvMenu.grid(column=1, row=1)
+        self.chooseblueMenu.grid(column=1, row=1)
+        self.chooseuvMenu.grid(column=1, row=3)
 
     def updateeventoptions(self):
         try:
@@ -218,18 +226,18 @@ class Window_photo(Frame):
             lickrunOptions = ['None']
         
         self.chooseeventMenu = ttk.OptionMenu(self, self.eventsVar, eventOptions[0], *eventOptions)
-        self.chooseeventMenu.grid(column=0, row=3)
+        self.chooseeventMenu.grid(column=0, row=6)
 
         snipOptions = ['blue', 'uv', 'filt', 'filt_z']
         self.choosesnipMenu = ttk.OptionMenu(self, self.snipsVar, snipOptions[0], *snipOptions)
-        self.choosesnipMenu.grid(column=6, row=9)
+        self.choosesnipMenu.grid(column=6, row=12)
    
         onsetOptions = ['onset', 'offset']
         self.onsetMenu = ttk.OptionMenu(self, self.onsetVar, onsetOptions[0], *onsetOptions)
-        self.onsetMenu.grid(column=1, row=3)
+        self.onsetMenu.grid(column=1, row=6)
 
         self.chooselicksMenu = ttk.OptionMenu(self, self.lickrunsVar, lickrunOptions[0], *lickrunOptions)
-        self.chooselicksMenu.grid(column=0, row=4)
+        self.chooselicksMenu.grid(column=0, row=7)
         
     def loaddata(self):   
         self.progress['value'] = 0
@@ -315,20 +323,17 @@ class Window_photo(Frame):
     def makesnips(self):
         # get events and number of bins from dropdown menus
         self.setevents()
-        self.bins = int(self.nbins.get())
         
         # extract snips and calculate noise from data      
-        self.randomevents = makerandomevents(120, max(self.t2sMap)-120)
-        self.bgTrials, self.pps = snipper(self.data, self.randomevents,
-                                        t2sMap = self.t2sMap, fs = self.fs, bins=self.bins)
         self.snips = mastersnipper(self.data, self.datauv, self.datafilt,
-                                   self.t2sMap, self.fs,
+                                   self.fs,
                                    self.events,
-                                   bins=int(self.bins),
-                                   preTrial=int(self.baseline.get()),
-                                   trialLength=int(self.length.get()),
-                                   threshold=int(self.noiseth.get()))
+                                   snipfs=float(self.fsnip.get()),
+                                   preTrial=float(self.baseline.get()),
+                                   trialLength=float(self.length.get()),
+                                   threshold=float(self.noiseth.get()))
         self.noiseindex = self.snips['noise']
+        self.pps = self.snips['info']['snipfs']
 
         self.snips_to_plot = self.snips[self.snipsVar.get()]
         if self.snipsVar.get() == 'filt_z':
@@ -429,11 +434,13 @@ class Window_photo(Frame):
         else:
             if self.noise:
                 trialsFig(ax, self.snips_to_plot, pps=self.pps, noiseindex=self.noiseindex,
+                          preTrial=self.snips['info']['baseline'],
                           eventText = self.eventsVar.get(),
                           ylabel=self.ylabel)
             else:
                 snips = np.asarray([i for (i,v) in zip(self.snips_to_plot, self.noiseindex) if not v])
                 trialsFig(ax, snips, pps=self.pps, eventText = self.eventsVar.get(),
+                          preTrial=self.snips['info']['baseline'],
                           ylabel=self.ylabel)
      
         canvas = FigureCanvasTkAgg(self.f_trials, self.f4)
@@ -450,7 +457,7 @@ class Window_photo(Frame):
         else:
             snips=removenoise(self.snips_to_plot, self.noiseindex)
         
-        makeheatmap(ax, snips, self.trial_to_plot)
+        makeheatmap(ax, snips, self.trial_to_plot, preTrial=self.snips['info']['baseline'], pps=self.pps)
         
         canvas = FigureCanvasTkAgg(self.f_heatmap, self.f5)
         canvas.draw()
@@ -470,6 +477,7 @@ class Window_photo(Frame):
         trialsShadedFig(ax, snips,
                           self.pps,
                           eventText = self.eventsVar.get(),
+                          preTrial=self.snips['info']['baseline'],
                           ylabel=self.ylabel)
         
         canvas = FigureCanvasTkAgg(self.f_avgsnips, self.f6)
