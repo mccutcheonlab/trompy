@@ -61,9 +61,9 @@ def processdata(data, datauv, method='konanur', normalize=True):
     
     return datafilt
 
-def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
+def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
                  adjustBaseline = True,
-                 bins = 0):
+                 bins = 0, **kwargs):
     """
     Makes 'snips' of a data file aligned to an event of interest.
 
@@ -78,8 +78,6 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
         Timestamps of events to be used to align data.
     fs : Float, optional
         Sampling frequency. The default is 1.
-    t2sMap : List, optional
-        Map to convert time (in seconds) to sample numbers. The default is [].
     preTrial : Int, optional
         Number of seconds to include before event. The default is 10.
     trialLength : Int, optional
@@ -87,7 +85,8 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
     adjustBaseline : Bool, optional
         When True divides all data points in each snip by mean of points occurring before event. The default is True.
     bins : Int, optional
-        Number of bins to divide trial length into. The default is 0.
+        Number of bins to divide trial length into. The default is 0. If set at default
+        of 0 then no binning will occur.
 
     Returns
     -------
@@ -108,9 +107,9 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
     length = int(trialLength*pps)
 # converts events into sample numbers
     event=[]
-    if len(t2sMap) > 1:
+    if 't2sMap' in kwargs.keys():
         for x in timelock:
-            event.append(np.searchsorted(t2sMap, x, side="left"))
+            event.append(np.searchsorted(kwargs['t2sMap'], x, side="left"))
     else:
         event = [x*fs for x in timelock]
 
@@ -130,9 +129,10 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
         try:
             snips[i] = data[start : start+length]
         except ValueError: # Deals with recording arrays that do not have a full final trial
-            snips = snips[:-1]
-            avgBaseline = avgBaseline[:-1]
-            nSnips = nSnips-1
+            snips = snips[:i]
+            avgBaseline = avgBaseline[:i]
+            nSnips = i
+            break # Exits for loop
 
     if adjustBaseline == True:
         snips = np.subtract(snips.transpose(), avgBaseline).transpose()
@@ -147,20 +147,19 @@ def snipper(data, timelock, fs = 1, t2sMap = [], preTrial=10, trialLength=30,
               
     return snips, pps
 
-def mastersnipper(data, dataUV, data_filt,
-                  t2sMap, fs,
-                  events,
-                  bgMAD=[],
-                  bins=300,
-                  baselinebins=100,
+def mastersnipper(data, dataUV, data_filt, fs, events,
+                  trialLength=30,
+                  snipfs=10,
                   preTrial=10,
-                  trialLength=30,    
                   threshold=8,
                   peak_between_time=[0, 1],
                   latency_events=[],
                   latency_direction='pre',
                   max_latency=30,
-                  verbose=True):
+                  verbose=True,
+                  removenoisefromaverage=True,
+                  **kwargs):
+
     """
     Runs snipper function on several types of data streams and calculates noise trials.
 
@@ -214,74 +213,135 @@ def mastersnipper(data, dataUV, data_filt,
             output['latency'] = List of latency times for all trials
 
     """
+    # Parse arguments relating to trial length, bins etc
+
+    if preTrial > trialLength:
+        baseline = trialLength / 2
+        print("preTrial is too long relative to total trialLength. Changing to half of trialLength.")
+    else:
+        baseline = preTrial
+    
+    if 'bins' in kwargs.keys():
+        bins = kwargs['bins']
+        print(f"bins given as kwarg. Fs for snip will be {trialLength/bins} Hz.")
+    else:
+        if snipfs > fs-1:
+            print('Snip fs is too high, reducing to data fs')
+            bins = 0
+        else:
+            bins = int(trialLength * snipfs)
+    
+    print('Number of bins is:', bins)
+    
+    if 'baselinebins' in kwargs.keys():
+        baselinebins = kwargs['baselinebins']
+        if baselinebins > bins:
+            print('Too many baseline bins for length of trial. Changing to length of baseline.')
+            baselinebins = int(baseline*snipfs)
+        baselinebins = baselinebins
+    else:
+        baselinebins = int(baseline*snipfs)
     
     if len(events) < 1:
         print('Cannot find any events. All outputs will be empty.')
-        blueTrials, uvTrials, filtTrials, filtTrials_z, filtTrials_z_adjBL, filt_avg, filt_avg_z, noiseindex, peak, latency = ([] for i in range(10))
+        return {}
     else:
         if verbose: print('{} events to analyze.'.format(len(events)))
-        
+
+    if len(data) > 0:
         blueTrials,_ = snipper(data, events,
-                                   t2sMap=t2sMap,
-                                   fs=fs,
-                                   bins=bins,
-                                   preTrial=preTrial,
-                                   trialLength=trialLength)
+                                       fs=fs,
+                                       bins=bins,
+                                       preTrial=baseline,
+                                       trialLength=trialLength)
+    else:
+        print('No data stream available as primary data input. Exiting without snipping.')
+        return {}
+    
+    if len(dataUV) > 0:
         uvTrials,_ = snipper(dataUV, events,
-                                   t2sMap=t2sMap,
                                    fs=fs,
                                    bins=bins,
-                                   preTrial=preTrial,
+                                   preTrial=baseline,
                                    trialLength=trialLength)
+    else:
+        print('No UV (secondary) data stream.')
+        uvTrials = []
+    if len(data_filt) > 0:
         filtTrials,_ = snipper(data_filt, events,
-                                   t2sMap=t2sMap,
                                    fs=fs,
                                    bins=bins,
-                                   preTrial=preTrial,
+                                   preTrial=baseline,
                                    trialLength=trialLength,
                                    adjustBaseline=False)
-        
+
         filtTrials_z = np.asarray(zscore(filtTrials, baseline_points=baselinebins))
-        
-        if bgMAD == []:
-            bgMAD = findnoise(data, makerandomevents(120, max(t2sMap)-120),
-                                  t2sMap=t2sMap, fs=fs, bins=bins,
-                                  method='sum')
+    else:
+        print('No processed data stream.')
+        filtTrials, filtTrials_z  = [], []
 
-        sigSum = [np.sum(abs(i)) for i in blueTrials]
+    # Code to calculate noise in file and work out which trials should be classified as noisy
+    if 'bgMAD' not in kwargs.keys():
+        bgMAD = findnoise(data, makerandomevents(120, int(len(data)/fs)-120),
+                              fs=fs, bins=bins,
+                              method='sum')
+    else:
+        bgMAD = kwargs['bgMAD']
 
-        noiseindex = [i > bgMAD*threshold for i in sigSum]
+    sigSum = [np.sum(abs(i)) for i in blueTrials]
+    noiseindex = [i > bgMAD*threshold for i in sigSum]
 
-        filt_avg = np.mean(removenoise(filtTrials, noiseindex), axis=0)
-        filt_avg_z = [(x-np.mean(filt_avg))/np.std(filt_avg) for x in filt_avg]
-        if verbose: print('{} noise trials removed from averages'.format(sum(noiseindex)))
-
-        bin2s = bins/trialLength
-        peakbins = [int((preTrial+peak_between_time[0])*bin2s),
-                    int((preTrial+peak_between_time[1])*bin2s)]
-        peak = [np.mean(trial[peakbins[0]:peakbins[1]]) for trial in filtTrials_z]
-        
-        latency = []
-
-        if len(latency_events) > 1: 
-            for event in events:
-                if latency_direction == 'pre':
-                    try:
-                        latency.append(np.abs([lat-event for lat in latency_events if lat-event<0]).min())
-                    except ValueError:
-                        latency.append(np.NaN)
-                
-                elif latency_direction == 'post':
-                    try:
-                        latency.append(np.abs([lat-event for lat in latency_events if lat-event>0]).min())
-                    except ValueError:
-                        latency.append(np.NaN)
-
-            latency = [x if (x<max_latency) else np.NaN for x in latency]
-            if latency_direction == 'pre':
-                latency = [-x for x in latency]
+    if sum(noiseindex) == len(noiseindex):
+        print('Not removing noisy trials from average because all trials identified as noisy.')
+        removenoisefromaverage = False
+    if len(filtTrials) > 0:
+        if removenoisefromaverage:
+                filt_avg = np.mean(removenoise(filtTrials, noiseindex), axis=0)
+                if verbose: print('{} noise trials removed from averages'.format(sum(noiseindex)))
         else:
-            print('No latency events found')
+            filt_avg = np.mean(filtTrials, axis=0)
+            
+        filt_avg_z = [(x-np.mean(filt_avg))/np.std(filt_avg) for x in filt_avg]
+    else:
+        filt_avg, filt_avg_z  = [], []
+    
+    # Code to find peak at specified time in each trial
+    bin2s = bins/trialLength
+    peakbins = [int((preTrial+peak_between_time[0])*bin2s),
+                int((preTrial+peak_between_time[1])*bin2s)]
+    peak = [np.mean(trial[peakbins[0]:peakbins[1]]) for trial in filtTrials_z]
+    
+    # Code to find latencies associated with each trial
+    latency = []
+    if len(latency_events) > 1: 
+        for event in events:
+            if latency_direction == 'pre':
+                try:
+                    latency.append(np.abs([lat-event for lat in latency_events if lat-event<0]).min())
+                except ValueError:
+                    latency.append(np.NaN)
+            
+            elif latency_direction == 'post':
+                try:
+                    latency.append(np.abs([lat-event for lat in latency_events if lat-event>0]).min())
+                except ValueError:
+                    latency.append(np.NaN)
+
+        latency = [x if (x<max_latency) else np.NaN for x in latency]
+        if latency_direction == 'pre':
+            latency = [-x for x in latency]
+    else:
+        print('No latency events found')
+        
+    # Create info dictionary
+    info = {}
+    info['baseline'] = baseline
+    info['length'] = trialLength
+    if bins is 0:
+        info['bins'] = np.shape(blueTrials)[1]
+    else:
+        info['bins'] = bins
+    info['snipfs'] = info['bins'] / info['length']
 
     output = {}
     output['blue'] = blueTrials
@@ -293,6 +353,7 @@ def mastersnipper(data, dataUV, data_filt,
     output['noise'] = noiseindex
     output['peak'] = peak
     output['latency'] = latency
+    output['info'] = info
     
     return output
 
@@ -322,7 +383,7 @@ def zscore(snips, baseline_points=100):
         
     return z_snips
 
-def findnoise(data, background_events, t2sMap = [], fs = 1, bins=0, method='sd'):
+def findnoise(data, background_events, fs = 1, bins=0, method='sd'):
     """
     Identifies snips that are classed as noisy due to exceeding a threshold based on background.
 
@@ -348,7 +409,7 @@ def findnoise(data, background_events, t2sMap = [], fs = 1, bins=0, method='sd')
 
     """
     
-    bgSnips, _ = snipper(data, background_events, t2sMap=t2sMap, fs=fs, bins=bins)
+    bgSnips, _ = snipper(data, background_events, fs=fs, bins=bins)
     
     if method == 'sum':
         bgSum = [np.sum(abs(i)) for i in bgSnips]
