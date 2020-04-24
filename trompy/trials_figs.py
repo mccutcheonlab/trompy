@@ -164,9 +164,10 @@ def trialstiledFig(gs, trials, pps = 1, preTrial = 10):
         ax.spines['top'].set_visible(False)
         ax.spines['bottom'].set_visible(False)
 
-def makeheatmap(ax, data, trial_to_plot, events=None, ylabel='Trial'):
-    ntrials = np.shape(data)[0]
-    xvals = np.linspace(-9.9,20,300)
+def makeheatmap(ax, data, trial_to_plot, preTrial=10, pps=1, events=None, ylabel='Trial'):
+    (ntrials, bins) = np.shape(data)
+
+    xvals = np.linspace(-preTrial+(1/pps),(bins/pps)-preTrial,bins)
     yvals = np.arange(1, ntrials+2)
     xx, yy = np.meshgrid(xvals, yvals)
     
