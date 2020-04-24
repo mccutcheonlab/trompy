@@ -1,5 +1,15 @@
 # trompy changelog
 
+## 0.8.3
+
+24/04/20
+
+- Added additional labels to photo_gui and made snipper utility more flexible
+- Added workaround to allow streams beginning with underscores to be read in.
+- Changed snipper_utils extensively, making mastersnipper and snipper more flexible
+- Removed need for t2sMap from most snipper functions
+
+
 ## 0.8.2
 
 21/04/20
