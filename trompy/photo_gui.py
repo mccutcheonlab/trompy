@@ -230,7 +230,7 @@ class Window_photo(Frame):
         self.choosesnipMenu = ttk.OptionMenu(self, self.snipsVar, snipOptions[0], *snipOptions)
         self.choosesnipMenu.grid(column=6, row=12)
    
-        onsetOptions = ['onset', 'offset', 'runs', 'random']
+        onsetOptions = ['onset', 'offset', 'runs', 'random', 'notes']
         self.onsetMenu = ttk.OptionMenu(self, self.onsetVar, onsetOptions[0], *onsetOptions)
         self.onsetMenu.grid(column=1, row=6)
         
@@ -370,6 +370,11 @@ class Window_photo(Frame):
                     nevents = 30
                 print(f'Creating {nevents} random events.')
                 self.events = list(np.sort(np.random.randint(low=120, high=int(len(self.data)/self.fs)-120, size=30)))
+            elif self.onsetVar.get() == 'notes':
+                try:
+                    self.events = self.eventepoc.notes.ts
+                except:
+                    alert('Could not find notes.')
                     
         except:
             alert('Cannot set events')
