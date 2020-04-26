@@ -135,8 +135,6 @@ class Window_photo(Frame):
         self.primarysigLbl.grid(column=1, row=0)
         self.autofsigLbl.grid(column=1, row=2)
         
-        self.makelickrunsBtn.grid(column=1, row=7)
-        
         self.baselineLbl.grid(column=0, row=8, sticky=E)
         self.baselineField.grid(column=1, row=8)
         self.lengthLbl.grid(column=0, row=9, sticky=E)
@@ -232,12 +230,9 @@ class Window_photo(Frame):
         self.choosesnipMenu = ttk.OptionMenu(self, self.snipsVar, snipOptions[0], *snipOptions)
         self.choosesnipMenu.grid(column=6, row=12)
    
-        onsetOptions = ['onset', 'offset']
+        onsetOptions = ['onset', 'offset', 'runs', 'random']
         self.onsetMenu = ttk.OptionMenu(self, self.onsetVar, onsetOptions[0], *onsetOptions)
         self.onsetMenu.grid(column=1, row=6)
-
-        self.chooselicksMenu = ttk.OptionMenu(self, self.lickrunsVar, lickrunOptions[0], *lickrunOptions)
-        self.chooselicksMenu.grid(column=0, row=7)
         
     def loaddata(self):   
         self.progress['value'] = 0
@@ -352,12 +347,30 @@ class Window_photo(Frame):
         
     def setevents(self):
         try:
-            if 'runs' in self.eventsVar.get():
-                key=self.eventsVar.get().split('-')
-                self.events = self.runs[key[1]]
-            else:
-                self.eventepoc = getattr(self.epocs, self.eventsVar.get())
-                self.events = getattr(self.eventepoc, self.onsetVar.get())
+            self.eventepoc = getattr(self.epocs, self.eventsVar.get())
+            if self.onsetVar.get() == 'onset' or self.onsetVar.get() == 'offset':
+                try:
+                   self.events = getattr(self.eventepoc, self.onsetVar.get())
+                except AttributeError:
+                    alert(f'{self.eventsVar.get()} does not have {self.onsetVar.get()}')
+            elif self.onsetVar.get() == 'runs':
+                try:
+                    tmp = getattr(self.eventepoc, 'onset')
+                    self.events = [val for i, val in enumerate(tmp) if (val - tmp[i-1]) > float(self.baseline.get())]
+                except:
+                    alert(f'Cannot calculate runs for {self.eventsVar.get()}')
+            elif self.onsetVar.get() == 'random':
+                try:
+                    nevents = len(getattr(self.eventepoc, 'onset'))
+                    if nevents > 100:
+                        nevents = 100
+                    elif nevents < 10:
+                        nevents = 10
+                except AttributeError:
+                    nevents = 30
+                print(f'Creating {nevents} random events.')
+                self.events = list(np.sort(np.random.randint(low=120, high=int(len(self.data)/self.fs)-120, size=30)))
+                    
         except:
             alert('Cannot set events')
             
