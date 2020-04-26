@@ -1,5 +1,13 @@
 # trompy changelog
 
+## 0.9.1
+
+26/04/20
+
+- Changed method of producing lick runs by adding to onset and offset menu
+- Added ability to generate random events
+- Added ability to extract events from 'notes'
+
 ## 0.9.0
 
 24/04/20
@@ -8,7 +16,6 @@
 - Added workaround to allow streams beginning with underscores to be read in.
 - Changed snipper_utils extensively, making mastersnipper and snipper more flexible
 - Removed need for t2sMap from most snipper functions
-
 
 ## 0.8.2
 
