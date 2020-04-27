@@ -31,7 +31,7 @@ from trompy import *
 # Main class for GUI
 class Window_photo(Frame):
     
-    def __init__(self, master=None):
+    def __init__(self, master=None, quickstart=False):
         f1 = ttk.Style()
         f1.configure('.', background='powder blue', padding=5)
         f1.configure('TButton', width=15, sticky=(E,W))
@@ -41,7 +41,8 @@ class Window_photo(Frame):
         
         ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))               
         
-        self.master = master        
+        self.master = master
+        self.quickstart = quickstart        
         self.init_window()
 
     def init_window(self):
@@ -177,11 +178,8 @@ class Window_photo(Frame):
         
         self.sessionviewer()
         
-        #self.quickstart()
-        
-    def quickstart(self):
-        self.choosefile()
-        self.loaddata()
+        if self.quickstart:
+            alert('Welcome to the photometry analyzer! First click "Choose tank" to select a tank to analyze')
         
     def choosefile(self):
         self.tdtfile = filedialog.askdirectory(initialdir=os.getcwd(), title='Select a tank.')
@@ -194,6 +192,9 @@ class Window_photo(Frame):
         # update dropdown menu options
         self.updatesigoptions()
         self.updateeventoptions()
+        
+        if self.quickstart:
+            alert('Great! Now select the correct values for your primary signal and autofluorescence signal. Then press "Load data"')
     
     def getstreamandepochnames(self):
         tmp = tdt.read_block(self.tdtfile, t2=2, evtype=['streams'])
@@ -254,6 +255,10 @@ class Window_photo(Frame):
         self.sessionviewer()
         self.progress['value'] = 100
         
+        if self.quickstart:
+            alert('Super! Now you can pick a event to timelock your snips to - yuo can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
+            self.number_of_times = 0
+            
     def loadstreams(self):
         try:
             tmp = tdt.read_block(self.tdtfile, evtype=['streams'], store=self.blue.get())
@@ -345,6 +350,19 @@ class Window_photo(Frame):
         self.averagesnipsviewer()
         self.sessionviewer()
         
+        if self.quickstart:
+            if self.number_of_times == 0:
+                alert('You can turn noise on and off with the "Toggle noise" button.')
+                self.number_of_times = 1
+            elif self.number_of_times == 1:
+                alert('You can alter the baseline, snip length, sample frequency, and noise threshold by using the fields on the right.')
+                self.number_of_times = 2
+            elif self.number_of_times == 2:
+                alert('You can export these data using the various Export / Save figs options at the bottom.')
+                self.number_of_times = 3
+            elif self.number_of_times == 3:
+                alert('OK. Got it? Play around with the GUI as you see fit and if you notice bugs or would like added features let me know [j.mccutcheon@uit.no]')
+                self.number_of_times = 4
     def setevents(self):
         try:
             self.eventepoc = getattr(self.epocs, self.eventsVar.get())
@@ -572,14 +590,14 @@ class Window_photo(Frame):
         self.f_heatmap.savefig(self.savefolder / f"heatmap{self.fileinfo}.pdf")
         self.f_avgsnips.savefig(self.savefolder / f"averagesnips{self.fileinfo}.pdf")
 
-def start_photo_gui():
+def start_photo_gui(quickstart=False):
     root = Tk()
-    app = Window_photo(root)
+    app = Window_photo(root, quickstart)
     root.lift()
     root.mainloop()
 
 if __name__ == '__main__':
     os.chdir("C:\\Github\\PPP_analysis\\data\\Eelke-171027-111329\\")
     os.chdir("C:\\Test Data\\data\\FiPho-180416\\")
-    start_photo_gui()
+    start_photo_gui(quickstart=True)
     
