@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.9.2
+
+27/04/20
+
+- Added quickstart tips to photogui
+
 ## 0.9.1
 
 26/04/20

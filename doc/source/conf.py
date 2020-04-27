@@ -22,7 +22,7 @@ copyright = '2020, James E McCutcheon'
 author = 'James E McCutcheon'
 
 # The full version, including alpha/beta/rc tags
-release = '0.9.1-alpha'
+release = '0.9.2-alpha'
 
 
 # -- General configuration ---------------------------------------------------
