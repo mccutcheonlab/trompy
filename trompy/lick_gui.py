@@ -6,6 +6,13 @@ To analyze data from Med PC files or text/csv files and calculate/output lick pa
 """
 
 # Import statements
+import warnings
+import matplotlib as mpl
+try:
+    mpl.use("TkAgg")
+except:
+    warnings.warn("Unable to set TKAgg as matplotlib backend for GUI", ImportWarning)
+
 from tkinter import *
 from tkinter import ttk
 from tkinter import filedialog
@@ -15,8 +22,7 @@ import string
 import numpy as np
 import scipy.optimize as opt
 import scipy.stats as stats
-import matplotlib as mpl
-mpl.use("TkAgg")
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.backends.backend_pdf import PdfPages

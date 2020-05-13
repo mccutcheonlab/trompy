@@ -6,6 +6,13 @@ Created on Mon Apr 20 10:22:07 2020
 """
 
 # Import statements
+import warnings
+import matplotlib as mpl
+try:
+    mpl.use("TkAgg")
+except:
+    warnings.warn("Unable to set TKAgg as matplotlib backend for GUI", ImportWarning)
+    
 import sys
 from tkinter import *
 from tkinter import ttk
@@ -14,8 +21,7 @@ from tkinter import messagebox
 import os
 import string
 import numpy as np
-import matplotlib as mpl
-mpl.use("TkAgg")
+
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 from matplotlib.figure import Figure
 from matplotlib.ticker import StrMethodFormatter
