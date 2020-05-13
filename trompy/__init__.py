@@ -1,5 +1,7 @@
-from trompy.barscatter import barscatter, setcolors, data2obj1D, data2obj2D, xyspacer
-from trompy.medfilereader import medfilereader, isnumeric
+#from trompy.barscatter import barscatter, setcolors, data2obj1D, data2obj2D, xyspacer
+from trompy.barscatter import barscatter
+#from trompy.medfilereader import medfilereader, isnumeric
+from trompy.medfilereader import medfilereader
 from trompy.metafile_utils import metafilemaker, metafilereader
 from trompy.snipper_utils import processdata, snipper, mastersnipper, zscore, findnoise, removenoise, med_abs_dev, makerandomevents, time2samples, event2sample
 from trompy.general_utils import remcheck, random_array, getuserhome, flatten_list, discrete2continuous, findpercentilevalue, logical_subset
@@ -9,6 +11,8 @@ from trompy.fig_utils import setsameaxislimits, invisible_axes, shadedError, ax2
 from trompy.lick_figs import licklengthFig, iliFig, burstlengthFig, ibiFig, burstprobFig, sessionlicksFig
 from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trialsMultShadedFig, trialstiledFig, makeheatmap
 from trompy.gui_utils import get_location, alert
-from trompy.lick_gui import Window_lick, checknsessions, medfilereader_licks, tstamp_to_tdate, start_lickcalc_gui
-from trompy.photo_gui import Window_photo, start_photo_gui
+#from trompy.lick_gui import Window_lick, checknsessions, medfilereader_licks, tstamp_to_tdate, start_lickcalc_gui
+from trompy.lick_gui import start_lickcalc_gui
+#from trompy.photo_gui import Window_photo, start_photo_gui
+from trompy.photo_gui import start_photo_gui
 from trompy.roc_utils import rocN, rocshuf, nanroc, plot_ROC_and_line
