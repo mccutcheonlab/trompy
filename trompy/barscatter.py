@@ -10,7 +10,7 @@ from itertools import chain, count
 
 def barscatter(data, transpose = False, unequal=False,
                 groupwidth = .75,
-                barwidth = .9,
+                barwidth = .8,
                 paired = False,
                 spaced = False,
                 yspace = 20,
@@ -28,7 +28,7 @@ def barscatter(data, transpose = False, unequal=False,
                 scattersize = 80,
                 scatteralpha = 1,
                 spreadscatters = False,
-                linewidth=1,
+                linewidth=0.5,
                 xlim=[],
                 ylim=[],
                 ylabel = 'none',
@@ -246,6 +246,8 @@ def barscatter(data, transpose = False, unequal=False,
         bottom=False,      # ticks along the bottom edge are off
         top=False,
         labelbottom=False) # labels along the bottom edge are off
+    
+    ax.set_xticks([])
 
     if len(xlim) > 0:
         ax.set_xlim(xlim)
