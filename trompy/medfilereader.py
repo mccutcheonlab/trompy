@@ -6,6 +6,7 @@ Created on Fri Apr 17 10:12:10 2020
 """
 
 import numpy as np
+import string
 
 def medfilereader(filename, varsToExtract = 'all',
                   sessionToExtract = 1,

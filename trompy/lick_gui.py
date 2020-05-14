@@ -32,7 +32,7 @@ import xlsxwriter as xl
 import datetime
 from pathlib import Path
 
-from trompy import alert, get_location, lickCalc, sessionlicksFig, iliFig, burstlengthFig, burstprobFig, licklengthFig, isnumeric
+from trompy import alert, get_location, lickCalc, sessionlicksFig, iliFig, burstlengthFig, burstprobFig, licklengthFig, isnumeric, medfilereader_licks, checknsessions, tstamp_to_tdate
 
 # Main class for GUI
 class Window_lick(Frame):
@@ -203,14 +203,16 @@ class Window_lick(Frame):
         else:
             print('Not valid format')
         
-    def loadmedfile(self):        
+    def loadmedfile(self):       
+        
         try:
             if len(checknsessions(self.filename)) > 1:
                 alert('More than one session in file. Analysing session 1.')
             else:                    
                 self.loaded_vars = medfilereader_licks(self.filename)
-        except:
+        except Exception as e:
             alert("Problem reading file and extracting data. File may not be properly formatted - see Help for advice.")
+            print(e)
             return
         if self.fileformat.get() == 'SF Lab':
             new_vars = {}
@@ -284,7 +286,8 @@ class Window_lick(Frame):
         self.onsetButton = ttk.OptionMenu(self, self.onset, *options).grid(column=3, row=1, sticky=(W,E))
         self.offsetButton = ttk.OptionMenu(self, self.offset, *options).grid(column=3, row=2, sticky=(W,E))
 
-    def load_adj_files(self,delta=1): #delta+1 = next, -1=prev        
+    def load_adj_files(self,delta=1): #delta+1 = next, -1=prev
+     
         try:
             if not self.list_of_files:
                 self.currpath = ntpath.dirname(self.filename)
@@ -469,6 +472,39 @@ def start_lickcalc_gui():
     app = Window_lick(root)
     root.lift()
     root.mainloop()
+    
+# def medfilereader_licks(filename,
+#                   sessionToExtract = 1,
+#                   verbose = False,
+#                   remove_var_header = True):
+#     '''Gets lick data from Med Associates file.'''
+    
+#     f = open(filename, 'r')
+#     f.seek(0)
+#     filerows = f.readlines()[8:]
+#     datarows = [isnumeric(x) for x in filerows]
+#     matches = [i for i,x in enumerate(datarows) if x == 0.3]
+#     if sessionToExtract > len(matches):
+#         print('Session ' + str(sessionToExtract) + ' does not exist.')
+#     if verbose == True:
+#         print('There are ' + str(len(matches)) + ' sessions in ' + filename)
+#         print('Analyzing session ' + str(sessionToExtract))
+    
+#     varstart = matches[sessionToExtract - 1]    
+#     medvars = {}
+   
+#     k = int(varstart + 27)
+#     for i in range(26):
+#         medvarsN = int(datarows[varstart + i + 1])
+#         if medvarsN > 1:
+#             medvars[string.ascii_uppercase[i]] = datarows[k:k + int(medvarsN)]
+#         k = k + medvarsN
+    
+#     if remove_var_header == True:
+#         for val in medvars.values():
+#             val.pop(0)
+
+#     return medvars
     
 if __name__ == '__main__':
     os.chdir("C:\\Github\\Lick-Calc-GUI\\output\\")

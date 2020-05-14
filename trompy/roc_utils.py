@@ -6,6 +6,7 @@ Created on Tue Apr 21 10:24:11 2020
 """
 
 import numpy as np
+import time
 import matplotlib.gridspec as gridspec
 from matplotlib.colors import LinearSegmentedColormap
 from trompy import flatten_list, logical_subset, shadedError
@@ -111,7 +112,7 @@ def run_roc_comparison(data, n4shuf=10, timer=True, savedata=""):
     
     if timer: start_time = time.time()
 
-    a, p = tp.nanroc(data[0], data[1], n4shuf=n4shuf)
+    a, p = nanroc(data[0], data[1], n4shuf=n4shuf)
     
     if timer: print(f"--- Total ROC analysis took {(time.time() - start_time)} seconds ---")
     
@@ -129,8 +130,10 @@ def plot_ROC_and_line(f, a, p, snips1, snips2,
                       cdict=['grey', 'white', 'red'],
                       colors=['grey', 'red'],
                       labels=["", ""],
-                      labeloffset=0,
-                      ylabel=''
+                      labeloffset_y=0,
+                      labeloffset_x=0,
+                      ylabel='',
+                      xlabel=''
                       ):
     
     ax=[]
@@ -184,12 +187,12 @@ def plot_ROC_and_line(f, a, p, snips1, snips2,
     ax[1].spines['top'].set_visible(False)
     ax[1].spines['right'].set_visible(False)
     
-    ax[1].set_xticks([0, 10, 20, 30])
-    ax[1].set_xticklabels(['-10', '0', '10', '20'])
-    ax[1].set_xlabel('Time from distractor (s)')
+    # ax[1].set_xticks([0, 10, 20, 30])
+    # ax[1].set_xticklabels(['-10', '0', '10', '20'])
+    ax[1].set_xlabel(xlabel)
     
-    ax[1].text(20, np.mean(snips1, axis=0)[-1]-labeloffset, labels[0], color=colors[0], ha='left', va='center')
-    ax[1].text(20, np.mean(snips2, axis=0)[-1]+labeloffset, labels[1], color=colors[1], ha='left', va='center')
+    ax[1].text(xlen+labeloffset_x, np.mean(snips1, axis=0)[-1]-labeloffset_y, labels[0], color=colors[0], ha='left', va='center')
+    ax[1].text(xlen+labeloffset_x, np.mean(snips2, axis=0)[-1]+labeloffset_y, labels[1], color=colors[1], ha='left', va='center')
     
     ax[0].set_xlim(ax[1].get_xlim())
     
