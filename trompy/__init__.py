@@ -1,7 +1,5 @@
-#from trompy.barscatter import barscatter, setcolors, data2obj1D, data2obj2D, xyspacer
 from trompy.barscatter import barscatter, data2obj1D, data2obj2D, xyspacer
-#from trompy.medfilereader import medfilereader, isnumeric
-from trompy.medfilereader import medfilereader
+from trompy.medfilereader import medfilereader, isnumeric
 from trompy.metafile_utils import metafilemaker, metafilereader
 from trompy.snipper_utils import processdata, snipper, mastersnipper, zscore, findnoise, removenoise, med_abs_dev, makerandomevents, time2samples, event2sample
 from trompy.general_utils import remcheck, random_array, getuserhome, flatten_list, discrete2continuous, findpercentilevalue, logical_subset
