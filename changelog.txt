@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.11.3
+
+14/05/20
+
+- Fixed syntax error in __init__.py
+
 ## 0.11.2
 
 14/05/20
