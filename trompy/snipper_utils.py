@@ -547,3 +547,25 @@ def event2sample(EOI, t2sMap):
     """
     idx = (np.abs(t2sMap - EOI)).argmin()   
     return idx
+
+def resample_snips(snips, factor=0.1):
+    """ Resamples snips to collapse data into larger bins (e.g. for ROC analysis)
+    Args
+    snips: array of snips (list of lists)
+    factor: constant to decide how to bin data (default=0.1)
+    
+    Returns
+    snips: resamples snips
+    
+    """
+    if len(snips)>0:
+        n_bins = len(snips[0])
+        out_bins = int(n_bins * factor)
+
+        snips_out = []
+        for snip in snips:
+            snips_out.append(np.mean(np.reshape(snip, (out_bins, -1)), axis=1))
+    
+        return snips_out
+    else:
+        return []

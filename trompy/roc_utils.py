@@ -88,6 +88,43 @@ def nanroc(x, y, N=100, min4roc=4, n4shuf=100):
         
     return a, p
 
+def run_roc_comparison(data, n4shuf=10, timer=True, savedata=""):
+    """ Function to run ROC analysis with option for timing and saving resulting data
+    Args
+    data: list or array with two distributions to be compared. Normally should 
+          be of the shape (2,x,y) where x is number of trials and can be different
+          between each array and y is bins and should be identical.
+          Example, data[0] can be 300x20 list of lists or array and data[1] can
+          be 360x20.
+    n4shuf: number of times to repeat roc with shuffled values to calculate ps
+            default=10, so that it is fast to run, but for accurate p-vals should
+            run 2000 times
+    timer: Boolean, prints time taken if True
+    savedata: insert complete filename here to save the results
+    
+    Returns
+    a: list of ROC values (between 0 and 1) corresponding to bins provided
+       (e.g. y in description above)
+    p: list of p-vals that correspond to each ROC value in a
+    
+    """
+    
+    if timer: start_time = time.time()
+
+    a, p = tp.nanroc(data[0], data[1], n4shuf=n4shuf)
+    
+    if timer: print(f"--- Total ROC analysis took {(time.time() - start_time)} seconds ---")
+    
+    if len(savedata)>0:
+        try:       
+            pickle_out = open(savedata, 'wb')
+            dill.dump([a, p, data], pickle_out)
+            pickle_out.close()
+        except:
+            print("Cannot save. Check filename.")
+
+    return a, p
+
 def plot_ROC_and_line(f, a, p, snips1, snips2,
                       cdict=['grey', 'white', 'red'],
                       colors=['grey', 'red'],

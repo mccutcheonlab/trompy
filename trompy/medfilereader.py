@@ -67,3 +67,50 @@ def isnumeric(s):
         return x
     except ValueError:
         return float('nan')
+    
+def checknsessions(filename):
+    f = open(filename, 'r')
+    f.seek(0)
+    filerows = f.readlines()[8:]
+    datarows = [isnumeric(x) for x in filerows]
+    matches = [i for i,x in enumerate(datarows) if x == 0.3]
+    return matches
+
+def tstamp_to_tdate(timestamp, fmt):
+    try:
+        return datetime.datetime.strptime(timestamp, fmt)
+    except ValueError:
+        return
+
+def medfilereader_licks(filename,
+                  sessionToExtract = 1,
+                  verbose = False,
+                  remove_var_header = True):
+    '''Gets lick data from Med Associates file.'''
+    
+    f = open(filename, 'r')
+    f.seek(0)
+    filerows = f.readlines()[8:]
+    datarows = [isnumeric(x) for x in filerows]
+    matches = [i for i,x in enumerate(datarows) if x == 0.3]
+    if sessionToExtract > len(matches):
+        print('Session ' + str(sessionToExtract) + ' does not exist.')
+    if verbose == True:
+        print('There are ' + str(len(matches)) + ' sessions in ' + filename)
+        print('Analyzing session ' + str(sessionToExtract))
+    
+    varstart = matches[sessionToExtract - 1]    
+    medvars = {}
+   
+    k = int(varstart + 27)
+    for i in range(26):
+        medvarsN = int(datarows[varstart + i + 1])
+        if medvarsN > 1:
+            medvars[string.ascii_uppercase[i]] = datarows[k:k + int(medvarsN)]
+        k = k + medvarsN
+    
+    if remove_var_header == True:
+        for val in medvars.values():
+            val.pop(0)
+
+    return medvars

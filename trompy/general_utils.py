@@ -163,3 +163,5 @@ def logical_subset(data, logical, condition=True):
         return [d for d, L in zip(data, logical) if L]
     else:
         return [d for d, L in zip(data, logical) if not L]
+    
+
