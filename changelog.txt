@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.11.2
+
+14/05/20
+
+- Moved medfilereader associated fx from lick_gui to medfilereader
+- Added ROC fx to roc_utils
+
 ## 0.11.1
 
 14/05/20
