@@ -133,13 +133,25 @@ def plot_ROC_and_line(f, a, p, snips1, snips2,
                       labeloffset_y=0,
                       labeloffset_x=0,
                       ylabel='',
-                      xlabel=''
+                      xlabel='',
+                      gridspec_dict=None,
                       ):
     
     ax=[]
     
-    gs=gridspec.GridSpec(2,2, figure=f, height_ratios=[0.25, 1], width_ratios=[1, 0.05], wspace=0.05,
-                        bottom=0.2, right=0.75, left=0.15)
+    if type(gridspec_dict) == dict:
+        try:
+            gs_spec = gridspec_dict['gs_spec']
+            gsx = gridspec_dict['gsx']
+            gsy = gridspec_dict['gsy']
+    
+            gs = gs_spec[gsx, gsy].subgridspec(2,2, height_ratios=[0.25, 1], width_ratios=[1, 0.05], wspace=0.05)
+        except:
+            print('Problem with gridspec_dict when plotting ROC so ignoring it. Check it has correct keys.')
+            return
+    else:   
+        gs=gridspec.GridSpec(2,2, figure=f, height_ratios=[0.25, 1], width_ratios=[1, 0.05], wspace=0.05,
+                            bottom=0.2, right=0.75, left=0.15)
     
     ax.append(f.add_subplot(gs[0, 0]))
     
