@@ -16,3 +16,7 @@ def get_location():
 def alert(msg):
     print(msg)
     messagebox.showinfo('Error', msg)
+    
+def tips(msg):
+    print(msg)
+    messagebox.showinfo('Quick Tips', msg)

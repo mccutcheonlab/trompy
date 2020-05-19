@@ -34,6 +34,11 @@ from pathlib import Path
 
 from trompy import *
 
+def callback(*args):
+    print('Triggered')
+    for arg in args:
+        print(arg)
+
 # Main class for GUI
 class Window_photo(Frame):
     
@@ -48,16 +53,22 @@ class Window_photo(Frame):
         ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))               
         
         self.master = master
-        self.quickstart = quickstart        
+        self.quickstart = quickstart     
+        self.startdir = Path(os.getcwd())
         self.init_window()
+        
+        self.master.bind_all("<Return>", self.callback)
 
     def init_window(self):
         self.master.title('Photometry Analyzer')
         self.pack(fill=BOTH, expand=1)
         
+        # self.master.bind_all("<Return>", self.callback())
+
         #Frames for session window and snipits
         self.f2 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
                             borderwidth=5, height=150)
+        # self.f2.bind("<Return>", self.callback())
         self.f3 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
                             borderwidth=5, height=150)
         self.f4 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
@@ -72,7 +83,7 @@ class Window_photo(Frame):
         self.loaddataBtn = ttk.Button(self, text='Load data', command=self.loaddata)
         self.makelickrunsBtn = ttk.Button(self, text='Lick runs', command=self.makelickruns)
         self.makesnipsBtn = ttk.Button(self, text='Make Snips', command=self.makesnips)
-        self.noiseBtn = ttk.Button(self, text='Turn noise off', command=self.togglenoise)
+        self.noiseBtn = ttk.Button(self, text='Toggle noise', command=self.togglenoise)
         self.prevtrialBtn = ttk.Button(self, text='Prev Trial', command=self.prevtrial)
         self.nexttrialBtn = ttk.Button(self, text='Next Trial', command=self.nexttrial)
         self.showallBtn = ttk.Button(self, text='Show All', command=self.showall)
@@ -80,6 +91,7 @@ class Window_photo(Frame):
         self.defaultfolderBtn = ttk.Button(self, text='Default folder', command=self.chooseexportfolder)
         self.makeexcelBtn = ttk.Button(self, text='Make Excel', command=self.makeExcel)
         self.savefigsBtn = ttk.Button(self, text='Save Figs', command=self.savefigs)
+        self.toggletipsBtn = ttk.Button(self, text='Toggle tips', command=self.toggletips)
 
         # Label definitions
         self.shortfilename = StringVar(self.master)
@@ -139,6 +151,8 @@ class Window_photo(Frame):
         self.filenameLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         self.timelockLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         
+        self.toggletipsBtn.grid(column=9, row=0)
+        
         self.primarysigLbl.grid(column=1, row=0)
         self.autofsigLbl.grid(column=1, row=2)
         
@@ -184,11 +198,24 @@ class Window_photo(Frame):
         
         self.sessionviewer()
         
-        if self.quickstart:
-            alert('Welcome to the photometry analyzer! First click "Choose tank" to select a tank to analyze')
+
         
+        if self.quickstart:
+            tips('Welcome to the photometry analyzer! First click "Choose tank" to select a tank to analyze')
+        
+    def callback(self, *args):
+
+        print('Triggered')
+
+        if hasattr(self, 'data'):
+            try:
+                self.makesnips()
+            except:
+                print('cannot make snips')
+    
     def choosefile(self):
-        self.tdtfile = filedialog.askdirectory(initialdir=os.getcwd(), title='Select a tank.')
+        self.tdtfile = Path(filedialog.askdirectory(initialdir=self.startdir, title='Select a tank.'))
+        self.startdir = self.tdtfile.parent
         self.shortfilename.set(ntpath.dirname(self.tdtfile))
         
         print(self.shortfilename.get())
@@ -200,7 +227,7 @@ class Window_photo(Frame):
         self.updateeventoptions()
         
         if self.quickstart:
-            alert('Great! Now select the correct values for your primary signal and autofluorescence signal. Then press "Load data"')
+            tips('Great! Now select the correct values for your primary signal and autofluorescence signal. Then press "Load data"')
     
     def getstreamandepochnames(self):
         tmp = tdt.read_block(self.tdtfile, t2=2, evtype=['streams'])
@@ -262,7 +289,7 @@ class Window_photo(Frame):
         self.progress['value'] = 100
         
         if self.quickstart:
-            alert('Super! Now you can pick a event to timelock your snips to - yuo can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
+            tips('Super! Now you can pick a event to timelock your snips to - yuo can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
             self.number_of_times = 0
             
     def loadstreams(self):
@@ -358,16 +385,16 @@ class Window_photo(Frame):
         
         if self.quickstart:
             if self.number_of_times == 0:
-                alert('You can turn noise on and off with the "Toggle noise" button.')
+                tips('You can turn noise on and off with the "Toggle noise" button.')
                 self.number_of_times = 1
             elif self.number_of_times == 1:
-                alert('You can alter the baseline, snip length, sample frequency, and noise threshold by using the fields on the right.')
+                tips('You can alter the baseline, snip length, sample frequency, and noise threshold by using the fields on the left.')
                 self.number_of_times = 2
             elif self.number_of_times == 2:
-                alert('You can export these data using the various Export / Save figs options at the bottom.')
+                tips('You can export these data using the various Export / Save figs options at the bottom.')
                 self.number_of_times = 3
             elif self.number_of_times == 3:
-                alert('OK. Got it? Play around with the GUI as you see fit and if you notice bugs or would like added features let me know [j.mccutcheon@uit.no]')
+                tips('OK. Got it? Play around with the GUI as you see fit and if you notice bugs or would like added features let me know [j.mccutcheon@uit.no]')
                 self.number_of_times = 4
     def setevents(self):
         try:
@@ -423,14 +450,24 @@ class Window_photo(Frame):
     def togglenoise(self):
         if self.noise:
             self.noise = False
-            self.noiseBtn.config(text="Turn noise on")
+            self.noiseBtn.config(text="Toggle noise")
+            self.noiseBtn.state(['pressed'])
         else:
             self.noise = True
-            self.noiseBtn.config(text="Turn noise off")
+            self.noiseBtn.config(text="Toggle noise")
+            self.noiseBtn.state(['!pressed'])
             
         try:
             self.makesnips()
         except: pass
+    
+    def toggletips(self):
+        if self.quickstart:
+            self.quickstart = False
+            self.toggletipsBtn.state(['!pressed'])
+        else:
+            self.quickstart = True
+            self.toggletipsBtn.state(['pressed'])
         
     def prevtrial(self):
         try:
@@ -601,9 +638,13 @@ def start_photo_gui(quickstart=False):
     app = Window_photo(root, quickstart)
     root.lift()
     root.mainloop()
+    
+def tips(msg):
+    print(msg)
+    messagebox.showinfo('Quick Tips', msg)
 
 if __name__ == '__main__':
     os.chdir("C:\\Github\\PPP_analysis\\data\\Eelke-171027-111329\\")
     os.chdir("C:\\Test Data\\data\\FiPho-180416\\")
-    start_photo_gui(quickstart=True)
+    start_photo_gui(quickstart=False)
     
