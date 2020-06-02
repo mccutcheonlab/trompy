@@ -19,6 +19,7 @@ from tkinter import ttk
 from tkinter import filedialog
 from tkinter import messagebox
 import os
+import subprocess
 import string
 import numpy as np
 
@@ -32,12 +33,10 @@ import tdt
 import xlsxwriter as xl
 from pathlib import Path
 
-from trompy import *
+import io
+from contextlib import redirect_stdout
 
-def callback(*args):
-    print('Triggered')
-    for arg in args:
-        print(arg)
+from trompy import *
 
 # Main class for GUI
 class Window_photo(Frame):
@@ -62,8 +61,6 @@ class Window_photo(Frame):
     def init_window(self):
         self.master.title('Photometry Analyzer')
         self.pack(fill=BOTH, expand=1)
-        
-        # self.master.bind_all("<Return>", self.callback())
 
         #Frames for session window and snipits
         self.f2 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
@@ -77,17 +74,22 @@ class Window_photo(Frame):
                             borderwidth=5, height=200, width=200)
         self.f6 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
                             borderwidth=5, height=200, width=200)
+        
+        # self.f7 = ScrollableFrame(self)
+        self.terminal = Text(self, bg='black', fg='white')
+        self.terminal.insert(INSERT, "Photometry Analyzer 3.0")
+        self.terminal.grid(column=0, row=16, columnspan=10, sticky=(N,S,E,W))
 
         # Button definitions
         self.choosefileBtn = ttk.Button(self, text='Choose Tank', command=self.choosefile)
         self.loaddataBtn = ttk.Button(self, text='Load data', command=self.loaddata)
         self.makelickrunsBtn = ttk.Button(self, text='Lick runs', command=self.makelickruns)
-        self.makesnipsBtn = ttk.Button(self, text='Make Snips', command=self.makesnips)
+        self.makesnipsBtn = ttk.Button(self, text='Make Snips', command=self.refresh)
         self.noiseBtn = ttk.Button(self, text='Toggle noise', command=self.togglenoise)
         self.prevtrialBtn = ttk.Button(self, text='Prev Trial', command=self.prevtrial)
         self.nexttrialBtn = ttk.Button(self, text='Next Trial', command=self.nexttrial)
         self.showallBtn = ttk.Button(self, text='Show All', command=self.showall)
-        self.refreshBtn = ttk.Button(self, text='Refresh', command=self.makesnips)
+        self.refreshBtn = ttk.Button(self, text='Refresh', command=self.refresh)
         self.defaultfolderBtn = ttk.Button(self, text='Default folder', command=self.chooseexportfolder)
         self.makeexcelBtn = ttk.Button(self, text='Make Excel', command=self.makeExcel)
         self.savefigsBtn = ttk.Button(self, text='Save Figs', command=self.savefigs)
@@ -138,7 +140,6 @@ class Window_photo(Frame):
 
         self.aboutLbl = ttk.Label(self, text='Photometry Analyzer-3.0 by J McCutcheon')
 
-        
         # Packing grid with widgets
         self.f2.grid(column=2, row=0, columnspan=3, rowspan=5, sticky=(N,S,E,W))
         self.f3.grid(column=5, row=0, columnspan=3, rowspan=5, sticky=(N,S,E,W))
@@ -197,21 +198,19 @@ class Window_photo(Frame):
         self.updateeventoptions()
         
         self.sessionviewer()
-        
 
-        
         if self.quickstart:
             tips('Welcome to the photometry analyzer! First click "Choose tank" to select a tank to analyze')
         
     def callback(self, *args):
 
-        print('Triggered')
-
         if hasattr(self, 'data'):
             try:
-                self.makesnips()
-            except:
-                print('cannot make snips')
+                self.refresh()
+            except: pass
+        
+    def refresh(self):
+        self.getoutput(self.makesnips)
     
     def choosefile(self):
         self.tdtfile = Path(filedialog.askdirectory(initialdir=self.startdir, title='Select a tank.'))
@@ -271,9 +270,12 @@ class Window_photo(Frame):
     def loaddata(self):   
         self.progress['value'] = 0
         
+        self.addtoterminal("\nLoading streams...\n")
+        
         self.progress['value'] = 40
         # load in streams
-        self.loadstreams()
+        self.getoutput(self.loadstreams)
+
         self.progress['value'] = 60
         
         # process data
@@ -355,6 +357,7 @@ class Window_photo(Frame):
 
     def makesnips(self):
         # get events and number of bins from dropdown menus
+        print("Making and plotting snips...")
         self.setevents()
         
         # extract snips and calculate noise from data      
@@ -452,13 +455,15 @@ class Window_photo(Frame):
             self.noise = False
             self.noiseBtn.config(text="Toggle noise")
             self.noiseBtn.state(['pressed'])
+            self.addtoterminal(f"Noise set with threshold of {self.noisethField.get()} and noisy trials removed.\n")
         else:
             self.noise = True
             self.noiseBtn.config(text="Toggle noise")
             self.noiseBtn.state(['!pressed'])
+            self.addtoterminal("Noisy trials included.\n")
             
         try:
-            self.makesnips()
+            self.refresh()
         except: pass
     
     def toggletips(self):
@@ -477,7 +482,8 @@ class Window_photo(Frame):
                 self.currenttrial.set(str(int(self.currenttrial.get()) - 1))
         except ValueError:
             self.currenttrial.set(str(self.maxtrials))
-        self.makesnips()
+        self.addtoterminal(f"Showing trial {self.currenttrial.get()}.\n")
+        self.refresh()
         
     def nexttrial(self):
         try:
@@ -486,13 +492,14 @@ class Window_photo(Frame):
             self.currenttrial.set(str(int(self.currenttrial.get()) + 1))
         except ValueError:
             self.currenttrial.set(str(1))
-        self.makesnips()
+        self.addtoterminal(f"Showing trial {self.currenttrial.get()}.\n")
+        self.refresh()
         
     def showall(self):
-        print('Showing all trials')
+        self.addtoterminal('Showing all trials.\n')
         self.trial_to_plot = 'all'
         self.currenttrial.set('')
-        self.makesnips()
+        self.refresh()
 
     def makelickruns(self):
         self.setlicks()
@@ -577,6 +584,8 @@ class Window_photo(Frame):
         savexlfile = self.savefolder / f"output{self.fileinfo}.xlsx"
         
         print('File saved as', savexlfile)
+        
+        self.terminal.insert(END, f'File saved as {savexlfile}')
 
         self.makesummarysheet()
 
@@ -632,10 +641,25 @@ class Window_photo(Frame):
         self.f_trials.savefig(self.savefolder / f"trials{self.fileinfo}.pdf")
         self.f_heatmap.savefig(self.savefolder / f"heatmap{self.fileinfo}.pdf")
         self.f_avgsnips.savefig(self.savefolder / f"averagesnips{self.fileinfo}.pdf")
+        
+        self.terminal.insert(END, f"Saving figures in {self.savefolder}")
+        
+    def addtoterminal(self, s):
+        self.terminal.insert(END, s)
+        self.terminal.see(END)
+        print(s)
+
+    def getoutput(self, function):
+        f = io.StringIO()
+        with redirect_stdout(f):
+            function()
+        s = f.getvalue()
+        self.addtoterminal(s)
 
 def start_photo_gui(quickstart=False):
     root = Tk()
     app = Window_photo(root, quickstart)
+
     root.lift()
     root.mainloop()
     
