@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.12.1
+
+19/06/20
+
+- Fixed bug in makeExcel function
+- Added event times to Excel output
+
 ## 0.12.0
 
 02/06/20
