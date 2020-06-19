@@ -57,6 +57,7 @@ class Window_photo(Frame):
         self.init_window()
         
         self.master.bind_all("<Return>", self.callback)
+        self.master.bind_all("n", self.callback2)
 
     def init_window(self):
         self.master.title('Photometry Analyzer')
@@ -208,6 +209,11 @@ class Window_photo(Frame):
             try:
                 self.refresh()
             except: pass
+    
+    def callback2(self, *args):
+        try:
+            self.togglenoise()
+        except: pass
         
     def refresh(self):
         self.getoutput(self.makesnips)
