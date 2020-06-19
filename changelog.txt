@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.12.2
+
+19/06/20
+
+- Added keyboard shortcut (n) to toggle noise
+
 ## 0.12.1
 
 19/06/20
