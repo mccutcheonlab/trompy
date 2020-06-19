@@ -591,8 +591,10 @@ class Window_photo(Frame):
 
         if self.noise:
             snips_to_write=self.snips_to_plot
+            events_to_write=self.events
         else:
             snips_to_write=removenoise(self.snips_to_plot, self.noiseindex)
+            events_to_write=[event for event, noise in zip(self.events, self.noiseindex) if not noise]
         
         wb = xl.Workbook(savexlfile)
         # worksheet with summary data
@@ -619,11 +621,15 @@ class Window_photo(Frame):
             for col, snip in enumerate(snips_to_write):
                 sh.write(idx, col, snip[idx])
 
+        sh = wb.add_worksheet('Event times')
+        for col, event in enumerate(events_to_write):
+            sh.write(0, col, event)
+
         wb.close()
         
     def makesummarysheet(self):
         
-        self.d = [('Filename',self.tdtfile),
+        self.d = [('Filename',str(self.tdtfile)),
                   ('Signal (470nm)',self.blue.get()),
                   ('Signal (405nm)',self.uv.get()),
                   ('Event',self.eventsVar.get()),
