@@ -42,15 +42,16 @@ from trompy import *
 class Window_photo(Frame):
     
     def __init__(self, master=None, quickstart=False):
+
         f1 = ttk.Style()
         f1.configure('.', background='powder blue', padding=5)
         f1.configure('TButton', width=15, sticky=(E,W))
         f1.configure('TEntry', width=7)
         f2 = ttk.Style()
         f2.configure('inner.TFrame', background='light cyan')
-        
-        ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))               
-        
+
+        ttk.Frame.__init__(self, master, style='TFrame', padding=(10, 10, 15, 15))
+
         self.master = master
         self.quickstart = quickstart     
         self.startdir = Path(os.getcwd())
@@ -60,13 +61,13 @@ class Window_photo(Frame):
         self.master.bind_all("n", self.callback2)
 
     def init_window(self):
+    
         self.master.title('Photometry Analyzer')
         self.pack(fill=BOTH, expand=1)
 
         #Frames for session window and snipits
         self.f2 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
-                            borderwidth=5, height=150)
-        # self.f2.bind("<Return>", self.callback())
+                            borderwidth=5, height=150)        
         self.f3 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
                             borderwidth=5, height=150)
         self.f4 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
@@ -75,8 +76,7 @@ class Window_photo(Frame):
                             borderwidth=5, height=200, width=200)
         self.f6 = ttk.Frame(self, style='inner.TFrame', relief='sunken',
                             borderwidth=5, height=200, width=200)
-        
-        # self.f7 = ScrollableFrame(self)
+
         self.terminal = Text(self, bg='black', fg='white')
         self.terminal.insert(INSERT, "Photometry Analyzer 3.0")
         self.terminal.grid(column=0, row=16, columnspan=10, sticky=(N,S,E,W))
@@ -148,6 +148,16 @@ class Window_photo(Frame):
         self.f5.grid(column=4, row=7, columnspan=2, rowspan=5, sticky=(N,S,E,W))
         self.f6.grid(column=6, row=7, columnspan=2, rowspan=5, sticky=(N,S,E,W))
         
+        # for frame in [self.f2, self.f3, self.f4, self.f5, self.f6]:
+        #     frame.columnconfigure(0, weight=1)
+        #     frame.rowconfigure(0, weight=1)
+
+        for row_index in range(17):
+            Grid.rowconfigure(self, row_index, weight=1)
+            for col_index in range(9):
+                Grid.columnconfigure(self, col_index, weight=1)
+        # Grid.rowconfigure(self, 16, weight=1)
+                
         self.choosefileBtn.grid(column=0, row=0, rowspan=2, sticky=(N,S,E,W))
         self.loaddataBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
         self.filenameLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
@@ -670,6 +680,8 @@ class Window_photo(Frame):
 
 def start_photo_gui(quickstart=False):
     root = Tk()
+    Grid.rowconfigure(root, 0, weight=1)
+    Grid.columnconfigure(root, 0, weight=1)
     app = Window_photo(root, quickstart)
 
     root.lift()

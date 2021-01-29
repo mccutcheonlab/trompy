@@ -196,18 +196,27 @@ def barscatter(data, transpose = False, unequal=False,
         for x, Yarray, scf, sce  in zip(xvals.flatten(), data.flatten(),
                                         scfacecolorArray, scedgecolorArray):
             if spaced == True:
-                xVals, yVals = xyspacer(ax, x, Yarray, bindist=yspace, space=xspace)
+                try: 
+                    xVals, yVals = xyspacer(ax, x, Yarray, bindist=yspace, space=xspace)
+                except:
+                    print("Could not space all sets of points.")
+                    xVals = [x] * len(Yarray)
+                    yVals = Yarray
+                    
                 sclist.append(ax.scatter(xVals, yVals, s = scattersize,
                              c = scf,
                              edgecolors = sce,
-                             zorder=20))           
+                             zorder=20,
+                             clip_on=False))
+                         
             else:
                 for y in Yarray:
                      sclist.append(ax.scatter(x, y, s = scattersize,
                                      c = scf,
                                      edgecolors = sce,
-                                     zorder=20))
-
+                                     zorder=20,
+                                     clip_on=False))
+                     
     elif grouped == True:
         for x, Yarray, scf, sce in zip(xvals, data, scfacecolorArray, scedgecolorArray):
             for y in np.transpose(Yarray.tolist()):
@@ -216,7 +225,8 @@ def barscatter(data, transpose = False, unequal=False,
                          linewidth=linewidth,
                          markerfacecolor = scf,
                          markeredgecolor = sce,
-                         zorder=20))
+                         zorder=20,
+                         clip_on=False))
     elif grouped == False:
         for n,_ in enumerate(data[0]):
             y = [y[n-1] for y in data]
@@ -225,7 +235,8 @@ def barscatter(data, transpose = False, unequal=False,
                          linewidth=linewidth,
                          markerfacecolor = scfacecolorArray[0],
                          markeredgecolor = scedgecolorArray[0],
-                         zorder=20))
+                         zorder=20,
+                         clip_on=False))
     
     # Label axes
     if ylabel != 'none':
@@ -371,6 +382,6 @@ def xyspacer(ax, x, yvals, bindist=20, space=0.1):
             for val in temp_vals:
                 xvals.append(val)
                 
-    yvals.sort()
+    yvals = np.sort(yvals)
 
     return xvals, yvals

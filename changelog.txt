@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.12.3
+
+29/01/2021
+
+- Changed barscatter so scatters were not clipped
+- Fixed bug in medfilereader by adding datetime import
+
 ## 0.12.2
 
 19/06/20
