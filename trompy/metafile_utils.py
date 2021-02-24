@@ -42,14 +42,17 @@ def metafilemaker(xlfile, metafilename, sheetname='metafile', fileformat='csv'):
                 for r in range(sh.nrows):
                     c.writerow(sh.row_values(r))
     
-def metafilereader(filename):
+def metafilereader(filename, sheetname="metafile"):
     """
-    Reads in metafile.
+    Reads in metafile. If an Excel file is given it uses the sheetname argument
+    to specify sheet. Otherwise, text files work better than CSV files.
 
     Parameters
     ----------
     filename : String
         Path to metafile to be read in and interpreted.
+    sheetname : String
+        Name of sheet within excel file to be used. Default is metafile.
 
     Returns
     -------
@@ -60,6 +63,20 @@ def metafilereader(filename):
 
     """
     
+    if filename.lower().endswith((".xls", "xlsx")):
+        print("File is excel file. Making csv metafile first")
+        
+        with xlrd.open_workbook(filename) as wb:
+            sh = wb.sheet_by_name(sheetname)  # or wb.sheet_by_name('name_of_the_sheet_here')
+            
+            header = sh.row_values(0)
+            
+            tablerows=[]
+            for r in range(1, sh.nrows):
+                tablerows.append(sh.row_values(r))
+                
+        return tablerows, header
+
     f = open(filename, 'r')
     f.seek(0)
     header = f.readlines()[0]
