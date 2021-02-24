@@ -1,9 +1,18 @@
 # useful commands for maintaining trompy package
 
+## Preparing for new pypi release
+Commit changes to master Github repository with sensible commits (e.g. fixed bug in xxx)
+Update __init__.py if any new functions to import
+Update changelog.txt
+Make changes to setup.py (version number, download link to release (to be made in next step), additional packages needed.
+Commit changes to master Github using "Prep for vxxx" as commit
+Make a new Release using exact name e.g. "v0.12.3-alpha" as used in setup.py
+
+
 ## For uploading new pypi release
 1. Ensure that setup.py and __init__.py are up-to-date
 2. Navigate to trompy folder and run: python setup.py sdist
-3. twine upload dist/* (need to enter pypi username and password)
+3. twine upload dist/* (need to enter pypi username and password) (password in 1password)
 
 ## To use pypitest
 
