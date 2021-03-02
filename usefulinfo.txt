@@ -13,6 +13,7 @@ Make a new Release using exact name e.g. "v0.12.3-alpha" as used in setup.py
 1. Ensure that setup.py and __init__.py are up-to-date
 2. Navigate to trompy folder and run: python setup.py sdist
 3. twine upload dist/* (need to enter pypi username and password) (password in 1password)
+(can try twine upload --skip-existing dist/*)
 
 ## To use pypitest
 

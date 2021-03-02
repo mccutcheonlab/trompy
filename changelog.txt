@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.12.5
+
+02/032021
+
+- Updated lickCalc to cope with onset and offset arrays of different lengths
+
 ## 0.12.4
 
 24/02/2021
