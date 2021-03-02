@@ -79,12 +79,18 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         except:
             print('Licks and offsets need to be arrays and unable to easily convert.')
             return
-
-    lickData = {}
     
+    lickData = {}
+
     if len(offset) > 0:
+        licks = licks[:len(offset)]
         lickData['licklength'] = offset - licks
-        lickData['longlicks'] = [x for x in lickData['licklength'] if x > longlickThreshold]
+        if min(lickData['licklength']) < 0:
+            print("Some offsets precede onsets. Not doing lick length analysis.")
+            lickData['licklength'] = []
+            lickData['longlicks'] = []
+        else:
+            lickData['longlicks'] = [x for x in lickData['licklength'] if x > longlickThreshold]
     else:
         lickData['licklength'] = []
         lickData['longlicks'] = []
