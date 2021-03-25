@@ -244,14 +244,30 @@ class Window_photo(Frame):
         if self.quickstart:
             tips('Great! Now select the correct values for your primary signal and autofluorescence signal. Then press "Load data"')
     
+    def getbitwise(self, key):
+        tmp = tdt.read_block(self.tdtfile, evtype=['epocs'], bitwise=key)
+        bitwise = getattr(tmp.epocs, key).bitwise
+        bits = {}
+        for key in bitwise.keys():
+            bits[key] = getattr(bitwise, key)      
+        return bits
+
     def getstreamandepochnames(self):
         tmp = tdt.read_block(self.tdtfile, t2=2, evtype=['streams'])
         self.streamfields = [v for v in vars(tmp.streams) if v != 'Fi2r']
         
         tmp = tdt.read_block(self.tdtfile, evtype=['epocs'])
-        self.epocs = getattr(tmp, 'epocs')
-        self.epochfields = [v for v in vars(self.epocs)]
-        
+
+        self.epocs = {}
+        for key in tmp.epocs.keys():
+            epoc = getattr(tmp.epocs, key)
+            self.epocs[key] = epoc
+            if key == "PrtA" or key == "PrtB":
+                bits = self.getbitwise(key)
+                self.epocs.update(bits)
+
+        self.epochfields = [key for key in self.epocs.keys()]
+  
     def updatesigoptions(self):
         try:
             sigOptions = self.streamfields
@@ -417,7 +433,7 @@ class Window_photo(Frame):
                 self.number_of_times = 4
     def setevents(self):
         try:
-            self.eventepoc = getattr(self.epocs, self.eventsVar.get())
+            self.eventepoc = self.epocs[self.eventsVar.get()]
             if self.onsetVar.get() == 'onset' or self.onsetVar.get() == 'offset':
                 try:
                    self.events = getattr(self.eventepoc, self.onsetVar.get())
@@ -444,14 +460,13 @@ class Window_photo(Frame):
                 try:
                     self.events = self.eventepoc.notes.ts
                 except:
-                    alert('Could not find notes.')
-                    
+                    alert('Could not find notes.')            
         except:
             alert('Cannot set events')
             
     def setlicks(self):
         try:
-            self.lickepoc = getattr(self.epocs, self.lickrunsVar.get())
+            self.lickepoc = self.epoc[self.lickrunsVar.get()]
             self.licks = getattr(self.lickepoc, self.onsetVar.get())
         except:
             alert('Cannot set licks')
@@ -692,7 +707,7 @@ def tips(msg):
     messagebox.showinfo('Quick Tips', msg)
 
 if __name__ == '__main__':
-    os.chdir("C:\\Github\\PPP_analysis\\data\\Eelke-171027-111329\\")
-    os.chdir("C:\\Test Data\\data\\FiPho-180416\\")
+    os.chdir("C:\\Users\\jmc010\\Dropbox\\Shared and resource folders\\Jess\\data\\tank 23.03.21\\Cage_2-210323-094028")
+    # os.chdir("D:\\Test Data\\data\\FiPho-180416\\")
     start_photo_gui(quickstart=False)
     
