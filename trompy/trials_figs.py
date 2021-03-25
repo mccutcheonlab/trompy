@@ -171,7 +171,7 @@ def makeheatmap(ax, data, trial_to_plot, preTrial=10, pps=1, events=None, ylabel
     yvals = np.arange(1, ntrials+2)
     xx, yy = np.meshgrid(xvals, yvals)
     
-    mesh = ax.pcolormesh(xx, yy, data, cmap='jet', shading = 'flat')
+    mesh = ax.pcolormesh(xx, yy, data, cmap='jet', shading = 'auto')
     
     if events:
         ax.vlines(events, yvals[:-1], yvals[1:], color='w')
