@@ -100,7 +100,10 @@ def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
     if len(timelock) == 0:
         print('No events to analyse! Quitting function.')
         raise Exception('no events')
-
+    
+    # removes non-numeric values, e.g. nans or infinite
+    timelock = [i for i in timelock if np.isfinite(i)]
+    
     pps = int(fs) # points per sample
     pre = int(preTrial*pps) 
 #    preABS = preTrial
