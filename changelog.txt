@@ -1,8 +1,15 @@
 # trompy changelog
 
+## 0.12.6
+
+31/03/2021
+
+- Updated snipper so that it can cope with non-numeric values (e.g. nans or infinites) by removal
+- Updated photo_gui so that bits are read from Port A and Port B when included in TDT file
+
 ## 0.12.5
 
-02/032021
+02/03/2021
 
 - Updated lickCalc to cope with onset and offset arrays of different lengths
 
