@@ -33,6 +33,12 @@ import tdt
 import xlsxwriter as xl
 from pathlib import Path
 
+import pandas as pd
+
+from scipy.signal import medfilt, butter, filtfilt
+from scipy.stats import linregress
+from scipy.optimize import curve_fit, minimize
+
 import io
 from contextlib import redirect_stdout
 
@@ -240,38 +246,35 @@ class Window_photo(Frame):
         self.loaddata()
         
         # opens file to get stream and epoch names
-        # self.getstreamandepochnames()
+        self.getstreamandepochnames()
         
         # update dropdown menu options
         # self.updatesigoptions()
-        # self.updateeventoptions()
+        self.updateeventoptions()
         
         if self.quickstart:
             tips('Great! Now select the correct values for your primary signal and autofluorescence signal. Then press "Load data"')
-    
-    def getbitwise(self, key):
-        tmp = tdt.read_block(self.tdtfile, evtype=['epocs'], bitwise=key)
-        bitwise = getattr(tmp.epocs, key).bitwise
-        bits = {}
-        for key in bitwise.keys():
-            bits[key] = getattr(bitwise, key)      
-        return bits
+
+    def parsebehavfile(self):
+        self.behavdf = pd.read_csv(self.behavfile)
+
+        all_cols = list(self.behavdf.columns)
+        self.epochfields = [col for col in all_cols if "time" in col]
+        self.extrafields = [col for col in all_cols if col not in self.epochfields]
+        
+        print(self.epochfields)
 
     def getstreamandepochnames(self):
-        tmp = tdt.read_block(self.tdtfile, t2=2, evtype=['streams'])
-        self.streamfields = [v for v in vars(tmp.streams) if v != 'Fi2r']
         
-        tmp = tdt.read_block(self.tdtfile, evtype=['epocs'])
+        self.parsebehavfile()
 
-        self.epocs = {}
-        for key in tmp.epocs.keys():
-            epoc = getattr(tmp.epocs, key)
-            self.epocs[key] = epoc
-            if key == "PrtA" or key == "PrtB":
-                bits = self.getbitwise(key)
-                self.epocs.update(bits)
+        # self.epocs = {}
+        # for key in tmp.epocs.keys():
+        #     epoc = getattr(tmp.epocs, key)
+        #     self.epocs[key] = epoc
 
-        self.epochfields = [key for key in self.epocs.keys()]
+
+        # self.epochfields = [key for key in self.epocs.keys()]
   
     def updatesigoptions(self):
         try:
@@ -315,32 +318,25 @@ class Window_photo(Frame):
             for row in c:
                 if row[2] == "6":
                     self.ts.append(np.float(row[1]))
-                    self.ch1.append(np.float(row[3]))
-                    
+                    self.ch1.append(np.float(row[3]))    
                 elif row[2] == "1":
                     self.ch2.append(np.float(row[3]))
                 else:
                     print("Not added:", row)
         
-        print(len(self.ch2))
         self.data = self.ch1
         self.datauv = self.ch2
+        self.t0 = self.ts[0]
+        
+        self.fs = 1/np.median(np.diff(self.ts))
         
         self.progress['value'] = 0
         
         self.addtoterminal("\nLoading streams...\n")
         
-        self.progress['value'] = 40
-        # load in streams
-        # self.getoutput(self.loadstreams)
-        
-        for v1, v2 in zip(self.data, self.datauv):
-            print(v1, v2)
-
-        # self.progress['value'] = 60
         
         # # process data
-        self.datafilt = processdata(self.data, self.datauv, normalize=True)
+        self.datafilt = processdata_np(self.data, self.datauv, self.ts)
         # self.progress['value'] = 80
         
         # # set time vectors
@@ -352,7 +348,7 @@ class Window_photo(Frame):
         self.progress['value'] = 100
         
         if self.quickstart:
-            tips('Super! Now you can pick a event to timelock your snips to - yuo can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
+            tips('Super! Now you can pick a event to timelock your snips to - you can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
             self.number_of_times = 0
             
     def sessionviewer(self):
@@ -446,37 +442,42 @@ class Window_photo(Frame):
                 tips('OK. Got it? Play around with the GUI as you see fit and if you notice bugs or would like added features let me know [j.mccutcheon@uit.no]')
                 self.number_of_times = 4
     def setevents(self):
-        try:
-            self.eventepoc = self.epocs[self.eventsVar.get()]
-            if self.onsetVar.get() == 'onset' or self.onsetVar.get() == 'offset':
-                try:
-                   self.events = getattr(self.eventepoc, self.onsetVar.get())
-                except AttributeError:
-                    alert(f'{self.eventsVar.get()} does not have {self.onsetVar.get()}')
-            elif self.onsetVar.get() == 'runs':
-                try:
-                    tmp = getattr(self.eventepoc, 'onset')
-                    self.events = [val for i, val in enumerate(tmp) if (val - tmp[i-1]) > float(self.baseline.get())]
-                except:
-                    alert(f'Cannot calculate runs for {self.eventsVar.get()}')
-            elif self.onsetVar.get() == 'random':
-                try:
-                    nevents = len(getattr(self.eventepoc, 'onset'))
-                    if nevents > 100:
-                        nevents = 100
-                    elif nevents < 10:
-                        nevents = 10
-                except AttributeError:
-                    nevents = 30
-                print(f'Creating {nevents} random events.')
-                self.events = list(np.sort(np.random.randint(low=120, high=int(len(self.data)/self.fs)-120, size=30)))
-            elif self.onsetVar.get() == 'notes':
-                try:
-                    self.events = self.eventepoc.notes.ts
-                except:
-                    alert('Could not find notes.')            
-        except:
-            alert('Cannot set events')
+        
+        self.events = np.array(self.behavdf[self.eventsVar.get()]) - self.t0
+        # try:
+            
+        #     self.events = np.array(self.dfbehav[self.eventsVar.get()]) - self.t0
+        # try:
+        #     self.eventepoc = self.epocs[self.eventsVar.get()]
+        #     if self.onsetVar.get() == 'onset' or self.onsetVar.get() == 'offset':
+        #         try:
+        #            self.events = getattr(self.eventepoc, self.onsetVar.get())
+        #         except AttributeError:
+        #             alert(f'{self.eventsVar.get()} does not have {self.onsetVar.get()}')
+        #     elif self.onsetVar.get() == 'runs':
+        #         try:
+        #             tmp = getattr(self.eventepoc, 'onset')
+        #             self.events = [val for i, val in enumerate(tmp) if (val - tmp[i-1]) > float(self.baseline.get())]
+        #         except:
+        #             alert(f'Cannot calculate runs for {self.eventsVar.get()}')
+        #     elif self.onsetVar.get() == 'random':
+        #         try:
+        #             nevents = len(getattr(self.eventepoc, 'onset'))
+        #             if nevents > 100:
+        #                 nevents = 100
+        #             elif nevents < 10:
+        #                 nevents = 10
+        #         except AttributeError:
+        #             nevents = 30
+        #         print(f'Creating {nevents} random events.')
+        #         self.events = list(np.sort(np.random.randint(low=120, high=int(len(self.data)/self.fs)-120, size=30)))
+        #     elif self.onsetVar.get() == 'notes':
+        #         try:
+        #             self.events = self.eventepoc.notes.ts
+        #         except:
+        #             alert('Could not find notes.')            
+        # except:
+        #     alert('Cannot set events')
             
     def setlicks(self):
         try:
@@ -706,6 +707,35 @@ class Window_photo(Frame):
             function()
         s = f.getvalue()
         self.addtoterminal(s)
+
+def processdata_np(ca, iso, ts):
+    cutoff = min(len(iso), len(ca), len(ts))
+    
+    iso = np.array(iso[:cutoff])
+    ca = np.array(ca[:cutoff])
+    
+    t0 = ts[0]
+    t = np.array(ts[:cutoff]) - t0
+    
+    iti = np.diff(t)
+
+    ca_parms, parm_cov = curve_fit(exp_func, t, ca, p0=[1,1e-3,1],bounds=([0,0,0],[4,0.1,4]), maxfev=1000)
+    ca_expfit = exp_func(t, *ca_parms)
+
+    iso_parms, parm_cov = curve_fit(exp_func, t, iso, p0=[1,1e-3,1],bounds=([0,0,0],[4,0.1,4]), maxfev=1000)
+    iso_expfit = exp_func(t, *iso_parms)
+    
+    ca_es = ca - ca_expfit
+    iso_es = iso - iso_expfit
+    
+    slope, intercept, r_value, p_value, std_err = linregress(x=iso_es, y=ca_es)
+    ca_est_motion = intercept + slope * iso_es
+    ca_corrected = ca_es - ca_est_motion
+    
+    return ca_corrected
+    
+def exp_func(x, a, b, c):
+   return a*np.exp(-b*x) + c
 
 def start_photo_gui(quickstart=False):
     root = Tk()
