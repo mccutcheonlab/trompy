@@ -1,5 +1,13 @@
 # trompy changelog
 
+## 0.13.0
+
+08/06/2021
+
+- Added neurophotometrics GUI (alpha version)
+
+31/03/2021
+
 ## 0.12.6
 
 31/03/2021

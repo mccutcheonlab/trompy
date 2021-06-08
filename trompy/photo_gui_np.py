@@ -696,7 +696,7 @@ def processdata_np(ca, iso, ts):
 def exp_func(x, a, b, c):
    return a*np.exp(-b*x) + c
 
-def start_photo_gui(quickstart=False):
+def start_photo_gui_np(quickstart=False):
     root = Tk()
     Grid.rowconfigure(root, 0, weight=1)
     Grid.columnconfigure(root, 0, weight=1)
