@@ -88,8 +88,8 @@ class Window_photo(Frame):
         self.terminal.grid(column=0, row=16, columnspan=10, sticky=(N,S,E,W))
 
         # Button definitions
-        self.choosefileBtn = ttk.Button(self, text='Choose Tank', command=self.choosefile)
-        self.loaddataBtn = ttk.Button(self, text='Load data', command=self.loaddata)
+        self.choosefileBtn = ttk.Button(self, text='Choose files', command=self.choosefile)
+        # self.loaddataBtn = ttk.Button(self, text='Load data', command=self.loaddata)
         self.makelickrunsBtn = ttk.Button(self, text='Lick runs', command=self.makelickruns)
         self.makesnipsBtn = ttk.Button(self, text='Make Snips', command=self.refresh)
         self.noiseBtn = ttk.Button(self, text='Toggle noise', command=self.togglenoise)
@@ -107,9 +107,10 @@ class Window_photo(Frame):
         self.shortfilename.set('No tank chosen')
         self.filenameLbl = ttk.Label(self, textvariable=self.shortfilename, wraplength=200)
         self.timelockLbl = ttk.Label(self, text='--Timelocked event--')
+        self.timelockoptionsLbl = ttk.Label(self, text='--Trial options--')
         
-        self.primarysigLbl = ttk.Label(self, text='Primary signal')
-        self.autofsigLbl = ttk.Label(self, text='AutoFl. signal')
+        # self.primarysigLbl = ttk.Label(self, text='Primary signal')
+        # self.autofsigLbl = ttk.Label(self, text='AutoFl. signal')
         
         self.baselineLbl = ttk.Label(self, text='Baseline (s)')
         self.lengthLbl = ttk.Label(self, text='Snip length (s)')
@@ -165,14 +166,15 @@ class Window_photo(Frame):
         # Grid.rowconfigure(self, 16, weight=1)
                 
         self.choosefileBtn.grid(column=0, row=0, rowspan=2, sticky=(N,S,E,W))
-        self.loaddataBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
+        # self.loaddataBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
         self.filenameLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         self.timelockLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
+        self.timelockoptionsLbl.grid(column=1, row=4, rowspan=2, sticky=(E,W))
         
         self.toggletipsBtn.grid(column=9, row=0)
         
-        self.primarysigLbl.grid(column=1, row=0)
-        self.autofsigLbl.grid(column=1, row=2)
+        # self.primarysigLbl.grid(column=1, row=0)
+        # self.autofsigLbl.grid(column=1, row=2)
         
         self.baselineLbl.grid(column=0, row=8, sticky=E)
         self.baselineField.grid(column=1, row=8)
@@ -205,13 +207,15 @@ class Window_photo(Frame):
         self.blue = StringVar(self.master)       
         self.uv = StringVar(self.master)  
         self.eventsVar = StringVar(self.master)
-        self.onsetVar = StringVar(self.master)
+        self.trialtypeVar = StringVar(self.master)
+        
+        self.trialselectVar = StringVar(self.master)
         self.lickrunsVar = StringVar(self.master)
         self.snipsVar = StringVar(self.master)
         self.noisethVar = IntVar(self.master)
         self.noise=True
         
-        self.updatesigoptions()
+        # self.updatesigoptions()
         self.updateeventoptions()
         
         self.sessionviewer()
@@ -232,7 +236,7 @@ class Window_photo(Frame):
         except: pass
         
     def refresh(self):
-        self.getoutput(self.makesnips)
+        self.makesnips()
     
     def choosefile(self):
         self.photofile = Path(filedialog.askopenfilename(initialdir=self.startdir, title='Select a data file.'))
@@ -246,10 +250,9 @@ class Window_photo(Frame):
         self.loaddata()
         
         # opens file to get stream and epoch names
-        self.getstreamandepochnames()
+        self.parsebehavfile()
         
         # update dropdown menu options
-        # self.updatesigoptions()
         self.updateeventoptions()
         
         if self.quickstart:
@@ -261,40 +264,16 @@ class Window_photo(Frame):
         all_cols = list(self.behavdf.columns)
         self.epochfields = [col for col in all_cols if "time" in col]
         self.extrafields = [col for col in all_cols if col not in self.epochfields]
-        
-        print(self.epochfields)
-
-    def getstreamandepochnames(self):
-        
-        self.parsebehavfile()
-
-        # self.epocs = {}
-        # for key in tmp.epocs.keys():
-        #     epoc = getattr(tmp.epocs, key)
-        #     self.epocs[key] = epoc
-
-
-        # self.epochfields = [key for key in self.epocs.keys()]
-  
-    def updatesigoptions(self):
-        try:
-            sigOptions = self.streamfields
-        except AttributeError:
-            sigOptions = ['None']
-            
-        self.chooseblueMenu = ttk.OptionMenu(self, self.blue, sigOptions[0], *sigOptions)
-        self.chooseuvMenu = ttk.OptionMenu(self, self.uv, sigOptions[0], *sigOptions)
-        
-        self.chooseblueMenu.grid(column=1, row=1)
-        self.chooseuvMenu.grid(column=1, row=3)
 
     def updateeventoptions(self):
         try:
             eventOptions = self.epochfields
-            lickrunOptions = self.epochfields
+            trialtypeOptions = self.extrafields
+
         except AttributeError:
             eventOptions = ['None']
-            lickrunOptions = ['None']
+            trialtypeOptions = ['None']
+
         
         self.chooseeventMenu = ttk.OptionMenu(self, self.eventsVar, eventOptions[0], *eventOptions)
         self.chooseeventMenu.grid(column=0, row=6)
@@ -303,10 +282,19 @@ class Window_photo(Frame):
         self.choosesnipMenu = ttk.OptionMenu(self, self.snipsVar, snipOptions[0], *snipOptions)
         self.choosesnipMenu.grid(column=6, row=12)
    
-        onsetOptions = ['onset', 'offset', 'runs', 'random', 'notes']
-        self.onsetMenu = ttk.OptionMenu(self, self.onsetVar, onsetOptions[0], *onsetOptions)
-        self.onsetMenu.grid(column=1, row=6)
+        self.trialtypeMenu = ttk.OptionMenu(self, self.trialtypeVar, trialtypeOptions[0], *trialtypeOptions, command=self.updatetrialselectoptions)
+        self.trialtypeMenu.grid(column=1, row=6)
         
+    def updatetrialselectoptions(self, event):       
+        
+        try:     
+            trialselectOptions = ["All"] + list(self.behavdf[self.trialtypeVar.get()].unique())
+        except:
+            trialselectOptions = ['None']
+                                
+        self.trialselectMenu = ttk.OptionMenu(self, self.trialselectVar, trialselectOptions[0], *trialselectOptions)
+        self.trialselectMenu.grid(column=1, row=7)
+
     def loaddata(self):
         
         # code to load in neurophotometrics data and perform filtering
@@ -317,16 +305,17 @@ class Window_photo(Frame):
             c = csv.reader(f, delimiter=',')
             for row in c:
                 if row[2] == "6":
-                    self.ts.append(np.float(row[1]))
-                    self.ch1.append(np.float(row[3]))    
+                    self.ts.append(float(row[1]))
+                    self.ch1.append(float(row[3]))    
                 elif row[2] == "1":
-                    self.ch2.append(np.float(row[3]))
+                    self.ch2.append(float(row[3]))
                 else:
                     print("Not added:", row)
         
         self.data = self.ch1
         self.datauv = self.ch2
         self.t0 = self.ts[0]
+        self.adj_ts = np.array(self.ts) - self.t0
         
         self.fs = 1/np.median(np.diff(self.ts))
         
@@ -377,12 +366,12 @@ class Window_photo(Frame):
         for sp in ['right', 'top']:
             ax[1].spines[sp].set_visible(False)
         ax[1].set_ylabel(ylabel)
-            
+        
         try:
-            ax[1].plot(self.ts, data1, color='blue')
+            ax[1].plot(self.adj_ts, data1, color='blue')
         except: pass
         try:
-            ax[1].plot(self.ts, data2, color='m')
+            ax[1].plot(self.adj_ts, data2, color='m')
         except: pass
         
         try:
@@ -410,6 +399,7 @@ class Window_photo(Frame):
                                    preTrial=float(self.baseline.get()),
                                    trialLength=float(self.length.get()),
                                    threshold=float(self.noiseth.get()))
+        print(self.snips.keys())
         self.noiseindex = self.snips['noise']
         self.pps = self.snips['info']['snipfs']
 
@@ -442,50 +432,19 @@ class Window_photo(Frame):
                 tips('OK. Got it? Play around with the GUI as you see fit and if you notice bugs or would like added features let me know [j.mccutcheon@uit.no]')
                 self.number_of_times = 4
     def setevents(self):
-        
-        self.events = np.array(self.behavdf[self.eventsVar.get()]) - self.t0
-        # try:
-            
-        #     self.events = np.array(self.dfbehav[self.eventsVar.get()]) - self.t0
-        # try:
-        #     self.eventepoc = self.epocs[self.eventsVar.get()]
-        #     if self.onsetVar.get() == 'onset' or self.onsetVar.get() == 'offset':
-        #         try:
-        #            self.events = getattr(self.eventepoc, self.onsetVar.get())
-        #         except AttributeError:
-        #             alert(f'{self.eventsVar.get()} does not have {self.onsetVar.get()}')
-        #     elif self.onsetVar.get() == 'runs':
-        #         try:
-        #             tmp = getattr(self.eventepoc, 'onset')
-        #             self.events = [val for i, val in enumerate(tmp) if (val - tmp[i-1]) > float(self.baseline.get())]
-        #         except:
-        #             alert(f'Cannot calculate runs for {self.eventsVar.get()}')
-        #     elif self.onsetVar.get() == 'random':
-        #         try:
-        #             nevents = len(getattr(self.eventepoc, 'onset'))
-        #             if nevents > 100:
-        #                 nevents = 100
-        #             elif nevents < 10:
-        #                 nevents = 10
-        #         except AttributeError:
-        #             nevents = 30
-        #         print(f'Creating {nevents} random events.')
-        #         self.events = list(np.sort(np.random.randint(low=120, high=int(len(self.data)/self.fs)-120, size=30)))
-        #     elif self.onsetVar.get() == 'notes':
-        #         try:
-        #             self.events = self.eventepoc.notes.ts
-        #         except:
-        #             alert('Could not find notes.')            
-        # except:
-        #     alert('Cannot set events')
-            
-    def setlicks(self):
         try:
-            self.lickepoc = self.epoc[self.lickrunsVar.get()]
-            self.licks = getattr(self.lickepoc, self.onsetVar.get())
+            tt_option = self.trialselectVar.get()
+            if tt_option == "All":
+                self.events = np.array(self.behavdf[self.eventsVar.get()]) - self.t0
+            else:
+                reduced_df = self.behavdf[self.behavdf[self.trialtypeVar.get()] == int(tt_option)]
+                self.events = np.array(reduced_df[self.eventsVar.get()]) - self.t0
+                if len(self.events) == 0:
+                    print("Using all events...")
+                    self.events = np.array(self.behavdf[self.eventsVar.get()]) - self.t0
         except:
-            alert('Cannot set licks')
-            
+            self.events = np.array(self.behavdf[self.eventsVar.get()]) - self.t0
+                        
     def getcurrenttrial(self):
         try:
             trial_entered = int(self.currenttrial.get())
@@ -679,7 +638,7 @@ class Window_photo(Frame):
                   ('Signal (470nm)',self.blue.get()),
                   ('Signal (405nm)',self.uv.get()),
                   ('Event',self.eventsVar.get()),
-                  ('Onset or offset',self.onsetVar.get()),
+                  ('Onset or offset',self.trialtypeVar.get()),
                   ('Data type',self.snipsVar.get()),
                   ('Noise threshold',self.noisethVar.get()),
                   ('Noise on',self.noise)]
@@ -701,12 +660,12 @@ class Window_photo(Frame):
         self.terminal.see(END)
         print(s)
 
-    def getoutput(self, function):
-        f = io.StringIO()
-        with redirect_stdout(f):
-            function()
-        s = f.getvalue()
-        self.addtoterminal(s)
+    # def getoutput(self, function):
+    #     f = io.StringIO()
+    #     with redirect_stdout(f):
+    #         function()
+    #     s = f.getvalue()
+    #     self.addtoterminal(s)
 
 def processdata_np(ca, iso, ts):
     cutoff = min(len(iso), len(ca), len(ts))
