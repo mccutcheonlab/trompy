@@ -5,6 +5,7 @@
 28/06/2021
 
 - Fixed bug in processdata (correction to Lerner method)
+- Fixed issue #2 in photoguis for saving files
 
 ## 0.13.0
 
