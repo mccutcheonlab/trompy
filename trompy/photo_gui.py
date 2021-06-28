@@ -613,10 +613,6 @@ class Window_photo(Frame):
         
         self.makefilename()
         savexlfile = self.savefolder / f"output{self.fileinfo}.xlsx"
-        
-        print('File saved as', savexlfile)
-        
-        self.terminal.insert(END, f'File saved as {savexlfile}')
 
         self.makesummarysheet()
 
@@ -626,8 +622,9 @@ class Window_photo(Frame):
         else:
             snips_to_write=removenoise(self.snips_to_plot, self.noiseindex)
             events_to_write=[event for event, noise in zip(self.events, self.noiseindex) if not noise]
-        
+
         wb = xl.Workbook(savexlfile)
+
         # worksheet with summary data
         sh = wb.add_worksheet('Summary')
         
@@ -655,8 +652,18 @@ class Window_photo(Frame):
         sh = wb.add_worksheet('Event times')
         for col, event in enumerate(events_to_write):
             sh.write(0, col, event)
-
-        wb.close()
+            
+        try:
+            wb.close()     
+        except:
+            problemsavingString = 'Problem saving file. Check permissions on save location.'
+            print(problemsavingString)
+            self.terminal.insert(END, problemsavingString)
+            alert(problemsavingString)
+            
+        if os.path.exists(savexlfile):
+            print('File saved as', savexlfile)
+            self.terminal.insert(END, f'File saved as {savexlfile}')
         
     def makesummarysheet(self):
         
@@ -707,7 +714,7 @@ def tips(msg):
     messagebox.showinfo('Quick Tips', msg)
 
 if __name__ == '__main__':
-    os.chdir("C:\\Users\\jmc010\\Dropbox\\Shared and resource folders\\Jess\\data\\tank 23.03.21\\Cage_2-210323-094028")
+    os.chdir("D:\\Test Data\\Eelke-171027-111329")
     # os.chdir("D:\\Test Data\\data\\FiPho-180416\\")
     start_photo_gui(quickstart=False)
     

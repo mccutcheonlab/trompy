@@ -587,10 +587,6 @@ class Window_photo(Frame):
         
         self.makefilename()
         savexlfile = self.savefolder / f"output{self.fileinfo}.xlsx"
-        
-        print('File saved as', savexlfile)
-        
-        self.terminal.insert(END, f'File saved as {savexlfile}')
 
         self.makesummarysheet()
 
@@ -629,8 +625,18 @@ class Window_photo(Frame):
         sh = wb.add_worksheet('Event times')
         for col, event in enumerate(events_to_write):
             sh.write(0, col, event)
-
-        wb.close()
+            
+        try:
+            wb.close()     
+        except:
+            problemsavingString = 'Problem saving file. Check permissions on save location.'
+            print(problemsavingString)
+            self.terminal.insert(END, problemsavingString)
+            alert(problemsavingString)
+            
+        if os.path.exists(savexlfile):
+            print('File saved as', savexlfile)
+            self.terminal.insert(END, f'File saved as {savexlfile}')
         
     def makesummarysheet(self):
         
