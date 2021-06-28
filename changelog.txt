@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.13.1
+
+28/06/2021
+
+- Fixed bug in processdata (correction to Lerner method)
+
 ## 0.13.0
 
 08/06/2021
