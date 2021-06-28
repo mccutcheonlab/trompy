@@ -46,8 +46,8 @@ def processdata(data, datauv, method='konanur', normalize=True):
         b, a = sig.butter(9, 0.012, 'low', analog=True)
         datafilt = sig.filtfilt(b, a, datafilt)
     elif method == 'lerner':
-        x = np.array(data)
-        y = np.array(datauv)
+        x = np.array(datauv)
+        y = np.array(data)
         bls = np.polyfit(x, y, 1)
         Y_fit_all = np.multiply(bls[0], x) + bls[1]
         Y_dF_all = y - Y_fit_all
