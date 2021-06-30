@@ -12,6 +12,7 @@ def barscatter(data, transpose = False, unequal=False,
                 groupwidth = .75,
                 barwidth = .8,
                 paired = False,
+                unequal = False,
                 spaced = False,
                 yspace = 20,
                 xspace = 0.1,
@@ -50,6 +51,7 @@ def barscatter(data, transpose = False, unequal=False,
         data - Required. Should be a list (or list of lists) or an array. Will try to convert if needed.
         barwidth - width if bars, default=0.9
         paired - attempts to add lines between paired data points, default=False
+        unequal - Boolean, set to True if groups are unequal, default=False
         spaced - spaces out data points so that they are not at an identical x value, default=False
         yspace - used in conjunction with spaced to determine spacing of data points, defalt=20
         xspace - used in conjunction with spaced to determine spacing of data points, defalt=0.1
