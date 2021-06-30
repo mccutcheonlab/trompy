@@ -8,7 +8,7 @@ Created on Fri Apr 17 11:51:29 2020
 import numpy as np
 import scipy.signal as sig
 
-def processdata(data, datauv, method='konanur', normalize=True):
+def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5):
     """
     Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
 
@@ -23,15 +23,22 @@ def processdata(data, datauv, method='konanur', normalize=True):
         'konanur' was developed by Vaibhav Konanur and uses FFT as described in
         doi: 10.1016/j.physbeh.2019.112771
         
-        'lerner' was developed by Talia Lerner and uses regression as described in
+        'lerner-davidson' (aka lerner or davidson) uses regression and was developed
+        by Tom Davidson and used by Talia Lerner as described in
         doi: 10.1016/j.cell.2015.07.014
+        
+        Code adapted from https://github.com/tjd2002/tjd-shared-code/tree/master/matlab/photometry/FP_normalize.m
+        
     normalize : Bool, optional
         Normalizes signal by dividing by 3*standard deviation. The default is True.
+    normalize_time_cutoff : Int, optional
+        Time in minutes to ignore when normalizing signal. Assumes sampling
+        frequency of 1017 Hz. The default is 5 (min).
 
     Returns
     -------
-    datafilt : List or 1D array of Floats
-        Filtered signal (.
+    df : List or 1D array of Floats
+        Processed signal, corrected for isosbestic.
 
     """
     if method == 'konanur':
@@ -40,26 +47,30 @@ def processdata(data, datauv, method='konanur', normalize=True):
         Y = np.fft.rfft(data, pt)
         Ynet = Y-X
     
-        datafilt = np.fft.irfft(Ynet) 
-        datafilt = sig.detrend(datafilt)
+        df = np.fft.irfft(Ynet) 
+        df = sig.detrend(df)
     
         b, a = sig.butter(9, 0.012, 'low', analog=True)
-        datafilt = sig.filtfilt(b, a, datafilt)
-    elif method == 'lerner':
+        df = sig.filtfilt(b, a, df)
+        
+    elif method == 'lerner' or method == 'lerner-davidson' or method == 'davidson':
         x = np.array(datauv)
         y = np.array(data)
         bls = np.polyfit(x, y, 1)
         Y_fit_all = np.multiply(bls[0], x) + bls[1]
         Y_dF_all = y - Y_fit_all
-        datafilt = np.multiply(100, np.divide(Y_dF_all, Y_fit_all))
+        df = np.multiply(100, np.divide(Y_dF_all, Y_fit_all))
+        
     else:
         print(method, 'is not a valid method.')
         
     if normalize==True:
-        sd=np.std(datafilt)
-        datafilt=np.divide(datafilt, sd*3)
+        nsamples = normalize_time_cutoff*60*1017
+        cutoff_range = range(nsamples, len(df)-nsamples)
+        sd=np.std(df[cutoff_range])
+        df=np.divide(df, sd*3)
     
-    return datafilt
+    return df
 
 def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
                  adjustBaseline = True,
