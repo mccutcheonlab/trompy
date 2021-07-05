@@ -1,5 +1,13 @@
 # trompy changelog
 
+## 0.13.2
+
+05/07/2021
+
+- Added normalization options to processdata
+- Added description of 'unequal' option to barscatter
+- Updated barscatter to allow changes to linewidth
+
 ## 0.13.1
 
 28/06/2021
