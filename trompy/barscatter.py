@@ -8,7 +8,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from itertools import chain, count
 
-def barscatter(data, transpose = False, unequal=False,
+def barscatter(data, transpose = False,
                 groupwidth = .75,
                 barwidth = .8,
                 paired = False,
@@ -29,7 +29,7 @@ def barscatter(data, transpose = False, unequal=False,
                 scattersize = 80,
                 scatteralpha = 1,
                 spreadscatters = False,
-                linewidth=0.5,
+                linewidth=0.75,
                 xlim=[],
                 ylim=[],
                 ylabel = 'none',
@@ -68,7 +68,7 @@ def barscatter(data, transpose = False, unequal=False,
         scattersize - size of datapoints, default=80
         scatteralpha -sets opacity of scatter points, default=1
         spreadscatters - to be checked!
-        linewidth - width of lines, default=1
+        linewidth - width of lines, default=0.75
         xlim - sets x limits, default=[]
         ylim - sets y limits, default=[]
         ylabel - sets y axis label, default='none'
@@ -94,20 +94,20 @@ def barscatter(data, transpose = False, unequal=False,
 
     if unequal == True:
         dims = np.ndim(data)
-        data_obj = np.ndarray((np.shape(data)), dtype=np.object)
+        data_obj = np.ndarray((np.shape(data)), dtype=object)
         if dims == 1:
             for i, dim in enumerate(data):
-                data_obj[i] = np.array(dim, dtype=np.object)
+                data_obj[i] = np.array(dim, dtype=object)
             data = data_obj
         elif dims == 2:            
             for i1, dim1 in enumerate(data):
                 for i2, dim2 in enumerate(dim1):
-                    data_obj[i1][i2] = np.array(dim2, dtype=np.object)
+                    data_obj[i1][i2] = np.array(dim2, dtype=object)
             data = data_obj
         else:
             print('Cannot convert that number of dimensions or data is in wrong format. Attmepting to make graph assuming equal groups.')
     
-    if type(data) != np.ndarray or data.dtype != np.object:
+    if type(data) != np.ndarray or data.dtype != object:
         dims = np.shape(data)
         if len(dims) == 2 or len(dims) == 1:
             data = data2obj1D(data)
@@ -185,7 +185,8 @@ def barscatter(data, transpose = False, unequal=False,
         barx.append(x)
         barlist.append(ax.bar(x, y, barwidth,
                          facecolor = bfc, edgecolor = bec,
-                         zorder=-1))
+                         zorder=-1,
+                         linewidth=linewidth))
     
     # Uncomment these lines to show method for changing bar colors outside of
     # function using barlist properties
@@ -208,6 +209,8 @@ def barscatter(data, transpose = False, unequal=False,
                 sclist.append(ax.scatter(xVals, yVals, s = scattersize,
                              c = scf,
                              edgecolors = sce,
+                             linewidth=linewidth,
+                             markeredgewidth=linewidth,
                              zorder=20,
                              clip_on=False))
                          
@@ -216,6 +219,8 @@ def barscatter(data, transpose = False, unequal=False,
                      sclist.append(ax.scatter(x, y, s = scattersize,
                                      c = scf,
                                      edgecolors = sce,
+                                     linewidth=linewidth,
+                                     markeredgewidth=linewidth,
                                      zorder=20,
                                      clip_on=False))
                      
@@ -227,6 +232,7 @@ def barscatter(data, transpose = False, unequal=False,
                          linewidth=linewidth,
                          markerfacecolor = scf,
                          markeredgecolor = sce,
+                         markeredgewidth=linewidth,
                          zorder=20,
                          clip_on=False))
     elif grouped == False:
@@ -237,6 +243,7 @@ def barscatter(data, transpose = False, unequal=False,
                          linewidth=linewidth,
                          markerfacecolor = scfacecolorArray[0],
                          markeredgecolor = scedgecolorArray[0],
+                         markeredgewidth=linewidth,
                          zorder=20,
                          clip_on=False))
     
@@ -251,7 +258,9 @@ def barscatter(data, transpose = False, unequal=False,
     if yaxisparams != 'auto':
         ax.set_ylim(yaxisparams[0])
         ax.set_yticks(yaxisparams[1])
-       
+        
+    ax.yaxis.set_tick_params(width=linewidth)
+
     # X ticks
     ax.tick_params(
         axis='x',          # changes apply to the x-axis
@@ -297,6 +306,9 @@ def barscatter(data, transpose = False, unequal=False,
     ax.spines['right'].set_visible(False)
     ax.spines['top'].set_visible(False)
     ax.spines['bottom'].set_position('zero')
+
+    ax.spines['bottom'].set_lw(linewidth)
+    ax.spines['left'].set_lw(linewidth)
     
     if show_legend == 'within':
         if len(itemlabel) != barspergroup:
@@ -308,6 +320,8 @@ def barscatter(data, transpose = False, unequal=False,
                 legendbar.append(barlist[i])
                 legendtext.append(itemlabel[i])
             ax.legend(legendbar, legendtext, loc=legendloc)
+    
+    
     
     return ax, barx, barlist, sclist
       
@@ -355,13 +369,13 @@ def setcolors(coloroption, colors, barspergroup, nGroups, data, paired_scatter =
     return coloroutput
 
 def data2obj1D(data):
-    obj = np.empty(len(data), dtype=np.object)
+    obj = np.empty(len(data), dtype=object)
     for i,x in enumerate(data):
         obj[i] = np.array(x)  
     return obj
 
 def data2obj2D(data):
-    obj = np.empty((np.shape(data)[0], np.shape(data)[1]), dtype=np.object)
+    obj = np.empty((np.shape(data)[0], np.shape(data)[1]), dtype=object)
     for i,x in enumerate(data):
         for j,y in enumerate(x):
             obj[i][j] = np.array(y)
@@ -387,3 +401,6 @@ def xyspacer(ax, x, yvals, bindist=20, space=0.1):
     yvals = np.sort(yvals)
 
     return xvals, yvals
+
+if __name__ == "__main__":
+    barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], paired=True)
