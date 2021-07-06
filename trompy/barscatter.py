@@ -210,7 +210,6 @@ def barscatter(data, transpose = False,
                              c = scf,
                              edgecolors = sce,
                              linewidth=linewidth,
-                             markeredgewidth=linewidth,
                              zorder=20,
                              clip_on=False))
                          
@@ -220,7 +219,6 @@ def barscatter(data, transpose = False,
                                      c = scf,
                                      edgecolors = sce,
                                      linewidth=linewidth,
-                                     markeredgewidth=linewidth,
                                      zorder=20,
                                      clip_on=False))
                      
