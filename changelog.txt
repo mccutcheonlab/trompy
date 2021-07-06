@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.13.3
+
+06/07/2021
+
+- Fixed linewidth bug in barscatter
+
 ## 0.13.2
 
 05/07/2021
