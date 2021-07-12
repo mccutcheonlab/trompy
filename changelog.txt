@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.13.4
+
+12/07/2021
+
+- Added reverse signals option to photogui_np
+
 ## 0.13.3
 
 06/07/2021
