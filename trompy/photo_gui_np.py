@@ -89,7 +89,7 @@ class Window_photo(Frame):
 
         # Button definitions
         self.choosefileBtn = ttk.Button(self, text='Choose files', command=self.choosefile)
-        # self.loaddataBtn = ttk.Button(self, text='Load data', command=self.loaddata)
+        self.reversesigsBtn = ttk.Button(self, text='Reverse signals', command=self.reversesignals)
         self.makelickrunsBtn = ttk.Button(self, text='Lick runs', command=self.makelickruns)
         self.makesnipsBtn = ttk.Button(self, text='Make Snips', command=self.refresh)
         self.noiseBtn = ttk.Button(self, text='Toggle noise', command=self.togglenoise)
@@ -166,7 +166,7 @@ class Window_photo(Frame):
         # Grid.rowconfigure(self, 16, weight=1)
                 
         self.choosefileBtn.grid(column=0, row=0, rowspan=2, sticky=(N,S,E,W))
-        # self.loaddataBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
+        self.reversesigsBtn.grid(column=0, row=2,rowspan=2, sticky=(N,S,E,W))
         self.filenameLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         self.timelockLbl.grid(column=0, row=4, rowspan=2, sticky=(E,W))
         self.timelockoptionsLbl.grid(column=1, row=4, rowspan=2, sticky=(E,W))
@@ -339,6 +339,21 @@ class Window_photo(Frame):
         if self.quickstart:
             tips('Super! Now you can pick a event to timelock your snips to - you can choose whether you want onset or offset, remove other events in the baseline, or even just make a series of random events. Once selected, click "Make snips"')
             self.number_of_times = 0
+            
+    def reversesignals(self):
+        try:
+            data_new = self.datauv
+            datauv_new = self.data
+            self.data = data_new
+            self.datauv = datauv_new
+            self.datafilt = processdata_np(self.data, self.datauv, self.ts)
+        except:
+            print("Unable to reverse signals")
+        
+        if hasattr(self, 'data'):
+            try:
+                self.refresh()
+            except: pass
             
     def sessionviewer(self):
         try:
@@ -716,7 +731,7 @@ def tips(msg):
     messagebox.showinfo('Quick Tips', msg)
 
 if __name__ == '__main__':
-    os.chdir("D:\\Test Data\\Johan\\")
+    os.chdir("D:\\Test Data\\Johan\\New set\\")
     # os.chdir("D:\\Test Data\\data\\FiPho-180416\\")
-    start_photo_gui(quickstart=False)
+    start_photo_gui_np(quickstart=False)
     
