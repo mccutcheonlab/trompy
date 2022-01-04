@@ -164,4 +164,32 @@ def logical_subset(data, logical, condition=True):
     else:
         return [d for d, L in zip(data, logical) if not L]
     
+def find_overlap(i1, i2, if_none=None):
+    """
+    Finds the amount of overlap between two intervals. Useful for looking at
+    time series when you only have onset and offset times.
 
+    Parameters
+    ----------
+    i1 : Tuple or list of floats or integers with length=2
+        Interval 1.
+    i2 : Tuple or list of floats or integers with length=2
+        Interval 2.
+    if_none : Any, optional
+        Value that will be returned if intervals do not overlap. The default is None.
+
+    Returns
+    -------
+    Float, if there is overlap between intervals. Otherwise, depends on value
+    of if_none variable but default is None
+        Amount of overlap.
+
+    """
+    if (len(i1) != 2) or (len(i2) !=2):
+        print("Intervals cannot be compared as they do not include start and stop.")
+        return
+    
+    if (i1[1] < i2[0]) or (i1[0] > i2[1]):
+        return if_none
+    else:
+        return min(i1[1], i2[1]) - max(i1[0], i2[0])
