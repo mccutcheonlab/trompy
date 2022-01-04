@@ -351,7 +351,7 @@ def mastersnipper(data, dataUV, data_filt, fs, events,
     info = {}
     info['baseline'] = baseline
     info['length'] = trialLength
-    if bins is 0:
+    if bins == 0:
         info['bins'] = np.shape(blueTrials)[1]
     else:
         info['bins'] = bins
