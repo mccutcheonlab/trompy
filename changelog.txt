@@ -1,10 +1,16 @@
 # trompy changelog
 
+## 0.13.6
+
+21/01/2022
+
+- Added download_data function to general_utils
+
 ## 0.13.5
 
 04/01/2022
 
-- Added find_overlap function to genral_utils
+- Added find_overlap function to general_utils
 
 ## 0.13.4
 
