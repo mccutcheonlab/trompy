@@ -193,3 +193,52 @@ def find_overlap(i1, i2, if_none=None):
         return if_none
     else:
         return min(i1[1], i2[1]) - max(i1[0], i2[0])
+
+def download_data(url):
+    """
+    Downloads zipped data from a remote URL and unzips. Unzipped data
+    is in a new directory in the current working directory called 'data'.
+    
+    Parameters
+    ------------
+    url : String with url for data to be retrieved from
+    
+    """
+    import os
+    print(os.getcwd())
+    if not os.path.exists('data.zip'):
+        import urllib.request
+        import sys
+        import time
+
+        print('downloading data...')
+
+        def reporthook(count, block_size, total_size):
+            global start_time
+            if count == 0:
+                start_time = time.time()
+                return
+            duration = time.time() - start_time
+            progress_size = int(count * block_size)
+            if duration > 0:
+                speed = int(progress_size / (1024 * duration))
+                percent = min(int(count * block_size * 100 / total_size), 100)
+                sys.stdout.write("\r...%d%%, %d MB, %d KB/s, %d seconds elapsed" %
+                                (percent, progress_size / (1024 * 1024), speed, duration))
+                sys.stdout.flush()
+
+        urllib.request.urlretrieve(url, '.\\data.zip', reporthook)
+
+    try:
+        print('unzipping data...')
+        import zipfile
+        zip_ref = zipfile.ZipFile('data.zip', 'r')
+        zip_ref.extractall('.\\data')
+        zip_ref.close()
+        os.remove('data.zip')
+    except:
+        print('problem with zip, downloading again')
+        os.remove('data.zip')
+        return download_demo_data()
+    
+    print("Datafiles ready")
