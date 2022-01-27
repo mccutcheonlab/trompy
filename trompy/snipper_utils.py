@@ -8,7 +8,7 @@ Created on Fri Apr 17 11:51:29 2020
 import numpy as np
 import scipy.signal as sig
 
-def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5):
+def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5, normalize_method="zscore", fs=1017):
     """
     Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
 
@@ -32,8 +32,12 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
     normalize : Bool, optional
         Normalizes signal by dividing by 3*standard deviation. The default is True.
     normalize_time_cutoff : Int, optional
-        Time in minutes to ignore when normalizing signal. Assumes sampling
-        frequency of 1017 Hz. The default is 5 (min).
+        Time in minutes at beginning and end to ignore when normalizing signal.
+        If too long (> a quarter of total time) then it is reduced. The default is 5 (min).
+    normalize_method : Str, optional
+        Default is zscore. But can also use old method which uses 3*SD.
+    fs : Int, optional
+        Used when normalizing signal. 1017 is default.
 
     Returns
     -------
@@ -65,10 +69,25 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         print(method, 'is not a valid method.')
         
     if normalize==True:
-        nsamples = normalize_time_cutoff*60*1017
+        fs = int(fs)
+        total_length = len(df) / (60*fs)
+
+        if total_length < normalize_time_cutoff*2:
+            nsamples = int((total_length / 4) * 60 * fs)
+            print("File is too short ({:.1f} minutes) for {} minute cutoff. Using {:.1f} minutes instead.".format(
+                total_length, normalize_time_cutoff, nsamples / (60*fs)))
+        else:
+            nsamples = normalize_time_cutoff*60*fs
+            
         cutoff_range = range(nsamples, len(df)-nsamples)
+        mean=abs(np.mean(df[cutoff_range]))
         sd=np.std(df[cutoff_range])
-        df=np.divide(df, sd*3)
+        
+        if normalize_method == "zscore":
+            df_corr = np.subtract(df, mean)
+            df=np.divide(df_corr, sd)
+        elif normalize_method == "old":
+            df=np.divide(df, sd*3)
     
     return df
 
