@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.13.7
+
+27/01/2022
+
+- Fixed issues with processdata, added zscore option
+
 ## 0.13.6
 
 21/01/2022
