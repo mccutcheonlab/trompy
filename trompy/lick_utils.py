@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 17 13:40:05 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import numpy as np
@@ -21,16 +21,15 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     ----------
     licks : List or 1D array
         Timestamps of licks (onsets). Expects in seconds. If given in ms then other
-        parameters should be changed, e.g. burstThreshold.
+        parameters should be changed, e.g. `burstThreshold`.
     offset : List or 1D array, optional
         Timestamps of lick offsets. The default is [].
     burstThreshold : Float, optional
-        Interlick threshold (in seconds) for defining bursts. See Naneix et al (2019) for more info.
-        https://doi.org/10.1016/j.neuroscience.2019.10.036 The default is 0.5.
+        Interlick threshold (in seconds) for defining bursts. The default is 0.5.
     runThreshold : Float or Int, optional
         Number of seconds separating runs of licks. The default is 10.
     ignorelongilis : Boolean, optional
-        Removes ILIs over burstThreshold from calcuations. Useful for calculating
+        Removes ILIs > `burstThreshold` from calcuations. Useful for calculating
         intraburst frequency. The default is True.
     longlickThreshold : Float, optional
         Threshold (in seconds) for long licks. The default is 0.3.
@@ -43,33 +42,64 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
 
     Returns
     -------
-    lickData : Dictionary with the following keys - 
-        'licklength' - list of lick lengths (only available if offset times given).
-        'longlicks' - list of licks that are greater than longlickThreshold
-        'licks' - list of lick onset times
-        'ilis' - list of interlick intervals
-        'freq' - mean frequency (in Hz) of intraburst licking
-        'total' - number of licks
-        'bStart' - list of timestamps of licks that start a burst
-        'bInd' - list of indices of licks that start a burst
-        'bEnd' - list of indices of licks that end a burst
-        'bLicks' - list with numbers of licks in each burst
-        'bTime' - Array of Floats with time (in seconds) of each burst
-        'bMean' - Float, mean of all bursts
-        'bMean-first3' - Float, mean of first three bursts
-        'IBIs' - List of interburst intervals
-        'rStart' - List of start times for all runs
-        'rInd' - List of lick indices where runs start
-        'rEnd' - List of end times for all runs
-        'rLicks' - List of numbers of licks per run
-        'rTime' - Array of floats with time (in seconds) of each run
-        'rNum' - Int, number of runs
-        'weib_alpha' - Float, alpha parameter with fitted Weibull function
-        'weib_beta' - Float, beta parameter of Weibull
-        'weib_rsq' - Float, rsq of Weibull fit
-        'burstprob' - List with xdata and ydata of cumulative burst probability
-        'hist' - Histogram of licks over time
-        
+    lickdata, a dictionary with the following keys
+    'licklength' : List of floats
+        Lick lengths (empty if offset times not given)
+    'longlicks' : List of floats
+        Licks that are greater than `longlickThreshold`
+    'licks' : List of floats
+        Lick onset times
+    'ilis' : List of floats
+        Interlick intervals
+    'freq' : Float
+        Mean frequency (in Hz) of intraburst licking
+    'total' : Int
+        Number of licks
+    'bStart' : List of floats
+        Timestamps of licks that start a burst
+    'bInd' : List of ints
+        Indices of licks that start a burst
+    'bEnd' : List of floats
+        Timestamps of licks that end a burst
+    'bLicks' : List of ints
+        Numbers of licks in each burst
+    'bTime' : Array of floats
+        Duration (in seconds) of each burst
+    'bMean' : Float
+        Mean number of licks in all bursts
+    'bMean-first3' : Float
+        Mean number of licks in first three bursts
+    'IBIs' : List of floats
+        Interburst intervals
+    'rStart' : List of floats
+        Timestamps for licks that start a run. Runs designated by `runThreshold`
+    'rInd' : List of ints
+        Indices of licks that start a run
+    'rEnd' : List of ints
+        Timestamps of licks that end a run
+    'rLicks' : List of ints
+        Number of licks per run
+    'rTime' : Array of floats
+        Duration (in seconds) of each run
+    'rNum' : Int
+        Number of runs
+    'weib_alpha' : Float
+        Alpha parameter from fitted Weibull function
+    'weib_beta' : Float
+        Beta parameter from fitted Weibull function
+    'weib_rsq' : Float
+        Rsquared value from fitted Weibull function
+    'burstprob' : List
+        xdata and ydata of cumulative burst probability
+    'hist' : List
+        Histogram of licks over time
+    
+    Notes
+    ----------
+    For more information on appropriate thresholds (e.g. numbers of licks or interlick intervals) see Naneix et al (2019) for more info.
+        https://doi.org/10.1016/j.neuroscience.2019.10.036
+    
+    For more information on the Weibull function used to model burst probability see Davis (1998) DOI: 10.1152/ajpregu.1996.270.4.R793
     """
     # makes dictionary of data relating to licks and bursts
     if type(licks) != np.ndarray or type(offset) != np.ndarray:
