@@ -30,7 +30,7 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         Code adapted from https://github.com/tjd2002/tjd-shared-code/tree/master/matlab/photometry/FP_normalize.m
         
     normalize : Bool, optional
-        Normalizes signal by dividing by 3*standard deviation. The default is True.
+        Normalizes signal by method given in normalize_method. The default is True.
     normalize_time_cutoff : Int, optional
         Time in minutes at beginning and end to ignore when normalizing signal.
         If too long (> a quarter of total time) then it is reduced. The default is 5 (min).
