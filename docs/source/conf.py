@@ -13,10 +13,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('.'))
-sys.path.insert(0, os.path.abspath('..'))
-# sys.path.insert(0, os.path.abspath('..\\..\\trompy\\'))
-
-# print(os.path.abspath('..\\..\\trompy\\'))
+sys.path.insert(0, os.path.abspath('..\\..'))
 
 # -- Project information -----------------------------------------------------
 
@@ -38,6 +35,8 @@ extensions = [
 napoleon_google_docstring = False
 napoleon_use_param = False
 napoleon_use_ivar = True
+
+autodoc_mock_imports =["tdt", "numpy", "matplotlib", "xlrd", "scipy", "xlsxwriter", "pandas"]
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
