@@ -2,13 +2,26 @@
 """
 Created on Fri Apr 17 16:22:10 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 import matplotlib.pyplot as plt
 import numpy as np
 from trompy import weib_davis
 
-def licklengthFig(ax, data, contents = '', color='grey'):          
+def licklengthFig(ax, data, contents = "", color='grey'):
+    """ Figure to show histogram of average lick length.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    data : Dict
+        Output from trompy.lickCalc
+    contents : Str, optional
+        Title. Default is "".
+    color : Str, optional
+        Bar color. Default is "grey".
+    """
     if len(data['longlicks']) > 0:
         longlicklabel = str(len(data['longlicks'])) + ' long licks,\n' +'max = ' + '%.2f' % max(data['longlicks']) + ' s.'        
     else:
@@ -23,6 +36,19 @@ def licklengthFig(ax, data, contents = '', color='grey'):
     ax.set_title(contents)
     
 def iliFig(ax, data, contents = '', color='grey'):
+    """ Figure to show within burst interlick intervals.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    data : Dict
+        Output from trompy.lickCalc
+    contents : Str, optional
+        Title. Default is "".
+    color : Str, optional
+        Bar color. Default is "grey".
+    """
     ax.hist(data['ilis'], np.arange(0, 0.5, 0.02), color=color)
     
     figlabel = '%.2f Hz' % data['freq']
@@ -33,6 +59,19 @@ def iliFig(ax, data, contents = '', color='grey'):
     ax.set_title(contents)
     
 def burstlengthFig(ax, data, contents='', color3rdbar=False):
+    """ Figure to show length of bursts.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    data : Dict
+        Output from trompy.lickCalc
+    contents : Str, optional
+        Title. Default is "".
+    color3rdbar : Bool, optional
+        Option to color 3rd bar red. Default is False.
+    """
     
     figlabel = (str(data['bNum']) + ' total bursts\n' +
                 str('%.2f' % data['bMean']) + ' licks/burst.')
@@ -49,11 +88,31 @@ def burstlengthFig(ax, data, contents='', color3rdbar=False):
         patches[3].set_fc('r')
     
 def ibiFig(ax, data, contents = ''):
+    """ Figure to show interburst intervals.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    data : Dict
+        Output from trompy.lickCalc
+    contents : Str, optional
+        Title. Default is "".
+    """
     ax.hist(data['bILIs'], range(0, 20), normed=1)
     ax.set_xlabel('Interburst intervals')
     ax.set_ylabel('Frequency')
     
 def burstprobFig(ax, data):
+    """ Figure to show burst probability (based on Davis (1997).
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    data : Dict
+        Output from trompy.lickCalc
+    """
     
     x=data['burstprob'][0]
     y=data['burstprob'][1]
@@ -73,6 +132,16 @@ def burstprobFig(ax, data):
     ax.text(0.9, 0.9, figlabel, ha='right', va='top', transform = ax.transAxes)
     
 def sessionlicksFig(ax, licks):
+    """ Figure to show licks across a 1h session.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis to plot figure.
+    licks : List of floats
+        Data to be plotted.
+    """
+    
     ax.hist(licks, range(0,3600,60), color='grey', alpha=0.4)
     yraster = [ax.get_ylim()[1]] * len(licks)
     ax.scatter(licks, yraster, s=50, facecolors='none', edgecolors='grey')

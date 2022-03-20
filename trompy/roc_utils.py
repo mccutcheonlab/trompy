@@ -2,7 +2,7 @@
 """
 Created on Tue Apr 21 10:24:11 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import numpy as np
@@ -13,7 +13,20 @@ from trompy import flatten_list, logical_subset, shadedError
 
 
 def rocN(x,y,N=100):
-    """ Function to calculate ROC based on MATLAB function"""
+    """ Function to calculate ROC based on MATLAB function
+    
+    Parameters
+    -----------
+    x, y : Arrays or lists of numerical data
+        Data to be compared.
+    N : Int, optional
+        Number of bins to use for calculation. Deafault is 100.
+        
+    Returns
+    --------
+    a : Float
+        ROC value. Number between 0 and 1.
+    """
     if len(x) > 0 and len(y) >0:
         pass
     else:
@@ -48,6 +61,24 @@ def rocN(x,y,N=100):
     return a
     
 def rocshuf(x,y,nsims=10):
+    """
+    Performs ROC on shuffled data to obtain p-vlaue (probability) of observed ROC value
+    
+    Parameters
+    -----------
+    x, y : Arrays or lists of numerical data
+        Data to be compared
+    nsims : Int, optional
+        Number of simulations to run. Precision of p-value will be increased by using a larger number (e.g. nsims=100 gives p-value to 0.01 precision). Default is 10.
+        
+    Returns
+    ---------
+    roc0 : Float
+        ROC value. Number between 0 and 1.
+    p : Float
+        p-value.
+
+    """
     z = x + y
     b = [True for val in x] + [False for val in y]
     n0 = len(b)
@@ -69,6 +100,27 @@ def rocshuf(x,y,nsims=10):
     return roc0, p
 
 def nanroc(x, y, N=100, min4roc=4, n4shuf=100):
+    """
+    Performs ROC analysis on multiple arrays or columns of data, e.g. for examining a time series.
+    
+    Parameters
+    -----------
+    x, y : Arrays or lists of numerical data
+        Data to be compared
+    N : Int, optional
+        Number of bins for calculating ROC. Not currently used. Default is 100.
+    min4roc : Int, optional
+        Minimum number of data points for comparison. Not currently used. Default is 4.
+    n4shuf : Int, optional
+        Number of shuffled simulations to run to derive p-value. Precision of p-value will be increased by using a larger number (e.g. n4shuf=100 gives p-value to 0.01 precision). Default is 100.
+        
+    Returns
+    ---------
+    a : List of floats
+        ROC values corresponding to each column in input data.
+    p : List of floats
+        p-values corresponding to each column in input data.
+    """
  
     # checks dimensions of matrices
     if np.shape(x)[1] != np.shape(y)[1]:
@@ -91,22 +143,25 @@ def nanroc(x, y, N=100, min4roc=4, n4shuf=100):
 
 def run_roc_comparison(data, n4shuf=10, timer=True, savedata=""):
     """ Function to run ROC analysis with option for timing and saving resulting data
-    Args
-    data: list or array with two distributions to be compared. Normally should 
-          be of the shape (2,x,y) where x is number of trials and can be different
-          between each array and y is bins and should be identical.
-          Example, data[0] can be 300x20 list of lists or array and data[1] can
-          be 360x20.
-    n4shuf: number of times to repeat roc with shuffled values to calculate ps
-            default=10, so that it is fast to run, but for accurate p-vals should
-            run 2000 times
-    timer: Boolean, prints time taken if True
-    savedata: insert complete filename here to save the results
+    
+    Parameters
+    -----------
+    data : List or array of numerical values
+        Two distributions to be compared. Normally should be of the shape (2,x,y) where x is number of trials and can be different
+        between each array and y is bins and should be identical. Example, data[0] can be 300x20 list of lists or array and data[1] can
+        be 360x20.
+    n4shuf : Int, optional
+        Number of times to repeat roc with shuffled values to calculate p-values. Default is 10, so that it is fast to run, but for accurate p-values should run 2000 times
+    timer : Bool, optional
+        Prints time taken if True
+    savedata : Str, optional
+        Filename for saving data. If empty, does not save anything. Default is ""
     
     Returns
-    a: list of ROC values (between 0 and 1) corresponding to bins provided
-       (e.g. y in description above)
-    p: list of p-vals that correspond to each ROC value in a
+    a : List of floats
+        ROC values corresponding to each column in input data.
+    p : List of floats
+        p-values corresponding to each column in input data.
     
     """
     
@@ -136,6 +191,38 @@ def plot_ROC_and_line(f, a, p, snips1, snips2,
                       xlabel='',
                       gridspec_dict=None,
                       ):
+    """
+    Makes ROC figure. Originally used to produce figures in Peters et al (2021)
+    
+    Parameters
+    -----------
+    f : Matplotlib figure object
+        
+    a, p : Lists of floats
+        ROC values and p-values from ROC analysis
+    snips1, snips2 : Lists or arrays of floats
+        Binned data corresponding to the comparison that produced a and p
+    cdict : List of 3 strings, optional
+        Colors representing mapping of colors for representation of ROC values
+    colors : List of 2 strings, optional
+        Colors representing data from snips1 and snips2
+    labels : List of 2 strings, optional
+        Labels for snips1 and snips2
+    labeloffset_y : Float, optional
+        Specifies y label offset. Default is 0.
+    labeloffset_x : Float, optional
+        Specifies x label offset. Default is 0.
+    ylabel : Str, optional
+        Specifies y label
+    xlabel : Str, optional
+        Specifies x label
+    gridspec_dict : Dict, optional
+        Allows specification of figure and customisation.
+        
+    Returns
+    ----------
+    f, ax : Matplotlib figure and axis
+    """
     
     ax=[]
     

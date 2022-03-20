@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 17 10:14:34 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import csv
