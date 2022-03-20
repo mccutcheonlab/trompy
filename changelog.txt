@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.14.0
+
+20/03/2022
+
+- Added function to merge FED files
+- Added additional documentation as docstrings preparing for upload to readthedocs
+
 ## 0.13.7
 
 27/01/2022
