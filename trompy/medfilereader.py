@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 17 10:12:10 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import numpy as np
@@ -14,18 +14,26 @@ def medfilereader(filename, varsToExtract = 'all',
                   verbose = False,
                   remove_var_header = False):
     
-    """
-    Reads in Med Associates file stored as single column and returns variables as lists.
-    Args:
-        filename - file to be read in
-        varsToExtract - to be provided as list of strings (e.g. ['a', 'b', 'f']), default is 'all'
-        sessionToExtract - 1 is default, but can be specified for situations in which more than one session is included in a single file   
-        verbose - prints statements with file information, False is default
-        remove_var_header - removes first value in array, useful when negative numbers are used as markers to signal array start, False is default
-        
-    Returns:
+    """Reads in Med Associates file stored as single column and returns variables as lists.
+    
+    Parameters
+    ----------
+    filename : str
+        File to be read in.
+    varsToExtract : str or list of str, optional
+        (e.g. ['a', 'b', 'f']), default is 'all'
+    sessionToExtract : int, optional
+        Can be specified for situations in which more than one session is included in a single file. Deafult is 1.
+    verbose : bool, optional
+        Prints statements with file information. Default is False.
+    remove_var_header : bool, optional
+        Removes first value in array, useful when negative numbers are used as markers to signal array start. Default is False.
+    
+    Returns
+    -------
+    varsToReturn : list of lists of numbers (int or float)
         Variables extracted from medfile as lists or a list of lists ('all')
-    """  
+    """
 
     if varsToExtract == 'all':
         numVarsToExtract = np.arange(0,26)
@@ -63,7 +71,17 @@ def medfilereader(filename, varsToExtract = 'all',
     return varsToReturn
 
 def isnumeric(s):
-    """ Converts strings into numbers (floats) """
+    """Converts strings into numbers (floats)
+
+    Parameters
+    ----------
+    s : any
+    
+    Returns
+    -------
+    x : float
+    """
+    
     try:
         x = float(s)
         return x
@@ -71,6 +89,8 @@ def isnumeric(s):
         return float('nan')
     
 def checknsessions(filename):
+    '''Helper function for medfilereader that checks how many sessions in medfile'''
+    
     f = open(filename, 'r')
     f.seek(0)
     filerows = f.readlines()[8:]
@@ -79,6 +99,8 @@ def checknsessions(filename):
     return matches
 
 def tstamp_to_tdate(timestamp, fmt):
+    '''Converts timestamp in string format into datetime object'''
+    
     try:
         return datetime.datetime.strptime(timestamp, fmt)
     except ValueError:
@@ -88,7 +110,25 @@ def medfilereader_licks(filename,
                   sessionToExtract = 1,
                   verbose = False,
                   remove_var_header = True):
-    '''Gets lick data from Med Associates file.'''
+    
+    """Reads in Med Associates file stored as single column and returns variables as lists.
+    
+    Parameters
+    ----------
+    filename : str
+        File to be read in.
+    sessionToExtract : int, optional
+        Can be specified for situations in which more than one session is included in a single file. Deafult is 1.
+    verbose : bool, optional
+        Prints statements with file information. Default is False.
+    remove_var_header : bool, optional
+        Removes first value in array, useful when negative numbers are used as markers to signal array start. Default is False.
+    
+    Returns
+    -------
+    medvars : list of lists of numbers (int or float)
+        Variables extracted from medfile as lists or a list of lists ('all')
+    """
     
     f = open(filename, 'r')
     f.seek(0)

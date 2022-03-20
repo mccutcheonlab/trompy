@@ -2,23 +2,22 @@
 """
 Created on Fri Apr 17 13:12:17 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import numpy as np
 import os
 
 def remcheck(val, range1, range2):
-    """
-    Checks whether value is within range of two decimals.
+    """ Checks whether value is within range of two decimals.
 
     Parameters
     ----------
-    val : Float
+    val : float
         Value to be checked.
-    range1 : Float
+    range1 : float
         Decimal 1.
-    range2 : Float
+    range2 : float
         Decimal 2.
 
     Returns
@@ -27,7 +26,7 @@ def remcheck(val, range1, range2):
         Result of check.
 
     """
-    # function checks whether value is within range of two decimels
+    
     if (range1 < range2):
         if (val > range1) and (val < range2):
             return True
@@ -40,23 +39,21 @@ def remcheck(val, range1, range2):
             return False
     
 def random_array(dims,n, multiplier = 10):
-    """
-    Creates random array of values. Useful for checking plot functions, e.g. barscatter.
+    """ Creates random array of values. Useful for checking plot functions, e.g. barscatter.
 
     Parameters
     ----------
-    dims : Int
+    dims : int
         Number of dimensions.
-    n : Int
+    n : int
         Number of data points in each data set.
-    multiplier : Int or Float, optional
+    multiplier : int or float, optional
         Value to multiply random data points by. The default is 10.
 
     Returns
     -------
     data : List of lists
         Random data array as a list of lists with appropriate dimensions.
-
     """
     
     data = []
@@ -82,10 +79,14 @@ def random_array(dims,n, multiplier = 10):
     return data
 
 def getuserhome():
+    """ Returns path to user's home directory"""
+    
     path = os.environ['USERPROFILE']
     return path
 
 def flatten_list(listoflists):
+    """ Flattens list of lists into a 1D list"""
+    
     try:
         flat_list = [item for sublist in listoflists for item in sublist]
         return flat_list
@@ -96,10 +97,7 @@ def flatten_list(listoflists):
 def discrete2continuous(onset, offset=[], nSamples=[], fs=[]):
     """
     Takes timestamp data (e.g. licks) that can include offsets as well as onsets,
-    and returns a digital on/off array (y) as well as the x output. The number 
-    of samples (nSamples) and sample frequency (fs) can be input or if they are
-    not (default) it will attempt to calculate them based on the timestamp data.
-    It has not been fully stress-tested yet.
+    and returns a digital on/off array (y) as well as the x output.
 
     Parameters
     ----------
@@ -118,6 +116,11 @@ def discrete2continuous(onset, offset=[], nSamples=[], fs=[]):
         x values for y-array.
     outputy : List
         On / off array.
+        
+    Notes
+    -------
+    The number of samples (nSamples) and sample frequency (fs) can be input or if they are not (default) it will attempt to calculate them based on the timestamp data.
+    Not been fully stress-tested yet.
 
     """
 
@@ -146,6 +149,20 @@ def discrete2continuous(onset, offset=[], nSamples=[], fs=[]):
     return outputx, outputy
 
 def findpercentilevalue(data, percentile):
+    """ Finds percentile value in a specified data set.
+    
+    Parameters
+    ------------
+    data : list or 1D array
+    percentile : float
+        Must be between 0 and 1.
+    
+    Returns
+    ---------
+    value : int
+        Value in data set closest to percentile
+    
+    """
 
     if (0 < percentile) and (percentile <= 1):
         position = int(percentile*len(data))
@@ -159,6 +176,8 @@ def findpercentilevalue(data, percentile):
     return value
 
 def logical_subset(data, logical, condition=True):
+    """ Returns logical subset."""
+    
     if condition:
         return [d for d, L in zip(data, logical) if L]
     else:

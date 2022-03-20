@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 17 16:18:05 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -12,6 +12,16 @@ import matplotlib.mlab as mlab
 import colorsys
 
 def setsameaxislimits(axes, axis='y'):
+
+    """ Sets same y axis limits for all axis objects passed.
+    
+    Parameters
+    -----------
+    axes : List of Matplotlib axis objects
+        One or more axis objects to be equalized.
+    axis : Str, optional
+        Non-functional but will be added in future. Default is "y".
+    """
     axmin = []
     axmax = []
     for ax in axes:
@@ -22,18 +32,34 @@ def setsameaxislimits(axes, axis='y'):
     
     for ax in axes:
         ax.set_ylim([min_axmin, max_axmax])
-#                sclist.append(ax.plot(x, y, '-o', markersize = scattersize/10,
-#                         color = scatterlinecolor,
-#                         markerfacecolor = scf,
-#                         markeredgecolor = sce))
         
 def invisible_axes(ax):
+    """ Sets axes to invisible. """
     ax.xaxis.set_visible(False)
     ax.yaxis.set_visible(False)
     for sp in ['left', 'right', 'top', 'bottom']:
         ax.spines[sp].set_visible(False)
 
 def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linewidth=1):
+    """ Simple shaded error plot.
+    
+    Parameters
+    ------------
+    ax : Matplotlib axis object
+        Axis where data will be plotted.
+    yarray : 2D array or List of list of floats
+        Data to be plotted where rows are individual trials and columns are time bins.
+    linecolor : Str, optional
+        Color that average (mean) will be plotted in. Default is "black".
+    errorcolor : Str, optional
+        Color that shaded error area will be. Default is "xkcd:silver".
+    linewidth : Float or int, optional
+        Line width for average (mean). Default is 1.
+        
+    Returns
+    ----------
+    ax : Matplotlib axis object
+    """
     yarray = np.array(yarray)
     y = np.mean(yarray, axis=0)
     yerror = np.std(yarray)/np.sqrt(len(yarray))
@@ -44,9 +70,19 @@ def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linew
     return ax
 
 def ax2prop(axlims, n):
-    """
-    axlims should be provided as result of ax.get_xlims()
-    n should be a list of values to convert
+    """ Scales values relative to axis limits, e.g. for determining where events should be plotted on an axis.
+    
+    Parameters
+    ------------
+    axlims : Tuple or lust with 2 elements
+        Normally the result of ax.get_xlims()
+    n : List of floats
+        Values that should be scaled relative to axis limits.
+        
+    Returns
+    ---------
+    output : List of floats
+        Scaled values.
     """
     axrange = axlims[1] - axlims[0]
     output = []
@@ -59,8 +95,16 @@ def lighten_color(color, amount=0.5):
     """
     Lightens the given color by multiplying (1-luminosity) by the given amount.
     Input can be matplotlib color string, hex string, or RGB tuple.
-
-    Examples:
+    
+    Parameters
+    -------------
+    color : Str
+        Color to be lightened
+    amount : Float, optional
+        Amount to lighten color by. Default is 0.5.
+        
+    Examples
+    -------------
     >> lighten_color('g', 0.3)
     >> lighten_color('#F034A3', 0.6)
     >> lighten_color((.3,.55,.1), 0.5)
@@ -74,6 +118,23 @@ def lighten_color(color, amount=0.5):
     return colorsys.hls_to_rgb(c[0], 1 - amount * (1 - c[1]), c[2])
 
 def get_violinstats(dataset, points=100, bw_method=None):
+
+    """ Gets stats for a violin plot.
+    
+    Parameters
+    ------------
+    dataset : List or array of floats
+        Dataset for constructing violin plot.
+    points : Int, optional
+        Number of points for caclulating violin plot. Default is 100.
+    bw_method : Str, optional
+        Bandwidth method for calculating violin plot. Default is None.
+        
+    Returns
+    ---------
+    vpstats : Structured array
+    
+    """
 
     def _kde_method(X, coords):
         # fallback gracefully if the vector contains only one value

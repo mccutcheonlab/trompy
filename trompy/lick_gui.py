@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created by J McCutcheon
+Created by James Edgar McCutcheon
 22 Feb 2018
 To analyze data from Med PC files or text/csv files and calculate/output lick parameters.
 """
@@ -36,6 +36,15 @@ from trompy import alert, get_location, lickCalc, sessionlicksFig, iliFig, burst
 
 # Main class for GUI
 class Window_lick(Frame):
+    """ Main class for GUI to analyze lick microstructure.
+    
+    Can load in files in several different formats including Med Associates (stripped), .csv, .txt and custom formats.
+    
+    GUI will make graphs and output data in various formats.
+    
+    Can also try using tne online version: jaimemcc.pythonanywhere.com
+    
+    """
 
     def __init__(self, master=None):
         f1 = ttk.Style()
@@ -468,43 +477,19 @@ class Window_lick(Frame):
                  ('Weibull: rsquared',self.lickdata['weib_rsq'])]
 
 def start_lickcalc_gui():
+    """ Command to start GUI for analyzing lick microstructure.
+    
+    Usage:
+    
+    > import trompy as tp
+    > tp.start_lick_calc()
+    
+    """
     root = Tk()
     app = Window_lick(root)
     root.lift()
     root.mainloop()
     
-# def medfilereader_licks(filename,
-#                   sessionToExtract = 1,
-#                   verbose = False,
-#                   remove_var_header = True):
-#     '''Gets lick data from Med Associates file.'''
-    
-#     f = open(filename, 'r')
-#     f.seek(0)
-#     filerows = f.readlines()[8:]
-#     datarows = [isnumeric(x) for x in filerows]
-#     matches = [i for i,x in enumerate(datarows) if x == 0.3]
-#     if sessionToExtract > len(matches):
-#         print('Session ' + str(sessionToExtract) + ' does not exist.')
-#     if verbose == True:
-#         print('There are ' + str(len(matches)) + ' sessions in ' + filename)
-#         print('Analyzing session ' + str(sessionToExtract))
-    
-#     varstart = matches[sessionToExtract - 1]    
-#     medvars = {}
-   
-#     k = int(varstart + 27)
-#     for i in range(26):
-#         medvarsN = int(datarows[varstart + i + 1])
-#         if medvarsN > 1:
-#             medvars[string.ascii_uppercase[i]] = datarows[k:k + int(medvarsN)]
-#         k = k + medvarsN
-    
-#     if remove_var_header == True:
-#         for val in medvars.values():
-#             val.pop(0)
-
-#     return medvars
     
 if __name__ == '__main__':
     os.chdir("C:\\Github\\Lick-Calc-GUI\\output\\")
