@@ -13,3 +13,4 @@ from trompy.lick_gui import start_lickcalc_gui
 from trompy.photo_gui import start_photo_gui
 from trompy.photo_gui_np import start_photo_gui_np
 from trompy.roc_utils import rocN, rocshuf, nanroc, run_roc_comparison, plot_ROC_and_line
+from trompy.merge_fed_files import merge_files, parse_args
