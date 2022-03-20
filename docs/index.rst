@@ -10,6 +10,7 @@ Welcome to trompy's documentation!
    :maxdepth: 3
    :caption: Contents:
    
+   installation
    modules
 
 
