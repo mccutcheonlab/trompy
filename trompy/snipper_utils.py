@@ -2,15 +2,14 @@
 """
 Created on Fri Apr 17 11:51:29 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 
 import numpy as np
 import scipy.signal as sig
 
 def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5, normalize_method="zscore", fs=1017):
-    """
-    Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
+    """ Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
 
     Parameters
     ----------
@@ -18,8 +17,8 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         Primary data stream (Ca-modulated).
     datauv : List or 1D array of Floats
         Secondary data stream (non-Ca modulated).
-    method : String ('konanur' or 'lerner'), optional
-        Chooses method to correct. The default is 'konanur'.
+    method : Str, optional
+        Chooses method to correct. Options are 'konanur', 'lerner-davidson', 'lerner') The default is 'konanur'.
         'konanur' was developed by Vaibhav Konanur and uses FFT as described in
         doi: 10.1016/j.physbeh.2019.112771
         
@@ -94,8 +93,7 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
 def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
                  adjustBaseline = True,
                  bins = 0, **kwargs):
-    """
-    Makes 'snips' of a data file aligned to an event of interest.
+    """ Makes 'snips' of a data file aligned to an event of interest.
 
     If a timelocked map is needed to align data precisely (e.g. with TDT equipment)
     then it is necessary to pass a t2sMap to the function.
@@ -193,8 +191,7 @@ def mastersnipper(data, dataUV, data_filt, fs, events,
                   removenoisefromaverage=True,
                   **kwargs):
 
-    """
-    Runs snipper function on several types of data streams and calculates noise trials.
+    """ Runs snipper function on several types of data streams and calculates noise trials.
 
     Parameters
     ----------
@@ -208,7 +205,7 @@ def mastersnipper(data, dataUV, data_filt, fs, events,
         Time-to-sample map.
     fs : Float
         Sample frequency.
-    events : List
+    events : List of floats
         Timestamps of events for data to be aligned to.
     bins : Int, optional
         Number of bins for snips to be in length. The default is 300.
@@ -233,17 +230,25 @@ def mastersnipper(data, dataUV, data_filt, fs, events,
 
     Returns
     -------
-    output : Dictionary
-        Contains the following keys - 
-            output['blue'] = snips of primary data stream
-            output['uv'] = snips of secondary data stream
-            output['filt'] = snips of filtered data stream
-            output['filt_z'] = snips of Z-scores of filtered data stream
-            output['filt_avg'] = average of filtered snips
-            output['filt_avg_z'] = average of filtered snips converted to Z-score
-            output['noise'] = Boolean list of noisy trials
-            output['peak'] = List of peak values for all snips
-            output['latency'] = List of latency times for all trials
+    output, a dictionary with the following keys
+    'blue' : 2D array (or list of lists of floats)
+        Snips of primary data stream.
+    'uv' : 2D array (or list of lists of floats)
+        Snips of secondary data stream.
+    'filt' : 2D array (or list of lists of floats)
+        Snips of filtered data stream.    
+    'filt_z' : 2D array (or list of lists of floats)
+        Snips of Z-scored filtered data stream.         
+    'filt_avg' : 1d array (or list of floats)
+        Average (mean) of filtered snips.
+    'filt_avg_z' : 1d array (or list of floats)
+        Average (mean) of filtered snips converted to z-score.
+    'noise' : List of Booleans    
+        Logical index of noisy trials.
+    'peak' : List of floats
+        Peak values for all snips.
+    'latency' : List of floats
+        Latency times for all trials.
 
     """
     # Parse arguments relating to trial length, bins etc
@@ -424,7 +429,7 @@ def findnoise(data, background_events, fs = 1, bins=0, method='sd'):
     ----------
     data : List or 1D array of Floats
         Data stream from entire session.
-    background_events : List
+    background_events : List of floats
         Timestamps from which background snips will be made.
     t2sMap : List of floats, optional
         Time-to-samples map. The default is [].
@@ -432,8 +437,8 @@ def findnoise(data, background_events, fs = 1, bins=0, method='sd'):
         Sampling frequency. The default is 1.
     bins : Int, optional
         Number of bins to be used for snips. The default is 0.
-    method : String ('sd' or 'sum'), optional
-        Method of calculating noise - standard deviation or sum. The default is 'sd'.
+    method : Str, optional
+        Method of calculating noise. 'sd' or 'sum' (standard deviation or sum). Default is 'sd'.
 
     Returns
     -------
@@ -461,7 +466,7 @@ def removenoise(snipsIn, noiseindex):
     ----------
     snipsIn : List of lists or Numpy array
         Snips (generally list of binned data).
-    noiseindex : List of Boolean values
+    noiseindex : List of Booleans
         Should be the same length as first dimension of snipsIn.
 
     Returns
@@ -583,12 +588,17 @@ def event2sample(EOI, t2sMap):
 
 def resample_snips(snips, factor=0.1):
     """ Resamples snips to collapse data into larger bins (e.g. for ROC analysis)
-    Args
-    snips: array of snips (list of lists)
-    factor: constant to decide how to bin data (default=0.1)
+    
+    Parameters
+    ------------
+    snips : 2D array or list of lists of floats
+        Snips to be resampled.
+    factor : Float, optional
+        Constant to determine how to bin data. Default is 0.1.
     
     Returns
-    snips: resamples snips
+    snips : 2D array or list of lists of floats
+        Resampled snips.
     
     """
     if len(snips)>0:

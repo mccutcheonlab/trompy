@@ -2,7 +2,7 @@
 """
 Created on Fri Apr 17 09:19:56 2020
 
-@author: admin
+@author: James Edgar McCutcheon
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -45,51 +45,91 @@ def barscatter(data, transpose = False,
                 xfontsize=8,
                 ax=[]):
     """
-    Description: Creates a bar graph with data points shown as overlaid circles.
+    Creates a bar graph with data points shown as overlaid circles.
     
-    Args:
-        data - Required. Should be a list (or list of lists) or an array. Will try to convert if needed.
-        barwidth - width if bars, default=0.9
-        paired - attempts to add lines between paired data points, default=False
-        unequal - Boolean, set to True if groups are unequal, default=False
-        spaced - spaces out data points so that they are not at an identical x value, default=False
-        yspace - used in conjunction with spaced to determine spacing of data points, defalt=20
-        xspace - used in conjunction with spaced to determine spacing of data points, defalt=0.1
-        barfacecoloroption - chooses bar color option, default='same' other options are 'between' or 'individual'
-        barfacecolor - list of bar face colors, if 'between' or 'individual' is chosen for above option then number of colors needs to match number of bars or groups. defalt=['white']
-        baredgecoloroption - chooses bar edge option, default='same', see notes on barfacecoloroption
-        baredgecolor - list of bar edge colors, defalt=['black'], see notes on barfacecolor
-        baralpha - sets opacity of bars, default=1
-        scatterfacecoloroption - chooses scatter face option, default='same', see notes on barfacecoloroption
-        scatterfacecolor - list of scatter face colors, defalt=['white'], see notes on barfacecolor
-        scatteredgecoloroption - chooses scatter edge option, default='same', see notes on barfacecoloroption
-        scatteredgecolor - list of scatter face colors, defalt=['grey'], see notes on barfacecolor
-        scatterlinecolor - color of lines connecting related data points, should not be in a list, default='grey'
-        scattersize - size of datapoints, default=80
-        scatteralpha -sets opacity of scatter points, default=1
-        spreadscatters - to be checked!
-        linewidth - width of lines, default=0.75
-        xlim - sets x limits, default=[]
-        ylim - sets y limits, default=[]
-        ylabel - sets y axis label, default='none'
-        xlabel - sets x axis label, default='none',
-        grouplabel - sets labels for each group, default='auto'
-        itemlabel - to be checked! default='none',
-        barlabels - sets labels for each bar, default=[]
-        barlabeloffset - sets barlabels offset to x baseline, default=0.025
-        grouplabeloffset - sets grouplabels offset to x baseline, default=0.0250,
-        yaxisparams - to be checked!
-        show_legend - shows legend, default='none'
-        legendloc - sets legend location, default='upper right'
-        xfontsize - sets x axis font size, default=8
-        ax - plots in axis object if provided, default=[]
+    Parameters
+    -------------
+    data : List, lists of lists or array
+        Data to be plotted. Will try to convert if needed.
+    barwidth : Float, optional
+        Width of bars. Default is 0.9.
+    paired : Bool, optional
+        Attempts to add lines between paired data points. Requires number in each group to be matched. Default is False.
+    unequal : Bool, optional
+        To be set to True if groups are unequal. Default is False.
+    spaced : Bool, optional
+        Spaces out data points so that they are not at an identical x value, e.g. grape bunch style. Default is False.
+    yspace : Int or Float, optional
+        Used in conjunction with spaced to determine spacing of data points. Default is 20.
+    xspace : Float, optional
+        Used in conjunction with spaced to determine spacing of data points. Default is 0.1.
+    barfacecoloroption : Str, optional
+        Chooses bar color option. Default is 'same' and other options are 'between' or 'individual'.
+    barfacecolor : List of str, optional
+        If 'between' or 'individual' is chosen for above option then number of colors needs to match number of bars or groups. Default is ['white'].
+    baredgecoloroption : Str, optional
+        Chooses bar edge option. Default is 'same', see notes on barfacecoloroption.
+    baredgecolor : List of str, optional
+        Bar edge colors. Default is ['black'], see notes on barfacecolor.
+    baralpha : Float, optional
+        Sets opacity of bars so must be between 0 and 1. Default is 1.
+    scatterfacecoloroption : Str, optional
+        Chooses scatter face option. Default is 'same', see notes on barfacecoloroption.
+    scatterfacecolor : List of str, optional
+        Scatter face colors. Default = ['white'], see notes on barfacecolor.
+    scatteredgecoloroption : Str, optional
+        Chooses scatter edge option. Default is 'same', see notes on barfacecoloroption.
+    scatteredgecolor : List of str, optional
+        Scatter face colors. Default is ['grey'], see notes on barfacecolor.
+    scatterlinecolor : Str, optional
+        Color of lines connecting related data points, should not be in a list. Default is 'grey'.
+    scattersize : Int or Float, optional
+        Size of datapoints. Default is 80.
+    scatteralpha : Float, optional
+        Sets opacity of scatter points. Default is 1.
+    spreadscatters : Bool, optional
+        Not currently functional. Needs to be checked.
+    linewidth : Float, optional
+        Width of lines. Default is 0.75.
+    xlim : List or 2-tuple of floats, optional
+        Sets limits of x-axis. Default is [].
+    ylim : List or 2-tuple of floats, optional
+        Sets limits of x-axis. Default is [].
+    ylabel : Str, optional
+        Sets y-axis label. Default is 'none'.
+    xlabel : Str, optional
+        Sets x-axis label. Default is 'none'.
+    grouplabel : List of str, optional
+        Sets labels for each group. Default is 'auto'.
+    itemlabel : List of str, optional
+        Not currently functional. Needs to be checked. Default is 'none'.
+    barlabels : List of str, optional
+        Sets labels for each bar. Default is [].
+    barlabeloffset : Float, optional
+        Sets barlabel offset relative to x baseline. Default is 0.025.
+    grouplabeloffset : Float, optional
+        Sets grouplabel offset relative to x baseline. Default is 0.0250.
+    yaxisparams : None, optional
+        Not currently functional. Needs to be checked.
+    show_legend : Bool or str, optional
+        Shows legend. Default is 'none'.
+    legendloc : Str, optional
+        Sets legend location. Default is 'upper right'.
+    xfontsize : Int, optional
+        Sets x-axis font size. Default is 8.
+    ax : Matplotlib axis object, optional
+        Axis object to plot in. If not provided, plots in new figure/axis. Default is [].
     
-    Returns:
-        ax - axis object
-        barx - x values where each bar is plotted
-        barlist - list of bar containers (can be modified)
-        sclist - list of scatter containers (can be modified)
-    
+    Returns
+    -------------
+    ax : Matplotlib axis object
+        Axis object of plot.
+    barx : List of floats
+        x-values where each bar is plotted.
+    barlist : List of bar container objects
+        Allows modifcation, e.g. changing of colors of individual bars. See notes.
+    sclist : List of scatter container objects
+        Allows modifcation as described above. See notes.
     """
 
     if unequal == True:
@@ -324,6 +364,7 @@ def barscatter(data, transpose = False,
     return ax, barx, barlist, sclist
       
 def setcolors(coloroption, colors, barspergroup, nGroups, data, paired_scatter = False):
+    """ Helper function for setting colors in barscatter"""
             
     nColors = len(colors)
     
@@ -367,12 +408,14 @@ def setcolors(coloroption, colors, barspergroup, nGroups, data, paired_scatter =
     return coloroutput
 
 def data2obj1D(data):
+    """ Helper function for barscatter for converting data into apporopriate structure"""
     obj = np.empty(len(data), dtype=object)
     for i,x in enumerate(data):
         obj[i] = np.array(x)  
     return obj
 
 def data2obj2D(data):
+    """ Helper function for barscatter for converting data into apporopriate structure"""
     obj = np.empty((np.shape(data)[0], np.shape(data)[1]), dtype=object)
     for i,x in enumerate(data):
         for j,y in enumerate(x):
@@ -380,6 +423,7 @@ def data2obj2D(data):
     return obj
 
 def xyspacer(ax, x, yvals, bindist=20, space=0.1):
+    """ Helper function for barscatter for spacing individual datapoints"""
     
     histrange=[]
     histrange.append(min(ax.get_ylim()[0], min(yvals)))

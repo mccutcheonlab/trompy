@@ -125,7 +125,7 @@ GUIs
 Lick GUI
 ******************
 
-.. automodule:: trompy.lick_gui
+.. autoclass:: trompy.lick_gui
    :members:
    :undoc-members:
    :show-inheritance:
