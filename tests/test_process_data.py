@@ -10,7 +10,7 @@ import numpy as np
 import trompy as tp
 import matplotlib.pyplot as plt
 
-%matplotlib inline
+# %matplotlib inline
 
 np.random.seed(222)
 
@@ -18,7 +18,7 @@ def create_gcamp_kernel(t, tau=2.6):
     K = (1/tau)*(np.exp(-t/tau))
     return K
 
-def create_data_stream(n_samples, fs, kernel_process, events, add_noise=True):
+def create_data_stream(n_samples, fs, kernel_process, events, add_noise=False):
 
     # to create gcamp kernel
     x=np.arange(0, 30, 1/fs)
@@ -29,7 +29,7 @@ def create_data_stream(n_samples, fs, kernel_process, events, add_noise=True):
 
     # creates stream
     stream = np.zeros(n_samples- len(kernel) + 1 )
-    stream[events_in_samples] = [np.abs(np.random.normal(scale=20)) for e in range(len(events))]
+    stream[events_in_samples] = [np.abs(np.random.normal(scale=20))+1 for e in range(len(events))]
 
     simulated_data_stream = np.convolve(stream, kernel, "full")
 
@@ -62,7 +62,39 @@ def test_length():
 
     assert len(processed) == n_samples
 
-def test_process_data():
+def test_df():
+    n_samples = 600000
+    fs = 1017.324
+
+    events = np.arange(6000, 54000, 2400) / 100
+
+    simulated_gcamp = create_data_stream(n_samples, fs, create_gcamp_kernel, events)
+
+    noise = add_noise(np.zeros(n_samples))
+
+    t=np.arange(n_samples)
+    simulated_405 = double_exponential(t, 400, 2e6, 100, 1e5) + noise
+    simulated_gcamp_plus_noise = simulated_gcamp + double_exponential(t, 300, 2e6, 75, 1e5) + noise
+
+    processed_lerner = tp.processdata(simulated_gcamp_plus_noise, simulated_405, method="lerner", normalize=False)
+    # processed_konanur = tp.processdata(simulated_gcamp_plus_noise, simulated_405, method="konanur", normalize=False)
+
+    f, ax = plt.subplots(nrows=4)
+    ax[0].plot(simulated_405)
+    ax[1].plot(simulated_gcamp_plus_noise)
+    ax[2].plot(processed_lerner)
+    # ax[3].plot(processed_konanur)
+
+    event_indices = [int(event*fs) for event in events]
+
+    assert all(event > 0 for event in processed_lerner[event_indices])
+    assert processed_lerner[61039] > 4
+    assert processed_lerner[524939] > 4
+
+    # TODO improve konanur function and checking, maybe using real data to examine freqs and fits
+    # TODO check with reduced sampling frequencies
+
+def future_test_process_data_with_drift():
     n_samples = 600000
     fs = 1017.324
     n_events = 150
@@ -95,8 +127,9 @@ def test_process_data():
     ax[2].plot(processed_signal2)
 
 if __name__ == "__main__":
-    test_process_data()
-    # test_length()
+    # test_process_data()
+    test_length()
+    test_df()
     
 # %%
 
