@@ -5,6 +5,7 @@ Created on Fri Apr 17 11:51:29 2020
 @author: James Edgar McCutcheon
 """
 
+from audioop import avg
 import numpy as np
 import scipy.signal as sig
 
@@ -167,7 +168,7 @@ def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
 
     if adjustBaseline == True:
         snips = np.subtract(snips.transpose(), avgBaseline).transpose()
-        snips = np.divide(snips.transpose(), avgBaseline).transpose()
+        snips = np.divide(snips.transpose(), np.abs(avgBaseline)).transpose()
 
     if bins > 0:
         if length % bins != 0:
