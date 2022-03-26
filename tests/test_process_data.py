@@ -87,7 +87,7 @@ def test_process_data():
     simulated_405_plus_drift = add_drift(simulated_405)
     simulated_gcamp_plus_drift = add_drift(simulated_gcamp_plus_noise)
 
-    processed_signal2 = tp.processdata(simulated_405_plus_drift, simulated_gcamp_plus_drift, method="konanur", normalize=False)
+    processed_signal2 = tp.processdata(simulated_405_plus_drift, simulated_gcamp_plus_drift, method="lerner", normalize=False)
     
     f, ax = plt.subplots(nrows=3)
     ax[0].plot(simulated_405_plus_drift)
