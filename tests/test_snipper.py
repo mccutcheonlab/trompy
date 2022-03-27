@@ -58,7 +58,7 @@ def test_peaks():
     output, pps = tp.snipper(simulated_gcamp, events, fs=fs, adjustBaseline = False)
 
     for trace in output:
-        assert np.argmax(trace) == 10170
+        assert np.argmax(trace) == 10173
 
 def test_adjust_baseline():
     n_samples = 600000
@@ -72,12 +72,12 @@ def test_adjust_baseline():
     x = np.arange(len(simulated_gcamp))
     low_freq_signal = np.sin(x/100000)
     simulated_gcamp_with_drift = simulated_gcamp + low_freq_signal
-
-    output, pps = tp.snipper(simulated_gcamp_with_drift, events, fs=fs, adjustBaseline = True)
+    
+    output, pps = tp.snipper(simulated_gcamp_with_drift, events, fs=fs, adjust_baseline = True)
 
     for trace in output:
-        np.testing.assert_allclose(trace[10000], 0.0, atol=0.1)
-        assert trace[10170] > 0
+        np.testing.assert_allclose(np.mean(trace[:10000]), 0.0, atol=0.1)
+        assert trace[10173] > 0
 
 # TODO: check for triallength and pretrial
 # TODO: check for bins
