@@ -5,9 +5,9 @@ Created on Fri Apr 17 11:51:29 2020
 @author: James Edgar McCutcheon
 """
 
-from audioop import avg
-from email.mime import base
-from operator import length_hint
+# from audioop import avg
+# from email.mime import base
+# from operator import length_hint
 import numpy as np
 import scipy.signal as sig
 
@@ -123,8 +123,8 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
     -------
     snips : List of lists
         List of X snips of Y length where X=number of events in timelock and Y=bins
-    pps : Float
-        Points-per-second
+    pps : Int
+        Samples (points) per second 
 
     """
     # legacy arguments
@@ -176,10 +176,10 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
         # snips = np.divide(snips.transpose(), np.abs(average_baseline)).transpose()
 
     if bins > 0:
-        if length % bins != 0:
-            snips = snips[:,:-(length % bins)]
+        if trial_length_in_samples % bins != 0:
+            snips = snips[:,:-(trial_length_in_samples % bins)]
         totaltime = snips.shape[1] / int(fs)
-        snips = np.mean(snips.reshape(nSnips,bins,-1), axis=2)
+        snips = np.mean(snips.reshape(n_snips,bins,-1), axis=2)
         pps = bins/totaltime
               
     return snips, int(fs)
