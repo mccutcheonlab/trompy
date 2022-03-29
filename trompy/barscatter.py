@@ -87,7 +87,7 @@ def barscatter(data, transpose = False,
     scattersize : Int or Float, optional
         Size of datapoints. Default is 80.
     scatteralpha : Float, optional
-        Sets opacity of scatter points. Default is 1.
+        Sets opacity/transparency of scatter points. Default is 1.
     spreadscatters : Bool, optional
         Not currently functional. Needs to be checked.
     linewidth : Float, optional
