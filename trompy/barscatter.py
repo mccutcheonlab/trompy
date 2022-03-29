@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+# %##
 """
 Created on Fri Apr 17 09:19:56 2020
 
@@ -250,6 +251,7 @@ def barscatter(data, transpose = False,
                              c = scf,
                              edgecolors = sce,
                              linewidth=linewidth,
+                             alpha=scatteralpha,
                              zorder=20,
                              clip_on=False))
                          
@@ -259,6 +261,7 @@ def barscatter(data, transpose = False,
                                      c = scf,
                                      edgecolors = sce,
                                      linewidth=linewidth,
+                                     alpha=scatteralpha,
                                      zorder=20,
                                      clip_on=False))
                      
@@ -271,6 +274,7 @@ def barscatter(data, transpose = False,
                          markerfacecolor = scf,
                          markeredgecolor = sce,
                          markeredgewidth=linewidth,
+                         alpha=scatteralpha,
                          zorder=20,
                          clip_on=False))
     elif grouped == False:
@@ -282,6 +286,7 @@ def barscatter(data, transpose = False,
                          markerfacecolor = scfacecolorArray[0],
                          markeredgecolor = scedgecolorArray[0],
                          markeredgewidth=linewidth,
+                         alpha=scatteralpha,
                          zorder=20,
                          clip_on=False))
     
@@ -445,4 +450,4 @@ def xyspacer(ax, x, yvals, bindist=20, space=0.1):
     return xvals, yvals
 
 if __name__ == "__main__":
-    barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], paired=True)
+    barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
