@@ -60,7 +60,7 @@ def test_peaks():
     output, _ = tp.snipper(simulated_gcamp, events, fs=fs, adjustBaseline = False)
 
     for trace in output:
-        assert np.argmax(trace) == 10173
+        assert np.argmax(trace) == 10172
 
 def test_adjust_baseline():
     np.random.seed(222)
@@ -127,12 +127,12 @@ def test_overlap():
 # TODO: check with varied fs
 
 if __name__ == "__main__":
-    # test_output()
-    # test_peaks()
-    # test_adjust_baseline() 
-    # test_bins()
-    # test_trial_length()
-    # test_no_events()
+    test_output()
+    test_peaks()
+    test_adjust_baseline() 
+    test_bins()
+    test_trial_length()
+    test_no_events()
     test_overlap()
 
 
