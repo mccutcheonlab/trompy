@@ -5,11 +5,9 @@ Created on Fri Apr 17 11:51:29 2020
 @author: James Edgar McCutcheon
 """
 
-# from audioop import avg
-# from email.mime import base
-# from operator import length_hint
 import numpy as np
 import scipy.signal as sig
+from math import ceil
 
 def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5, normalize_method="zscore", fs=1017):
     """ Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
@@ -151,7 +149,7 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
     # removes non-numeric values, e.g. nans or infinite
     timestamps = [i for i in timestamps if np.isfinite(i)]
     
-    events_in_samples = [int(timestamp*fs) for timestamp in timestamps]
+    events_in_samples = [ceil(timestamp*fs) for timestamp in timestamps]
 
     baseline_in_samples = int(baseline_length*fs)
     trial_length_in_samples = int(trial_length*fs)
