@@ -1,3 +1,4 @@
+# %%
 # -*- coding: utf-8 -*-
 """
 Created on Fri Apr 17 16:18:05 2020
@@ -40,7 +41,8 @@ def invisible_axes(ax):
     for sp in ['left', 'right', 'top', 'bottom']:
         ax.spines[sp].set_visible(False)
 
-def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linewidth=1):
+def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linewidth=1,
+                    linestyle="-", alpha=0.4, **kwargs):
     """ Simple shaded error plot.
     
     Parameters
@@ -55,6 +57,10 @@ def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linew
         Color that shaded error area will be. Default is "xkcd:silver".
     linewidth : Float or int, optional
         Line width for average (mean). Default is 1.
+    linestyle : Str, optional
+        Line style for average. Default is solid ("-").
+    alpha : Float, optional
+        Transparency of error. Should be between 0 and 1. Default is 0.4.
         
     Returns
     ----------
@@ -64,8 +70,8 @@ def shadedError(ax, yarray, linecolor='black', errorcolor = 'xkcd:silver', linew
     y = np.mean(yarray, axis=0)
     yerror = np.std(yarray)/np.sqrt(len(yarray))
     x = np.arange(0, len(y))
-    ax.plot(x, y, color=linecolor, linewidth=1)
-    ax.fill_between(x, y-yerror, y+yerror, color=errorcolor, alpha=0.4)
+    ax.plot(x, y, color=linecolor, linewidth=1, linestyle=linestyle)
+    ax.fill_between(x, y-yerror, y+yerror, color=errorcolor, alpha=alpha)
     
     return ax
 
@@ -145,3 +151,9 @@ def get_violinstats(dataset, points=100, bw_method=None):
 
     vpstats = cbook.violin_stats(dataset, _kde_method, points=points)
     return vpstats
+
+if __name__ == "__main__":
+    data = np.random.random([50,100])
+    f, ax = plt.subplots()
+    shadedError(ax, data, linestyle="--")
+# %%
