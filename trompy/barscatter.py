@@ -6,10 +6,82 @@ Created on Fri Apr 17 09:19:56 2020
 @author: James Edgar McCutcheon
 """
 import numpy as np
+import pandas as pd
 import matplotlib.pyplot as plt
 from itertools import chain, count
 
-def barscatter(data, transpose = False,
+def prep_data(data_in, transpose=False):
+
+    dims = np.ndim(data_in)
+    data_obj = np.ndarray((np.shape(data_in)), dtype=object)
+    if dims == 1:
+        for i, dim in enumerate(data_in):
+            data_obj[i] = np.array(dim, dtype=object)
+        data = data_obj
+    elif dims == 2:            
+        for i1, dim1 in enumerate(data_in):
+            for i2, dim2 in enumerate(dim1):
+                data_obj[i1][i2] = np.array(dim2, dtype=object)
+        data = data_obj
+    else:
+        print('Cannot convert that number of dimensions or data is in wrong format. Attmepting to make graph assuming equal groups.')
+
+    # Check if transpose = True
+    if transpose:
+        data = np.transpose(data)
+
+    return data
+
+def calculate_items(data, barwidth, groupwidth):
+
+    bar_means = np.zeros((np.shape(data)))
+    items = np.zeros((np.shape(data)))
+    
+    n_groups = np.shape(data)[0]
+    group_x = np.arange(1,n_groups+1)
+
+    try:
+        if len(np.shape(data)) > 1:
+            grouped = True
+            bars_per_group = np.shape(data)[1]
+            width_of_bars = (barwidth * groupwidth) / bars_per_group
+            
+            for i in range(np.shape(data)[0]):
+                for j in range(np.shape(data)[1]):
+                    bar_means[i][j] = np.mean(data[i][j])
+                    items[i][j] = len(data[i][j])
+            
+        else:
+            grouped = False
+            bars_per_group = 1
+            
+            for i in range(np.shape(data)[0]):
+                bar_means[i] = np.mean(data[i])
+                items[i] = len(data[i])
+    except ValueError:
+        print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
+        return
+
+    return grouped, n_groups, group_x, bars_per_group, bar_means, width_of_bars
+
+def calculate_x_vals(data, groupwidth, group_x, bars_per_group, grouped):
+
+    x_vals = np.zeros((np.shape(data)))
+    bar_allocation = groupwidth / bars_per_group
+    k = (groupwidth/2) - (bar_allocation/2)
+    
+    if grouped == True:
+        
+        for i in range(np.shape(data)[0]):
+            xrange = np.linspace(i+1-k, i+1+k, bars_per_group)
+            for j in range(bars_per_group):
+                x_vals[i][j] = xrange[j]
+    else:
+        x_vals = group_x
+
+    return x_vals
+
+def barscatter(data_in, transpose = False,
                 groupwidth = .75,
                 barwidth = .8,
                 paired = False,
@@ -132,86 +204,37 @@ def barscatter(data, transpose = False,
     sclist : List of scatter container objects
         Allows modifcation as described above. See notes.
     """
+    # Transform data in numpy object arrays
+    data = prep_data(data_in)
+    params = {}
 
-    if unequal == True:
-        dims = np.ndim(data)
-        data_obj = np.ndarray((np.shape(data)), dtype=object)
-        if dims == 1:
-            for i, dim in enumerate(data):
-                data_obj[i] = np.array(dim, dtype=object)
-            data = data_obj
-        elif dims == 2:            
-            for i1, dim1 in enumerate(data):
-                for i2, dim2 in enumerate(dim1):
-                    data_obj[i1][i2] = np.array(dim2, dtype=object)
-            data = data_obj
-        else:
-            print('Cannot convert that number of dimensions or data is in wrong format. Attmepting to make graph assuming equal groups.')
-    
-    if type(data) != np.ndarray or data.dtype != object:
-        dims = np.shape(data)
-        if len(dims) == 2 or len(dims) == 1:
-            data = data2obj1D(data)
-
-        elif len(dims) == 3:
-            data = data2obj2D(data)
-              
-        else:
-            print('Cannot interpret data shape. Should be 2 or 3 dimensional array. Exiting function.')
-            return
-
-    # Check if transpose = True
-    if transpose == True:
-        data = np.transpose(data)
-        
     # Initialize arrays and calculate number of groups, bars, items, and means
-    
-    barMeans = np.zeros((np.shape(data)))
-    items = np.zeros((np.shape(data)))
-    
-    nGroups = np.shape(data)[0]
-    groupx = np.arange(1,nGroups+1)
+    grouped, n_groups, group_x, bars_per_group, bar_means, width_of_bars = calculate_items(data, barwidth, groupwidth)
 
-    if len(np.shape(data)) > 1:
-        grouped = True
-        barspergroup = np.shape(data)[1]
-        barwidth = (barwidth * groupwidth) / barspergroup
-        
-        for i in range(np.shape(data)[0]):
-            for j in range(np.shape(data)[1]):
-                barMeans[i][j] = np.mean(data[i][j])
-                items[i][j] = len(data[i][j])
-        
-    else:
-        grouped = False
-        barspergroup = 1
-        
-        for i in range(np.shape(data)[0]):
-            barMeans[i] = np.mean(data[i])
-            items[i] = len(data[i])
-    
+    x_vals = calculate_x_vals(data, groupwidth, group_x, bars_per_group, grouped)
+
     # Calculate x values for bars and scatters
     
-    xvals = np.zeros((np.shape(data)))
-    barallocation = groupwidth / barspergroup
-    k = (groupwidth/2) - (barallocation/2)
+    # x_vals = np.zeros((np.shape(data)))
+    # barallocation = groupwidth / bars_per_group
+    # k = (groupwidth/2) - (barallocation/2)
     
-    if grouped == True:
+    # if grouped == True:
         
-        for i in range(np.shape(data)[0]):
-            xrange = np.linspace(i+1-k, i+1+k, barspergroup)
-            for j in range(barspergroup):
-                xvals[i][j] = xrange[j]
-    else:
-        xvals = groupx
+    #     for i in range(np.shape(data)[0]):
+    #         xrange = np.linspace(i+1-k, i+1+k, bars_per_group)
+    #         for j in range(bars_per_group):
+    #             x_vals[i][j] = xrange[j]
+    # else:
+    #     x_vals = group_x
     
     # Set colors for bars and scatters
      
-    barfacecolorArray = setcolors(barfacecoloroption, barfacecolor, barspergroup, nGroups, data)
-    baredgecolorArray = setcolors(baredgecoloroption, baredgecolor, barspergroup, nGroups, data)
+    barfacecolorArray = setcolors(barfacecoloroption, barfacecolor, bars_per_group, n_groups, data)
+    baredgecolorArray = setcolors(baredgecoloroption, baredgecolor, bars_per_group, n_groups, data)
      
-    scfacecolorArray = setcolors(scatterfacecoloroption, scatterfacecolor, barspergroup, nGroups, data, paired_scatter = paired)
-    scedgecolorArray = setcolors(scatteredgecoloroption, scatteredgecolor, barspergroup, nGroups, data, paired_scatter = paired)
+    scfacecolorArray = setcolors(scatterfacecoloroption, scatterfacecolor, bars_per_group, n_groups, data, paired_scatter = paired)
+    scedgecolorArray = setcolors(scatteredgecoloroption, scatteredgecolor, bars_per_group, n_groups, data, paired_scatter = paired)
     
     # Initialize figure
     if ax == []:
@@ -221,10 +244,10 @@ def barscatter(data, transpose = False,
     # Make bars
     barlist = []
     barx = []
-    for x, y, bfc, bec in zip(xvals.flatten(), barMeans.flatten(),
+    for x, y, bfc, bec in zip(x_vals.flatten(), bar_means.flatten(),
                               barfacecolorArray, baredgecolorArray):
         barx.append(x)
-        barlist.append(ax.bar(x, y, barwidth,
+        barlist.append(ax.bar(x, y, width_of_bars,
                          facecolor = bfc, edgecolor = bec,
                          zorder=-1,
                          linewidth=linewidth))
@@ -237,17 +260,17 @@ def barscatter(data, transpose = False,
     # Make scatters
     sclist = []
     if paired == False:
-        for x, Yarray, scf, sce  in zip(xvals.flatten(), data.flatten(),
+        for x, Yarray, scf, sce  in zip(x_vals.flatten(), data.flatten(),
                                         scfacecolorArray, scedgecolorArray):
             if spaced == True:
                 try: 
-                    xVals, yVals = xyspacer(ax, x, Yarray, bindist=yspace, space=xspace)
+                    x_vals, yVals = xyspacer(ax, x, Yarray, bindist=yspace, space=xspace)
                 except:
                     print("Could not space all sets of points.")
-                    xVals = [x] * len(Yarray)
+                    x_vals = [x] * len(Yarray)
                     yVals = Yarray
                     
-                sclist.append(ax.scatter(xVals, yVals, s = scattersize,
+                sclist.append(ax.scatter(x_vals, yVals, s = scattersize,
                              c = scf,
                              edgecolors = sce,
                              linewidth=linewidth,
@@ -266,7 +289,7 @@ def barscatter(data, transpose = False,
                                      clip_on=False))
                      
     elif grouped == True:
-        for x, Yarray, scf, sce in zip(xvals, data, scfacecolorArray, scedgecolorArray):
+        for x, Yarray, scf, sce in zip(x_vals, data, scfacecolorArray, scedgecolorArray):
             for y in np.transpose(Yarray.tolist()):
                 sclist.append(ax.plot(x, y, '-o', markersize = scattersize/10,
                          color = scatterlinecolor,
@@ -280,7 +303,7 @@ def barscatter(data, transpose = False,
     elif grouped == False:
         for n,_ in enumerate(data[0]):
             y = [y[n-1] for y in data]
-            sclist.append(ax.plot(xvals, y, '-o', markersize = scattersize/10,
+            sclist.append(ax.plot(x_vals, y, '-o', markersize = scattersize/10,
                          color = scatterlinecolor,
                          linewidth=linewidth,
                          markerfacecolor = scfacecolorArray[0],
@@ -354,12 +377,12 @@ def barscatter(data, transpose = False,
     ax.spines['left'].set_lw(linewidth)
     
     if show_legend == 'within':
-        if len(itemlabel) != barspergroup:
+        if len(itemlabel) != bars_per_group:
             print('Not enough item labels for legend!')
         else:
             legendbar = []
             legendtext = []
-            for i in range(barspergroup):
+            for i in range(bars_per_group):
                 legendbar.append(barlist[i])
                 legendtext.append(itemlabel[i])
             ax.legend(legendbar, legendtext, loc=legendloc)
@@ -368,7 +391,7 @@ def barscatter(data, transpose = False,
     
     return ax, barx, barlist, sclist
       
-def setcolors(coloroption, colors, barspergroup, nGroups, data, paired_scatter = False):
+def setcolors(coloroption, colors, bars_per_group, n_groups, data, paired_scatter = False):
     """ Helper function for setting colors in barscatter"""
             
     nColors = len(colors)
@@ -378,32 +401,32 @@ def setcolors(coloroption, colors, barspergroup, nGroups, data, paired_scatter =
         coloroption = 'same'
         
     if coloroption == 'within':
-        if nColors < barspergroup:
+        if nColors < bars_per_group:
             print('Not enough colors for this option! Reverting to one color.')
             coloroption = 'same'
-        elif nColors > barspergroup:
-            colors = colors[:barspergroup]
+        elif nColors > bars_per_group:
+            colors = colors[:bars_per_group]
         coloroutput = [colors for i in data]
         coloroutput = list(chain(*coloroutput))
         
     if coloroption == 'between':
-        if nColors < nGroups:
+        if nColors < n_groups:
             print('Not enough colors for this option! Reverting to one color.')
             coloroption = 'same'
-        elif nColors > nGroups:
-            colors = colors[:nGroups]
+        elif nColors > n_groups:
+            colors = colors[:n_groups]
         if paired_scatter == False:
-            coloroutput = [[c]*barspergroup for c in colors]
+            coloroutput = [[c]*bars_per_group for c in colors]
             coloroutput = list(chain(*coloroutput))
         else:
             coloroutput = colors
             
     if coloroption == 'individual':
-        if nColors < nGroups*barspergroup:
+        if nColors < n_groups*bars_per_group:
             print('Not enough colors for this color option')
             coloroption = 'same'
-        elif nColors > nGroups*barspergroup:
-            coloroutput = colors[:nGroups*barspergroup]
+        elif nColors > n_groups*bars_per_group:
+            coloroutput = colors[:n_groups*bars_per_group]
         else: 
             coloroutput = colors
     
@@ -436,18 +459,18 @@ def xyspacer(ax, x, yvals, bindist=20, space=0.1):
 
     yhist = np.histogram(yvals, bins=bindist, range=histrange)
     
-    xvals=[]
+    x_vals=[]
     for ybin in yhist[0]:
         if ybin == 1:
-            xvals.append(x)
+            x_vals.append(x)
         elif ybin > 1:          
             temp_vals = np.linspace(x-space, x+space, num=ybin)
             for val in temp_vals:
-                xvals.append(val)
+                x_vals.append(val)
                 
     yvals = np.sort(yvals)
 
-    return xvals, yvals
+    return x_vals, yvals
 
 if __name__ == "__main__":
     barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
