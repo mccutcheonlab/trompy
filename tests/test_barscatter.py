@@ -20,7 +20,9 @@ def test_unequal_groups():
     
     print(np.shape(data_in))
     
-    output = tp.barscatter(data_in)
+    output = tp.barscatter(data_in, linewidth=4, bar_kwargs={"yerr": 2}, ax_kwargs={"ylabel": "hey"}, xlabel="woo", ylim=(0,20),
+    grouplabel=["nr", "pr"], barlabels=["bar"]*6,
+    show_legend=True)
 
 def test_alpha():
     output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
@@ -31,23 +33,10 @@ def test_prep_data():
          [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
 
 
-    dims = np.ndim(data_in)
-    print(type(data_in), dims)
-
-
-    data_out = tp.prep_data(data_in)
-
-    print(data_out.dtype)
-    print(data_out[1][0].dtype)
-    print(data_out[1][0])
-
-    # shape = np.shape(data_out)
-    # data_new = data_out.reshape(shape, )
-
 if __name__ == "__main__":
     # test_alpha()
     test_unequal_groups()
-    test_prep_data()
+    # test_prep_data()
     # print("hey")
 
 
