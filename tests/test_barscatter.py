@@ -13,12 +13,16 @@ import matplotlib.pyplot as plt
 
 np.random.seed(222)
 
+def make_data(n, dtype="int"):
+    if dtype == "int":
+        return np.random.randint(10, size=n)
+    else:
+        return np.random.random(n)
+
 def test_unequal_groups():
     
     data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
          [np.random.randint(10, size=5), np.random.randint(10, size=6), np.random.randint(10, size=2)]]
-    
-    print(np.shape(data_in))
     
     output = tp.barscatter(data_in, linewidth=4, bar_kwargs={"yerr": 2}, ax_kwargs={"ylabel": "hey"}, xlabel="woo", ylim=(0,20),
     grouplabel=["nr", "pr"], barlabels=["bar"]*6,
@@ -32,12 +36,36 @@ def test_prep_data():
     data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
          [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
 
+def test_different_structures():
+    # one bar
+    data_in = [make_data(9)]
+    tp.barscatter(data_in)
+
+    # five bars, 1D
+    data_in = [make_data(9), make_data(9), make_data(9), make_data(9), make_data(9)]
+    tp.barscatter(data_in)
+    
+    # grouped, 2x2
+    data_in = [[make_data(9), make_data(9)], [make_data(9), make_data(9)]]
+    tp.barscatter(data_in)
+    tp.barscatter(data_in, paired=True)
+    
+    # grouped, 2x4
+    tmplist = list(make_data(9))
+    data_in = [[tmplist, tmplist, tmplist, tmplist], [tmplist, tmplist, tmplist, tmplist]]
+    tp.barscatter(data_in)
+    tp.barscatter(data_in, paired=True)
+
+    # # # unbalanced, grouped
+    # data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
+    #      [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
+    # tp.barscatter(data_in)
 
 if __name__ == "__main__":
     # test_alpha()
-    test_unequal_groups()
+    # test_unequal_groups()
     # test_prep_data()
-    # print("hey")
+    test_different_structures()
 
 
 # %%

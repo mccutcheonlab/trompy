@@ -19,19 +19,16 @@ class BarScatter():
             self.ax = ax
         else:
             f, self.ax = plt.subplots()
-        
-        print(ax)
-        print(type(ax))
 
     def prep_data(self, transpose=False):
 
         self.dims = np.ndim(self.data)
         data_obj = np.ndarray((np.shape(self.data)), dtype=object)
-        if self.dims == 1:
+        if self.dims == 2:
             for i, dim in enumerate(self.data):
                 data_obj[i] = np.array(dim, dtype=object)
             self.data = data_obj
-        elif self.dims == 2:            
+        elif self.dims == 3:            
             for i1, dim1 in enumerate(self.data):
                 for i2, dim2 in enumerate(dim1):
                     data_obj[i1][i2] = np.array(dim2, dtype=object)
@@ -47,14 +44,23 @@ class BarScatter():
 
         self.group_width = groupwidth
 
-        self.bar_means = np.zeros((np.shape(self.data)))
+        self.bar_means = np.zeros((np.shape(self.data)[:self.dims-1]))
         self.items = np.zeros((np.shape(self.data)))
         
         self.n_groups = np.shape(self.data)[0]
         self.group_x = np.arange(1,self.n_groups+1)
 
         try:
-            if len(np.shape(self.data)) > 1:
+            if self.dims == 2:
+                self.grouped = False
+                self.bars_per_group = 1
+                self.width_of_bars = barwidth
+
+                for i in range(np.shape(self.data)[0]):
+                    self.bar_means[i] = np.mean(self.data[i])
+                    self.items[i] = len(self.data[i])
+
+            elif len(np.shape(self.data)) == 3:
                 self.grouped = True
                 self.bars_per_group = np.shape(self.data)[1]
                 self.width_of_bars = (barwidth * groupwidth) / self.bars_per_group
@@ -63,21 +69,14 @@ class BarScatter():
                     for j in range(np.shape(self.data)[1]):
                         self.bar_means[i][j] = np.mean(self.data[i][j])
                         self.items[i][j] = len(self.data[i][j])
-                
-            else:
-                self.grouped = False
-                self.bars_per_group = 1
-                
-                for i in range(np.shape(self.data)[0]):
-                    self.bar_means[i] = np.mean(self.data[i])
-                    self.items[i] = len(self.data[i])
+        
         except ValueError:
             print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
             return
 
     def calculate_x_vals(self):
 
-        self.x_vals = np.zeros((np.shape(self.data)))
+        self.x_vals = np.zeros((np.shape(self.data)[:self.dims-1]))
         bar_allocation = self.group_width / self.bars_per_group
         k = (self.group_width/2) - (bar_allocation/2)
         
@@ -170,7 +169,8 @@ class BarScatter():
         self.sclist = []
         
         if paired == False:
-            for x, Yarray, scf, sce  in zip(self.x_vals.flatten(), self.data.flatten(),
+            x_vals_flat = self.x_vals.flatten()
+            for x, Yarray, scf, sce  in zip(x_vals_flat, self.data.reshape((len(x_vals_flat),-1)),
                                             self.scfacecolorArray, self.scedgecolorArray):
                 if spaced == True:
                     try: 
@@ -238,8 +238,7 @@ class BarScatter():
     
     def make_group_labels(self, grouplabel, grouplabeloffset):
         group_x = np.arange(1, len(grouplabel)+1)
-        # if len(xlim) > 0:
-        #     group_x = [x for x in self.group_x]
+
         xpos = (group_x - self.ax.get_xlim()[0]) / self.xrange
 
         for x, label in zip(xpos, grouplabel):
@@ -279,200 +278,198 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
                ax_kwargs={},
                **extra_kwargs):
 
-    plot = BarScatter(data_in)
+    bs = BarScatter(data_in)
 
-    plot.prep_data(transpose=transpose)
-    plot.calculate_items(barwidth, groupwidth)
-    plot.calculate_x_vals()
+    bs.prep_data(transpose=transpose)
+    bs.calculate_items(barwidth, groupwidth)
+    bs.calculate_x_vals()
 
-    plot.barfacecolorArray = plot.set_colors(barfacecolor_option, barfacecolor)
-    plot.baredgecolorArray = plot.set_colors(baredgecolor_option, baredgecolor)
+    bs.barfacecolorArray = bs.set_colors(barfacecolor_option, barfacecolor)
+    bs.baredgecolorArray = bs.set_colors(baredgecolor_option, baredgecolor)
 
-    plot.scfacecolorArray = plot.set_colors(scatterfacecolor_option, scatterfacecolor)
-    plot.scedgecolorArray = plot.set_colors(scatteredgecolor_option, scatteredgecolor)
+    bs.scfacecolorArray = bs.set_colors(scatterfacecolor_option, scatterfacecolor)
+    bs.scedgecolorArray = bs.set_colors(scatteredgecolor_option, scatteredgecolor)
 
-    plot.linewidth = linewidth
-    plot.fontsize = fontsize
-    plot.create_axis(ax)
+    bs.linewidth = linewidth
+    bs.fontsize = fontsize
+    bs.create_axis(ax)
 
-    # Initialize figure
-
-    plot.make_bars(bar_kwargs)
+    bar_kwargs.update({"alpha": baralpha})
+    bs.make_bars(bar_kwargs)
 
     sc_kwargs.update({"linewidth": linewidth, "alpha": scatteralpha,
                        "zorder": 20, "clip_on": False})
+    bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, sc_kwargs)
 
-    plot.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, sc_kwargs)
+#     bs.set_axis_properties(ax_kwargs, extra_kwargs)
+#     bs.format_ticks()
+#     bs.tidy_axes()
 
-    plot.set_axis_properties(ax_kwargs, extra_kwargs)
-    plot.format_ticks()
-    plot.tidy_axes()
-
-    if len(grouplabel) == plot.n_groups:
-        plot.make_group_labels(grouplabel, grouplabeloffset)
+#     if len(grouplabel) == bs.n_groups:
+#         bs.make_group_labels(grouplabel, grouplabeloffset)
     
-    if len(barlabels) == len(plot.barx):
-        plot.make_bar_labels(barlabels, barlabeloffset)
+#     if len(barlabels) == len(bs.barx):
+#         bs.make_bar_labels(barlabels, barlabeloffset)
 
-    if show_legend:
-        if len(itemlabels) == len(plot.barx):
-            plot.make_legend(itemlabels, legendloc)
-        elif len(barlabels) == len(plot.barx):
-            plot.make_legend(barlabels, legendloc)
-        else:
-            barlabels=[str(x) for x in np.arange(1, len(barx)+1)]
-            plot.make_legend(barlabels, legendloc)
+#     if show_legend:
+#         if len(itemlabels) == len(bs.barx):
+#             bs.make_legend(itemlabels, legendloc)
+#         elif len(barlabels) == len(bs.barx):
+#             bs.make_legend(barlabels, legendloc)
+#         else:
+#             barlabels=[str(x) for x in np.arange(1, len(bs.barx)+1)]
+#             bs.make_legend(barlabels, legendloc)
     
-    return plot.ax, plot.barx, plot.barlist, plot.sclist
+#     return bs.ax, bs.barx, bs.barlist, bs.sclist
 
 
-#TODO add error bar option
-#TODO change markerstyle
-#TODO read pandas series, dataframe etc
-#TODO add extra axis for estimation
-#TODO make sure fontsize is for all arguments
-#TODO make labels without offsets
-#TODO add tick kwargs
+# #TODO add error bar option
+# #TODO change markerstyle
+# #TODO read pandas series, dataframe etc
+# #TODO add extra axis for estimation
+# #TODO make sure fontsize is for all arguments
+# #TODO make labels without offsets
+# #TODO add tick kwargs
 
-# def barscatter(data_in, transpose = False,
-#                 groupwidth = .75,
-#                 barwidth = .8,
-#                 paired = False,
-#                 unequal = False,
-#                 spaced = False,
-#                 yspace = 20,
-#                 xspace = 0.1,
-#                 barfacecolor_option = 'same', # other options 'between' or 'individual'
-#                 barfacecolor = ['white'],
-#                 baredgecolor_option = 'same',
-#                 baredgecolor = ['black'],
-#                 baralpha = 1,
-#                 scatterfacecolor_option = 'same',
-#                 scatterfacecolor = ['white'],
-#                 scatteredgecolor_option = 'same',
-#                 scatteredgecolor = ['grey'],
-#                 scatterlinecolor = 'grey', # Don't put this value in a list
-#                 scattersize = 80,
-#                 scatteralpha = 1,
-#                 spreadscatters = False,
-#                 linewidth=0.75,
-#                 xlim=[],
-#                 ylim=[],
-#                 ylabel = 'none',
-#                 xlabel = 'none',
-#                 grouplabel = [],
-#                 itemlabel = 'none',
-#                 barlabels = [],
-#                 barlabeloffset=0.025,
-#                 grouplabeloffset=0,
-#                 yaxisparams = 'auto',
-#                 show_legend = 'none',
-#                 legendloc='upper right',
-#                 xfontsize=8,
-#                 ax=[]):
-#     """
-#     Creates a bar graph with data points shown as overlaid circles.
+# # def barscatter(data_in, transpose = False,
+# #                 groupwidth = .75,
+# #                 barwidth = .8,
+# #                 paired = False,
+# #                 unequal = False,
+# #                 spaced = False,
+# #                 yspace = 20,
+# #                 xspace = 0.1,
+# #                 barfacecolor_option = 'same', # other options 'between' or 'individual'
+# #                 barfacecolor = ['white'],
+# #                 baredgecolor_option = 'same',
+# #                 baredgecolor = ['black'],
+# #                 baralpha = 1,
+# #                 scatterfacecolor_option = 'same',
+# #                 scatterfacecolor = ['white'],
+# #                 scatteredgecolor_option = 'same',
+# #                 scatteredgecolor = ['grey'],
+# #                 scatterlinecolor = 'grey', # Don't put this value in a list
+# #                 scattersize = 80,
+# #                 scatteralpha = 1,
+# #                 spreadscatters = False,
+# #                 linewidth=0.75,
+# #                 xlim=[],
+# #                 ylim=[],
+# #                 ylabel = 'none',
+# #                 xlabel = 'none',
+# #                 grouplabel = [],
+# #                 itemlabel = 'none',
+# #                 barlabels = [],
+# #                 barlabeloffset=0.025,
+# #                 grouplabeloffset=0,
+# #                 yaxisparams = 'auto',
+# #                 show_legend = 'none',
+# #                 legendloc='upper right',
+# #                 xfontsize=8,
+# #                 ax=[]):
+# #     """
+# #     Creates a bar graph with data points shown as overlaid circles.
     
-#     Parameters
-#     -------------
-#     data : List, lists of lists or array
-#         Data to be plotted. Will try to convert if needed.
-#     barwidth : Float, optional
-#         Width of bars. Default is 0.9.
-#     paired : Bool, optional
-#         Attempts to add lines between paired data points. Requires number in each group to be matched. Default is False.
-#     unequal : Bool, optional
-#         To be set to True if groups are unequal. Default is False.
-#     spaced : Bool, optional
-#         Spaces out data points so that they are not at an identical x value, e.g. grape bunch style. Default is False.
-#     yspace : Int or Float, optional
-#         Used in conjunction with spaced to determine spacing of data points. Default is 20.
-#     xspace : Float, optional
-#         Used in conjunction with spaced to determine spacing of data points. Default is 0.1.
-#     barfacecolor_option : Str, optional
-#         Chooses bar color option. Default is 'same' and other options are 'between' or 'individual'.
-#     barfacecolor : List of str, optional
-#         If 'between' or 'individual' is chosen for above option then number of colors needs to match number of bars or groups. Default is ['white'].
-#     baredgecolor_option : Str, optional
-#         Chooses bar edge option. Default is 'same', see notes on barfacecolor_option.
-#     baredgecolor : List of str, optional
-#         Bar edge colors. Default is ['black'], see notes on barfacecolor.
-#     baralpha : Float, optional
-#         Sets opacity of bars so must be between 0 and 1. Default is 1.
-#     scatterfacecolor_option : Str, optional
-#         Chooses scatter face option. Default is 'same', see notes on barfacecolor_option.
-#     scatterfacecolor : List of str, optional
-#         Scatter face colors. Default = ['white'], see notes on barfacecolor.
-#     scatteredgecolor_option : Str, optional
-#         Chooses scatter edge option. Default is 'same', see notes on barfacecolor_option.
-#     scatteredgecolor : List of str, optional
-#         Scatter face colors. Default is ['grey'], see notes on barfacecolor.
-#     scatterlinecolor : Str, optional
-#         Color of lines connecting related data points, should not be in a list. Default is 'grey'.
-#     scattersize : Int or Float, optional
-#         Size of datapoints. Default is 80.
-#     scatteralpha : Float, optional
-#         Sets opacity/transparency of scatter points. Default is 1.
-#     spreadscatters : Bool, optional
-#         Not currently functional. Needs to be checked.
-#     linewidth : Float, optional
-#         Width of lines. Default is 0.75.
-#     xlim : List or 2-tuple of floats, optional
-#         Sets limits of x-axis. Default is [].
-#     ylim : List or 2-tuple of floats, optional
-#         Sets limits of x-axis. Default is [].
-#     ylabel : Str, optional
-#         Sets y-axis label. Default is 'none'.
-#     xlabel : Str, optional
-#         Sets x-axis label. Default is 'none'.
-#     grouplabel : List of str, optional
-#         Sets labels for each group. Default is 'auto'.
-#     itemlabel : List of str, optional
-#         Not currently functional. Needs to be checked. Default is 'none'.
-#     barlabels : List of str, optional
-#         Sets labels for each bar. Default is [].
-#     barlabeloffset : Float, optional
-#         Sets barlabel offset relative to x baseline. Default is 0.025.
-#     grouplabeloffset : Float, optional
-#         Sets grouplabel offset relative to x baseline. Default is 0.0250.
-#     yaxisparams : None, optional
-#         Not currently functional. Needs to be checked.
-#     show_legend : Bool or str, optional
-#         Shows legend. Default is 'none'.
-#     legendloc : Str, optional
-#         Sets legend location. Default is 'upper right'.
-#     xfontsize : Int, optional
-#         Sets x-axis font size. Default is 8.
-#     ax : Matplotlib axis object, optional
-#         Axis object to plot in. If not provided, plots in new figure/axis. Default is [].
+# #     Parameters
+# #     -------------
+# #     data : List, lists of lists or array
+# #         Data to be plotted. Will try to convert if needed.
+# #     barwidth : Float, optional
+# #         Width of bars. Default is 0.9.
+# #     paired : Bool, optional
+# #         Attempts to add lines between paired data points. Requires number in each group to be matched. Default is False.
+# #     unequal : Bool, optional
+# #         To be set to True if groups are unequal. Default is False.
+# #     spaced : Bool, optional
+# #         Spaces out data points so that they are not at an identical x value, e.g. grape bunch style. Default is False.
+# #     yspace : Int or Float, optional
+# #         Used in conjunction with spaced to determine spacing of data points. Default is 20.
+# #     xspace : Float, optional
+# #         Used in conjunction with spaced to determine spacing of data points. Default is 0.1.
+# #     barfacecolor_option : Str, optional
+# #         Chooses bar color option. Default is 'same' and other options are 'between' or 'individual'.
+# #     barfacecolor : List of str, optional
+# #         If 'between' or 'individual' is chosen for above option then number of colors needs to match number of bars or groups. Default is ['white'].
+# #     baredgecolor_option : Str, optional
+# #         Chooses bar edge option. Default is 'same', see notes on barfacecolor_option.
+# #     baredgecolor : List of str, optional
+# #         Bar edge colors. Default is ['black'], see notes on barfacecolor.
+# #     baralpha : Float, optional
+# #         Sets opacity of bars so must be between 0 and 1. Default is 1.
+# #     scatterfacecolor_option : Str, optional
+# #         Chooses scatter face option. Default is 'same', see notes on barfacecolor_option.
+# #     scatterfacecolor : List of str, optional
+# #         Scatter face colors. Default = ['white'], see notes on barfacecolor.
+# #     scatteredgecolor_option : Str, optional
+# #         Chooses scatter edge option. Default is 'same', see notes on barfacecolor_option.
+# #     scatteredgecolor : List of str, optional
+# #         Scatter face colors. Default is ['grey'], see notes on barfacecolor.
+# #     scatterlinecolor : Str, optional
+# #         Color of lines connecting related data points, should not be in a list. Default is 'grey'.
+# #     scattersize : Int or Float, optional
+# #         Size of datapoints. Default is 80.
+# #     scatteralpha : Float, optional
+# #         Sets opacity/transparency of scatter points. Default is 1.
+# #     spreadscatters : Bool, optional
+# #         Not currently functional. Needs to be checked.
+# #     linewidth : Float, optional
+# #         Width of lines. Default is 0.75.
+# #     xlim : List or 2-tuple of floats, optional
+# #         Sets limits of x-axis. Default is [].
+# #     ylim : List or 2-tuple of floats, optional
+# #         Sets limits of x-axis. Default is [].
+# #     ylabel : Str, optional
+# #         Sets y-axis label. Default is 'none'.
+# #     xlabel : Str, optional
+# #         Sets x-axis label. Default is 'none'.
+# #     grouplabel : List of str, optional
+# #         Sets labels for each group. Default is 'auto'.
+# #     itemlabel : List of str, optional
+# #         Not currently functional. Needs to be checked. Default is 'none'.
+# #     barlabels : List of str, optional
+# #         Sets labels for each bar. Default is [].
+# #     barlabeloffset : Float, optional
+# #         Sets barlabel offset relative to x baseline. Default is 0.025.
+# #     grouplabeloffset : Float, optional
+# #         Sets grouplabel offset relative to x baseline. Default is 0.0250.
+# #     yaxisparams : None, optional
+# #         Not currently functional. Needs to be checked.
+# #     show_legend : Bool or str, optional
+# #         Shows legend. Default is 'none'.
+# #     legendloc : Str, optional
+# #         Sets legend location. Default is 'upper right'.
+# #     xfontsize : Int, optional
+# #         Sets x-axis font size. Default is 8.
+# #     ax : Matplotlib axis object, optional
+# #         Axis object to plot in. If not provided, plots in new figure/axis. Default is [].
     
-#     Returns
-#     -------------
-#     ax : Matplotlib axis object
-#         Axis object of plot.
-#     barx : List of floats
-#         x-values where each bar is plotted.
-#     barlist : List of bar container objects
-#         Allows modifcation, e.g. changing of colors of individual bars. See notes.
-#     sclist : List of scatter container objects
-#         Allows modifcation as described above. See notes.
-#     """
+# #     Returns
+# #     -------------
+# #     ax : Matplotlib axis object
+# #         Axis object of plot.
+# #     barx : List of floats
+# #         x-values where each bar is plotted.
+# #     barlist : List of bar container objects
+# #         Allows modifcation, e.g. changing of colors of individual bars. See notes.
+# #     sclist : List of scatter container objects
+# #         Allows modifcation as described above. See notes.
+# #     """
 
-
-    
 
     
 
-
-#     # X ticks
-#     ax.tick_params(
-#         axis='x',          # changes apply to the x-axis
-#         which='both',      # both major and minor ticks are affected
-#         bottom=False,      # ticks along the bottom edge are off
-#         top=False,
-#         labelbottom=False) # labels along the bottom edge are off
     
-#     ax.set_xticks([])
+
+
+# #     # X ticks
+# #     ax.tick_params(
+# #         axis='x',          # changes apply to the x-axis
+# #         which='both',      # both major and minor ticks are affected
+# #         bottom=False,      # ticks along the bottom edge are off
+# #         top=False,
+# #         labelbottom=False) # labels along the bottom edge are off
+    
+# #     ax.set_xticks([])
 
 
 
