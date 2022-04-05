@@ -12,7 +12,7 @@ from itertools import chain, count
 
 class BarScatter():
     def __init__(self, data):
-        self.data = data
+        self.data = np.asarray(data, dtype=object)
 
     def create_axis(self, ax):
         if isinstance(ax, plt.Axes):
@@ -20,21 +20,49 @@ class BarScatter():
         else:
             f, self.ax = plt.subplots()
 
+    def squeeze(self):
+        if np.shape(self.data)[0] == 1:
+            self.data = np.squeeze(self.data)
+            self.squeeze()
+        else:
+            return
+
+    def set_dims(self):
+        # self.squeeze()
+        self.grouped=False
+        self.dims = np.ndim(self.data)
+        self.n_groups = np.shape(self.data)[0]
+
+        if self.dims == 1:
+            try:
+                self.data[0][0]
+                self.dims = 2
+            except:
+                self.n_groups = 1
+        elif self.dims == 2:
+            try:
+                self.data[0][0][0]
+                self.grouped = True
+                self.dims = 3
+            except:
+                pass
+        elif self.dims == 3:
+            self.grouped = True
+
     def prep_data(self, transpose=False):
 
-        self.dims = np.ndim(self.data)
-        data_obj = np.ndarray((np.shape(self.data)), dtype=object)
-        if self.dims == 2:
-            for i, dim in enumerate(self.data):
-                data_obj[i] = np.array(dim, dtype=object)
-            self.data = data_obj
-        elif self.dims == 3:            
+        self.set_dims()
+
+        data_obj = np.ndarray((np.shape(self.data)[:self.dims-1]), dtype=object)
+        if self.grouped:
             for i1, dim1 in enumerate(self.data):
                 for i2, dim2 in enumerate(dim1):
-                    data_obj[i1][i2] = np.array(dim2, dtype=object)
+                    data_obj[i1][i2] = list(dim2)
             self.data = data_obj
         else:
-            print('Cannot convert that number of dimensions or data is in wrong format. Attmepting to make graph assuming equal groups.')
+            for i, dim in enumerate(self.data):
+                data_obj[i] = list(dim)
+            self.data = data_obj
 
         # Check if transpose = True
         if transpose:
@@ -43,36 +71,25 @@ class BarScatter():
     def calculate_items(self, barwidth, groupwidth):
 
         self.group_width = groupwidth
-
-        self.bar_means = np.zeros((np.shape(self.data)[:self.dims-1]))
-        self.items = np.zeros((np.shape(self.data)))
-        
-        self.n_groups = np.shape(self.data)[0]
         self.group_x = np.arange(1,self.n_groups+1)
-
-        try:
-            if self.dims == 2:
-                self.grouped = False
-                self.bars_per_group = 1
-                self.width_of_bars = barwidth
-
-                for i in range(np.shape(self.data)[0]):
-                    self.bar_means[i] = np.mean(self.data[i])
-                    self.items[i] = len(self.data[i])
-
-            elif len(np.shape(self.data)) == 3:
-                self.grouped = True
-                self.bars_per_group = np.shape(self.data)[1]
-                self.width_of_bars = (barwidth * groupwidth) / self.bars_per_group
+        self.bar_means = np.zeros((np.shape(self.data)[:self.dims-1]))
+        if self.grouped:
+            self.bars_per_group = np.shape(self.data)[1]
+            self.width_of_bars = (barwidth * groupwidth) / self.bars_per_group
                 
-                for i in range(np.shape(self.data)[0]):
-                    for j in range(np.shape(self.data)[1]):
-                        self.bar_means[i][j] = np.mean(self.data[i][j])
-                        self.items[i][j] = len(self.data[i][j])
+            for i in range(np.shape(self.data)[0]):
+                for j in range(np.shape(self.data)[1]):
+                    self.bar_means[i][j] = np.mean(self.data[i][j])
+        else:
+            self.bars_per_group = 1
+            self.width_of_bars = barwidth
+
+            for i in range(np.shape(self.data)[0]):
+                self.bar_means[i] = np.mean(self.data[i])
         
-        except ValueError:
-            print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
-            return
+        # except ValueError:
+        #     print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
+        #     return
 
     def calculate_x_vals(self):
 
@@ -170,7 +187,7 @@ class BarScatter():
         
         if paired == False:
             x_vals_flat = self.x_vals.flatten()
-            for x, Yarray, scf, sce  in zip(x_vals_flat, self.data.reshape((len(x_vals_flat),-1)),
+            for x, Yarray, scf, sce  in zip(self.x_vals.flatten(), self.data.flatten(),
                                             self.scfacecolorArray, self.scedgecolorArray):
                 if spaced == True:
                     try: 
@@ -301,26 +318,26 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
                        "zorder": 20, "clip_on": False})
     bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, sc_kwargs)
 
-#     bs.set_axis_properties(ax_kwargs, extra_kwargs)
-#     bs.format_ticks()
-#     bs.tidy_axes()
+    bs.set_axis_properties(ax_kwargs, extra_kwargs)
+    bs.format_ticks()
+    bs.tidy_axes()
 
-#     if len(grouplabel) == bs.n_groups:
-#         bs.make_group_labels(grouplabel, grouplabeloffset)
+    if len(grouplabel) == bs.n_groups:
+        bs.make_group_labels(grouplabel, grouplabeloffset)
     
-#     if len(barlabels) == len(bs.barx):
-#         bs.make_bar_labels(barlabels, barlabeloffset)
+    if len(barlabels) == len(bs.barx):
+        bs.make_bar_labels(barlabels, barlabeloffset)
 
-#     if show_legend:
-#         if len(itemlabels) == len(bs.barx):
-#             bs.make_legend(itemlabels, legendloc)
-#         elif len(barlabels) == len(bs.barx):
-#             bs.make_legend(barlabels, legendloc)
-#         else:
-#             barlabels=[str(x) for x in np.arange(1, len(bs.barx)+1)]
-#             bs.make_legend(barlabels, legendloc)
+    if show_legend:
+        if len(itemlabels) == len(bs.barx):
+            bs.make_legend(itemlabels, legendloc)
+        elif len(barlabels) == len(bs.barx):
+            bs.make_legend(barlabels, legendloc)
+        else:
+            barlabels=[str(x) for x in np.arange(1, len(bs.barx)+1)]
+            bs.make_legend(barlabels, legendloc)
     
-#     return bs.ax, bs.barx, bs.barlist, bs.sclist
+    return bs.ax, bs.barx, bs.barlist, bs.sclist
 
 
 # #TODO add error bar option
@@ -330,6 +347,7 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
 # #TODO make sure fontsize is for all arguments
 # #TODO make labels without offsets
 # #TODO add tick kwargs
+# #TODO catch exception for outer list or first dimension as 1, e.g. squeeze
 
 # # def barscatter(data_in, transpose = False,
 # #                 groupwidth = .75,
