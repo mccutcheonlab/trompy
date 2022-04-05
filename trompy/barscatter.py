@@ -8,7 +8,9 @@ Created on Fri Apr 17 09:19:56 2020
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from itertools import chain, count
+from itertools import chain
+
+import trompy as tp
 
 class BarScatter():
     def __init__(self, data):
@@ -73,19 +75,24 @@ class BarScatter():
         self.group_width = groupwidth
         self.group_x = np.arange(1,self.n_groups+1)
         self.bar_means = np.zeros((np.shape(self.data)[:self.dims-1]))
+        self.bar_error = np.zeros((np.shape(self.data)[:self.dims-1]))
+
         if self.grouped:
             self.bars_per_group = np.shape(self.data)[1]
             self.width_of_bars = (barwidth * groupwidth) / self.bars_per_group
                 
             for i in range(np.shape(self.data)[0]):
                 for j in range(np.shape(self.data)[1]):
-                    self.bar_means[i][j] = np.mean(self.data[i][j])
+                    self.bar_means[i][j], self.bar_error[i][j] = tp.mean_and_sem(self.data[i][j])
+                    # np.nanmean(self.data[i][j])
+                    # self.bar_error[i][j] = tp.mean_and_sem(self.data[i][j])[1]
         else:
             self.bars_per_group = 1
             self.width_of_bars = barwidth
 
             for i in range(np.shape(self.data)[0]):
-                self.bar_means[i] = np.mean(self.data[i])
+                self.bar_means[i], self.bar_error[i] = tp.mean_and_sem(self.data[i])
+                # self.bar_error[i] = tp.mean_and_sem(self.data[i])[1]
         
         # except ValueError:
         #     print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
@@ -170,23 +177,25 @@ class BarScatter():
                     
         self.y_vals = np.sort(self.y_vals)
     
-    def make_bars(self, bar_kwargs):
+    def make_bars(self, errorbars, bar_kwargs):
         self.barlist = []
         self.barx = []
-        for x, y, bfc, bec in zip(self.x_vals.flatten(), self.bar_means.flatten(),
+        for x, y, e, bfc, bec in zip(self.x_vals.flatten(), self.bar_means.flatten(), self.bar_error.flatten(),
                                 self.barfacecolorArray, self.baredgecolorArray):
             self.barx.append(x)
+            if errorbars == True:
+                bar_kwargs.update({"yerr": e})
             self.barlist.append(self.ax.bar(x, y, self.width_of_bars,
                             facecolor = bfc, edgecolor = bec,
                             zorder=-1,
                             linewidth=self.linewidth,
                             **bar_kwargs))
     
-    def make_scatters(self, paired, spaced, yspace, xspace, scatterlinecolor, scattersize, sc_kwargs):
+    def make_scatters(self, paired, spaced, yspace, xspace, scatterlinecolor, scattersize, scatteroffset, sc_kwargs):
         self.sclist = []
+        self.x_vals =  self.x_vals + (scatteroffset*self.width_of_bars)/2
         
         if paired == False:
-            x_vals_flat = self.x_vals.flatten()
             for x, Yarray, scf, sce  in zip(self.x_vals.flatten(), self.data.flatten(),
                                             self.scfacecolorArray, self.scedgecolorArray):
                 if spaced == True:
@@ -282,6 +291,7 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
                barfacecolor_option="same", barfacecolor=["white"],
                baredgecolor_option="same", baredgecolor=["black"],
                baralpha=1,
+               errorbars=False, scatteroffset=0,
                scatterfacecolor_option="same", scatterfacecolor=["white"],
                scatteredgecolor_option="same", scatteredgecolor=["black"],
                scatterlinecolor="grey", linewidth=0.75,
@@ -312,11 +322,11 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
     bs.create_axis(ax)
 
     bar_kwargs.update({"alpha": baralpha})
-    bs.make_bars(bar_kwargs)
+    bs.make_bars(errorbars, bar_kwargs)
 
     sc_kwargs.update({"linewidth": linewidth, "alpha": scatteralpha,
                        "zorder": 20, "clip_on": False})
-    bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, sc_kwargs)
+    bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, scatteroffset, sc_kwargs)
 
     bs.set_axis_properties(ax_kwargs, extra_kwargs)
     bs.format_ticks()

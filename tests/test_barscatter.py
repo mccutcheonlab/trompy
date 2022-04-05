@@ -9,7 +9,7 @@ import numpy as np
 import trompy as tp
 import matplotlib.pyplot as plt
 
-# %matplotlib inline
+%matplotlib inline
 
 np.random.seed(222)
 
@@ -43,7 +43,7 @@ def test_different_structures():
 
     # # five bars, 1D, unbalanced
     data_in = [make_data(9), make_data(8), make_data(3), make_data(7), make_data(5)]
-    tp.barscatter(data_in)
+    tp.barscatter(data_in, scatteroffset=-0.5)
     
     # # five bars, 1D, balanced
     data_in = [make_data(9), make_data(9), make_data(9), make_data(9), make_data(9)]
@@ -69,7 +69,7 @@ def test_different_structures():
     tmplist2 = list(make_data(7))
     data_in = [[tmplist, tmplist, tmplist, tmplist], [tmplist2, tmplist2, tmplist2, tmplist2]]
     tp.barscatter(data_in)
-    tp.barscatter(data_in, paired=True)
+    tp.barscatter(data_in, paired=True, errorbars=True, scatteroffset=0.9)
 
     # # # unbalanced, grouped
     # data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
