@@ -84,19 +84,12 @@ class BarScatter():
             for i in range(np.shape(self.data)[0]):
                 for j in range(np.shape(self.data)[1]):
                     self.bar_means[i][j], self.bar_error[i][j] = tp.mean_and_sem(self.data[i][j])
-                    # np.nanmean(self.data[i][j])
-                    # self.bar_error[i][j] = tp.mean_and_sem(self.data[i][j])[1]
         else:
             self.bars_per_group = 1
             self.width_of_bars = barwidth
 
             for i in range(np.shape(self.data)[0]):
                 self.bar_means[i], self.bar_error[i] = tp.mean_and_sem(self.data[i])
-                # self.bar_error[i] = tp.mean_and_sem(self.data[i])[1]
-        
-        # except ValueError:
-        #     print("Could not determine correct number of groups. Check format of data to ensure groups are balanced.")
-        #     return
 
     def calculate_x_vals(self):
 
@@ -350,7 +343,6 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
     return bs.ax, bs.barx, bs.barlist, bs.sclist
 
 
-# #TODO add error bar option
 # #TODO change markerstyle
 # #TODO read pandas series, dataframe etc
 # #TODO add extra axis for estimation

@@ -9,7 +9,7 @@ import numpy as np
 import trompy as tp
 import matplotlib.pyplot as plt
 
-%matplotlib inline
+#%matplotlib inline
 
 np.random.seed(222)
 
@@ -36,7 +36,19 @@ def make_data(n, dtype="int"):
 #     data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
 #          [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
 
-def test_different_structures():
+def test_improper_structures():
+    
+    # # unbalanced, grouped
+    data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
+         [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
+    with pytest.raises(ValueError):
+        tp.barscatter(data_in)
+
+    data_in = data_in = [make_data(9), make_data(8), "hey there", make_data(7), make_data(5)]
+    with pytest.raises(TypeError):
+        tp.barscatter(data_in)
+
+def test_different_working_structures():
     # one bar
     data_in = [make_data(9)]
     tp.barscatter(data_in)
@@ -71,16 +83,13 @@ def test_different_structures():
     tp.barscatter(data_in)
     tp.barscatter(data_in, paired=True, errorbars=True, scatteroffset=0.9)
 
-    # # # unbalanced, grouped
-    # data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
-    #      [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
-    # tp.barscatter(data_in)
 
 if __name__ == "__main__":
     # test_alpha()
     # test_unequal_groups()
     # test_prep_data()
-    test_different_structures()
+    test_improper_structures()
+    # test_different_structures()
 
 
 # %%
