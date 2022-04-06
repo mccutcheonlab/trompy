@@ -19,22 +19,46 @@ def make_data(n, dtype="int"):
     else:
         return np.random.random(n)
 
-# def test_unequal_groups():
+def make_data_array():
+    data_array={}
+    data_array["one bar"] = [make_data(9)]
+    data_array["5x1, balanced"] = [make_data(9), make_data(9), make_data(9), make_data(9), make_data(9)]
+    data_array["5x1, unbalanced"] = [make_data(9), make_data(8), make_data(3), make_data(7), make_data(5)]
+    data_array["2x2, balanced"] = [[make_data(9), make_data(9)], [make_data(9), make_data(9)]]
+    data_array["2x2, unbalanced"] = [[make_data(9), make_data(9)], [make_data(8), make_data(8)]]
     
-#     data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
-#          [np.random.randint(10, size=5), np.random.randint(10, size=6), np.random.randint(10, size=2)]]
-    
-#     output = tp.barscatter(data_in, linewidth=4, bar_kwargs={"yerr": 2}, ax_kwargs={"ylabel": "hey"}, xlabel="woo", ylim=(0,20),
-#     grouplabel=["nr", "pr"], barlabels=["bar"]*6,
-#     show_legend=True)
+    tmplist = list(make_data(9))
+    tmplist2 = list(make_data(7))
+
+    data_array["2x4, balanced"] = [[tmplist, tmplist, tmplist, tmplist], [tmplist, tmplist, tmplist, tmplist]]
+    data_array["2x4, unbalanced"] = [[tmplist, tmplist, tmplist, tmplist], [tmplist2, tmplist2, tmplist2, tmplist2]]
+
+    return data_array
+
+
 
 # def test_alpha():
 #     output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
 
-# def test_prep_data():
 
-#     data_in = [[np.random.randint(10, size=3), np.random.randint(10, size=4), np.random.randint(10, size=2)], \
-#          [np.random.randint(10, size=5), np.random.randint(10, size=6)]]
+def test_colors(data_in, n_colors):
+    colors = [(1.0, 0.0, 0.0, 1), (0.0, 1.0, 0.0, 1), (0.0, 0.0, 1.0, 1),
+              (0.0, 1.0, 1.0, 1), (1.0, 0.0, 1.0, 1)]*2
+    colors_in = colors[:n_colors]
+    _, _, bars, _ = tp.barscatter(data_in, barfacecolor_option="individual", barfacecolor = colors_in)
+
+    colors_out = []
+    for bar in bars:
+        colors_out.append(bar.get_children()[0].get_facecolor())
+
+    return colors_in == colors_out
+
+def test_many_colors():
+    data_array = make_data_array()
+
+    N_COLORS=[1, 5, 5, 4, 4, 8, 8]
+    for key, n_colors in zip(data_array, N_COLORS):
+        assert test_colors(data_array[key], n_colors)
 
 def test_improper_structures():
     
@@ -49,49 +73,24 @@ def test_improper_structures():
         tp.barscatter(data_in)
 
 def test_different_working_structures():
-    # one bar
-    data_in = [make_data(9)]
-    tp.barscatter(data_in)
+    data_array = make_data_array()
 
-    # # five bars, 1D, unbalanced
-    data_in = [make_data(9), make_data(8), make_data(3), make_data(7), make_data(5)]
-    tp.barscatter(data_in, scatteroffset=-0.5)
-    
-    # # five bars, 1D, balanced
-    data_in = [make_data(9), make_data(9), make_data(9), make_data(9), make_data(9)]
-    tp.barscatter(data_in)
-
-    # grouped, 2x2, unbalanced
-    data_in = [[make_data(9), make_data(9)], [make_data(9), make_data(9)]]
-    tp.barscatter(data_in)
-    tp.barscatter(data_in, paired=True)
-
-    # grouped, 2x2, unbalanced
-    data_in = [[make_data(9), make_data(9)], [make_data(8), make_data(8)]]
-    tp.barscatter(data_in)
-    tp.barscatter(data_in, paired=True)
-    
-    # grouped, 2x4, balanced
-    tmplist = list(make_data(9))
-    data_in = [[tmplist, tmplist, tmplist, tmplist], [tmplist, tmplist, tmplist, tmplist]]
-    tp.barscatter(data_in)
-    tp.barscatter(data_in, paired=True)
-
-    # grouped, 2x4, unbalanced
-    tmplist2 = list(make_data(7))
-    data_in = [[tmplist, tmplist, tmplist, tmplist], [tmplist2, tmplist2, tmplist2, tmplist2]]
-    tp.barscatter(data_in)
-    tp.barscatter(data_in, paired=True, errorbars=True, scatteroffset=0.9)
-
+    tp.barscatter(data_array["one bar"])
+    tp.barscatter(data_array["5x1, unbalanced"])
+    tp.barscatter(data_array["5x1, unbalanced"])
+    tp.barscatter(data_array["2x2, balanced"])
+    tp.barscatter(data_array["2x2, balanced"], paired=True)
+    tp.barscatter(data_array["2x2, unbalanced"])
+    tp.barscatter(data_array["2x2, unbalanced"], paired=True)
+    tp.barscatter(data_array["2x4, balanced"])
+    tp.barscatter(data_array["2x4, balanced"], paired=True)
+    tp.barscatter(data_array["2x4, unbalanced"])
+    tp.barscatter(data_array["2x4, unbalanced"], paired=True)
 
 if __name__ == "__main__":
     # test_alpha()
-    # test_unequal_groups()
-    # test_prep_data()
-    test_improper_structures()
-    # test_different_structures()
+    # test_improper_structures()
+    # test_different_working_structures()
+    test_many_colors()
 
 
-# %%
-
-# %%
