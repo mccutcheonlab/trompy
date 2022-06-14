@@ -29,6 +29,7 @@ setup(
           'matplotlib',
           'xlrd',
           'scipy',
+          'pandas',
           'xlsxwriter',
           'tdt'
       ],
