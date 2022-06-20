@@ -5,6 +5,7 @@ Created on Fri Apr 17 09:19:56 2020
 
 @author: James Edgar McCutcheon
 """
+import warnings
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -13,8 +14,16 @@ from itertools import chain
 import trompy as tp
 
 class BarScatter():
-    def __init__(self, data):
+    def __init__(self, data, linewidth, fontsize, bar_kwargs, sc_kwargs, ax_kwargs, extra_kwargs):
         self.data = np.asarray(data, dtype=object)
+
+        self.linewidth = linewidth
+        self.fontsize = fontsize
+
+        self.bar_kwargs = bar_kwargs
+        self.sc_kwargs = sc_kwargs
+        self.ax_kwargs = ax_kwargs
+        self.extra_kwargs = extra_kwargs
 
     def create_axis(self, ax):
         if isinstance(ax, plt.Axes):
@@ -170,7 +179,7 @@ class BarScatter():
                     
         self.y_vals = np.sort(self.y_vals)
     
-    def make_bars(self, errorbars, bar_kwargs):
+    def make_bars(self, errorbars):
         self.barlist = []
         self.barx = []
         for x, y, e, bfc, bec in zip(self.x_vals.flatten(), self.bar_means.flatten(), self.bar_error.flatten(),
@@ -182,9 +191,9 @@ class BarScatter():
                             facecolor = bfc, edgecolor = bec,
                             zorder=-1,
                             linewidth=self.linewidth,
-                            **bar_kwargs))
+                            **self.bar_kwargs))
     
-    def make_scatters(self, paired, spaced, yspace, xspace, scatterlinecolor, scattersize, scatteroffset, sc_kwargs):
+    def make_scatters(self, paired, spaced, yspace, xspace, scatterlinecolor, scattersize, scatteroffset):
         self.sclist = []
         self.x_vals =  self.x_vals + (scatteroffset*self.width_of_bars)/2
         
@@ -202,14 +211,14 @@ class BarScatter():
                     self.sclist.append(self.ax.scatter(self.x_vals, self.y_vals, s = scattersize,
                                 c = scf,
                                 edgecolors = sce,
-                                **sc_kwargs))
+                                **self.sc_kwargs))
                             
                 else:
                     for y in Yarray:
                         self.sclist.append(self.ax.scatter(x, y, s = scattersize,
                                         c = scf,
                                         edgecolors = sce,
-                                        **sc_kwargs))
+                                        **self.sc_kwargs))
                         
         elif self.grouped == True:
             for x, Yarray, scf, sce in zip(self.x_vals, self.data, self.scfacecolorArray, self.scedgecolorArray):
@@ -219,7 +228,7 @@ class BarScatter():
                             markerfacecolor = scf,
                             markeredgecolor = sce,
                             markeredgewidth=sc_kwargs["linewidth"],
-                            **sc_kwargs))
+                            **self.sc_kwargs))
         elif self.grouped == False:
             for n,_ in enumerate(self.data[0]):
                 y = [y[n-1] for y in self.data]
@@ -228,15 +237,12 @@ class BarScatter():
                             markerfacecolor = self.scfacecolorArray[0],
                             markeredgecolor = self.scedgecolorArray[0],
                             markeredgewidth=sc_kwargs["linewidth"],
-                            **sc_kwargs))
+                            **self.sc_kwargs))
 
-    def set_axis_properties(self, ax_kwargs, extra_kwargs):
-        legacy_ax_props = ["xlabel", "ylabel", "xlim", "ylim"]
-        for prop in legacy_ax_props:
-            if prop in extra_kwargs:
-                ax_kwargs[prop] = extra_kwargs[prop]
+    def set_axis_properties(self):
 
-        self.ax.set(**ax_kwargs)
+
+        self.ax.set(**self.ax_kwargs)
         self.xrange = np.diff(self.ax.get_xlim())
         self.yrange = np.diff(self.ax.get_ylim())
 
@@ -278,17 +284,34 @@ class BarScatter():
             legendtext.append(itemlabels[i])
         self.ax.legend(legendbar, legendtext, loc=legendloc)
 
+    def process_kwargs(self):
+        if "baralpha" in self.extra_kwargs.keys():
+            bar_kwargs.update({"alpha": self.extra_kwargs["baralpha"]})
+
+        if "scatteralpha" in self.extra_kwargs.keys():
+            self.bar_kwargs.update({"alpha": self.extra_kwargs["scatteralpha"]})
+
+        self.sc_kwargs.update({"linewidth": self.linewidth, "zorder": 20, "clip_on": False})
+
+        legacy_ax_props = ["xlabel", "ylabel", "xlim", "ylim"]
+        for prop in legacy_ax_props:
+            if prop in self.extra_kwargs:
+                self.ax_kwargs[prop] = self.extra_kwargs[prop]
+
+        functional_kwargs = ["xlabel", "ylabel", "xlim", "ylim", "baralpha", "scatteralpha"]
+        for key in self.extra_kwargs.keys():
+            if key not in functional_kwargs:
+                warnings.warn("{} is not a functional keyword argument. Check spelling or barscatter version.".format(key))
+
 def barscatter(data_in, ax=[], transpose=False, paired=False,
                spaced=False, xspace=0.1, yspace=20,
                groupwidth = .75, barwidth = .8,
                barfacecolor_option="same", barfacecolor=["white"],
                baredgecolor_option="same", baredgecolor=["black"],
-               baralpha=1,
                errorbars=False, scatteroffset=0,
                scatterfacecolor_option="same", scatterfacecolor=["white"],
                scatteredgecolor_option="same", scatteredgecolor=["black"],
-               scatterlinecolor="grey", linewidth=0.75,
-               scattersize=80, scatteralpha=1,
+               scatterlinecolor="grey", linewidth=0.75, scattersize=80,
                grouplabel=[], grouplabeloffset=0,
                barlabels=[], barlabeloffset=0.025,
                itemlabels=[], show_legend=False, legendloc="upper right",
@@ -298,7 +321,9 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
                ax_kwargs={},
                **extra_kwargs):
 
-    bs = BarScatter(data_in)
+    bs = BarScatter(data_in, linewidth, fontsize, bar_kwargs, sc_kwargs, ax_kwargs, extra_kwargs)
+
+    bs.process_kwargs()
 
     bs.prep_data(transpose=transpose)
     bs.calculate_items(barwidth, groupwidth)
@@ -310,18 +335,13 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
     bs.scfacecolorArray = bs.set_colors(scatterfacecolor_option, scatterfacecolor)
     bs.scedgecolorArray = bs.set_colors(scatteredgecolor_option, scatteredgecolor)
 
-    bs.linewidth = linewidth
-    bs.fontsize = fontsize
     bs.create_axis(ax)
 
-    bar_kwargs.update({"alpha": baralpha})
-    bs.make_bars(errorbars, bar_kwargs)
+    bs.make_bars(errorbars)
 
-    sc_kwargs.update({"linewidth": linewidth, "alpha": scatteralpha,
-                       "zorder": 20, "clip_on": False})
-    bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, scatteroffset, sc_kwargs)
+    bs.make_scatters(paired, spaced, xspace, yspace, scatterlinecolor, scattersize, scatteroffset)
 
-    bs.set_axis_properties(ax_kwargs, extra_kwargs)
+    bs.set_axis_properties()
     bs.format_ticks()
     bs.tidy_axes()
 
