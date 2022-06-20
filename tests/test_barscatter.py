@@ -41,7 +41,7 @@ def make_data_array():
 #     output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
 
 
-def test_colors(data_in, n_colors):
+def check_colors(data_in, n_colors):
     colors = [(1.0, 0.0, 0.0, 1), (0.0, 1.0, 0.0, 1), (0.0, 0.0, 1.0, 1),
               (0.0, 1.0, 1.0, 1), (1.0, 0.0, 1.0, 1)]*2
     colors_in = colors[:n_colors]
@@ -58,7 +58,11 @@ def test_many_colors():
 
     N_COLORS=[1, 5, 5, 4, 4, 8, 8]
     for key, n_colors in zip(data_array, N_COLORS):
-        assert test_colors(data_array[key], n_colors)
+        assert check_colors(data_array[key], n_colors)
+
+def test_kwargs():
+    data_in = [make_data(10)]
+    tp.barscatter(data_in, errorbars=True, error_bars=False)
 
 def test_improper_structures():
     
@@ -91,6 +95,9 @@ if __name__ == "__main__":
     # test_alpha()
     # test_improper_structures()
     # test_different_working_structures()
-    test_many_colors()
+    # test_many_colors()
+    test_kwargs()
 
 
+
+# %%
