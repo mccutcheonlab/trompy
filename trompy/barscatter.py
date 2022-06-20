@@ -186,7 +186,7 @@ class BarScatter():
                                 self.barfacecolorArray, self.baredgecolorArray):
             self.barx.append(x)
             if errorbars == True:
-                bar_kwargs.update({"yerr": e})
+                self.bar_kwargs.update({"yerr": e})
             self.barlist.append(self.ax.bar(x, y, self.width_of_bars,
                             facecolor = bfc, edgecolor = bec,
                             zorder=-1,
@@ -227,7 +227,7 @@ class BarScatter():
                             color = scatterlinecolor,
                             markerfacecolor = scf,
                             markeredgecolor = sce,
-                            markeredgewidth=sc_kwargs["linewidth"],
+                            markeredgewidth = self.sc_kwargs["linewidth"],
                             **self.sc_kwargs))
         elif self.grouped == False:
             for n,_ in enumerate(self.data[0]):
@@ -236,7 +236,7 @@ class BarScatter():
                             color = scatterlinecolor,
                             markerfacecolor = self.scfacecolorArray[0],
                             markeredgecolor = self.scedgecolorArray[0],
-                            markeredgewidth=sc_kwargs["linewidth"],
+                            markeredgewidth = self.sc_kwargs["linewidth"],
                             **self.sc_kwargs))
 
     def set_axis_properties(self):
@@ -286,7 +286,7 @@ class BarScatter():
 
     def process_kwargs(self):
         if "baralpha" in self.extra_kwargs.keys():
-            bar_kwargs.update({"alpha": self.extra_kwargs["baralpha"]})
+            self.bar_kwargs.update({"alpha": self.extra_kwargs["baralpha"]})
 
         if "scatteralpha" in self.extra_kwargs.keys():
             self.bar_kwargs.update({"alpha": self.extra_kwargs["scatteralpha"]})
