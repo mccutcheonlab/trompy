@@ -289,7 +289,7 @@ class BarScatter():
             self.bar_kwargs.update({"alpha": self.extra_kwargs["baralpha"]})
 
         if "scatteralpha" in self.extra_kwargs.keys():
-            self.bar_kwargs.update({"alpha": self.extra_kwargs["scatteralpha"]})
+            self.sc_kwargs.update({"alpha": self.extra_kwargs["scatteralpha"]})
 
         self.sc_kwargs.update({"linewidth": self.linewidth, "zorder": 20, "clip_on": False})
 
