@@ -3,12 +3,14 @@
 A collection of tools for plotting and data analysis from McCutcheon Lab based at UiT in Tromsø, Norway (hence *trom-py*). We study ingestive behavior and motivation in rodent neuroscience experiments but code may be useful in other settings.
  
 Highlights include:
- - GUI for analyzing lick patterns in rodent feeding and drinking experiments
- - GUI for analyzing fiber photometry data from rodent neuroscience experiments
+ - ~~GUI for analyzing lick patterns in rodent feeding and drinking experiments~~ [^1]
+ - ~~GUI for analyzing fiber photometry data from rodent neuroscience experiments~~
  - Function for plotting bar plots with individual data points
  - Function for reading data files produced by Med Associates behavioral equipment
  - Functions for analyzing patterns of licking in rodent experiments
  - Functions for performing ROC (receiver-operator characteristic) analysis
+ 
+ [^1]: GUIs are now available as separate packages: https://github.com/mccutcheonlab/Lick-Calc-GUI and https://github.com/mccutcheonlab/photogui
  
 Code is maintained by James McCutcheon, Dept of Psychology, UiT The Arctic University of Norway.
 
