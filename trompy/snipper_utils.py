@@ -7,6 +7,7 @@ Created on Fri Apr 17 11:51:29 2020
 
 import numpy as np
 import scipy.signal as sig
+from math import ceil
 
 def processdata(data, datauv, method='konanur', normalize=True, normalize_time_cutoff=5, normalize_method="zscore", fs=1017):
     """ Corrects for baseline when given calcium-moldulated and non-Ca modulated streams.
@@ -90,8 +91,8 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
     
     return df
 
-def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
-                 adjustBaseline = True,
+def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
+                 adjust_baseline = True,
                  bins = 0, **kwargs):
     """ Makes 'snips' of a data file aligned to an event of interest.
 
@@ -102,15 +103,15 @@ def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
     ----------
     data : List or array of floats
         Data to be divided into snips.
-    timelock : List
+    timestamps : List
         Timestamps of events to be used to align data.
     fs : Float, optional
         Sampling frequency. The default is 1.
-    preTrial : Int, optional
+    pre_trial : Int, optional
         Number of seconds to include before event. The default is 10.
-    trialLength : Int, optional
+    trial_length : Int, optional
         Total length (in seconds) of each snip. The default is 30.
-    adjustBaseline : Bool, optional
+    adjust_baseline : Bool, optional
         When True divides all data points in each snip by mean of points occurring before event. The default is True.
     bins : Int, optional
         Number of bins to divide trial length into. The default is 0. If set at default
@@ -120,63 +121,66 @@ def snipper(data, timelock, fs = 1, preTrial=10, trialLength=30,
     -------
     snips : List of lists
         List of X snips of Y length where X=number of events in timelock and Y=bins
-    pps : Float
-        Points-per-second
+    pps : Int
+        Samples (points) per second 
 
     """
+    # legacy arguments
+    if "timelock " in kwargs.keys():
+        timestamps = kwargs["timelock"]
+    
+    if "preTrial" in kwargs.keys():
+        baseline_length = kwargs["preTrial"]
 
-    if len(timelock) == 0:
+    if "trialLength" in kwargs.keys():
+        trial_length = kwargs["trialLength"]
+    
+    if "adjustBaseline" in kwargs.keys():
+        adjust_baseline = kwargs["adjustBaseline"]
+
+    if 't2sMap' in kwargs.keys():
+        print("Use of t2sMap is no longer supported. Use fs instead or install trompy=<14.0")
+        return
+    
+    if len(timestamps) == 0:
         print('No events to analyse! Quitting function.')
         raise Exception('no events')
     
     # removes non-numeric values, e.g. nans or infinite
-    timelock = [i for i in timelock if np.isfinite(i)]
+    timestamps = [i for i in timestamps if np.isfinite(i)]
     
-    pps = int(fs) # points per sample
-    pre = int(preTrial*pps) 
-#    preABS = preTrial
-    length = int(trialLength*pps)
-# converts events into sample numbers
-    event=[]
-    if 't2sMap' in kwargs.keys():
-        for x in timelock:
-            event.append(np.searchsorted(kwargs['t2sMap'], x, side="left"))
-    else:
-        event = [x*fs for x in timelock]
+    events_in_samples = [ceil(timestamp*fs) for timestamp in timestamps]
 
-    new_events = []
-    for x in event:
-        if int(x-pre) > 0:
-            new_events.append(x)
-    event = new_events
+    baseline_in_samples = int(baseline_length*fs)
+    trial_length_in_samples = int(trial_length*fs)
 
-    nSnips = len(event)
-    snips = np.empty([nSnips,length])
-    avgBaseline = []
+    # removes events where an entire snip cannot be made
+    events_in_samples = [event for event in events_in_samples if \
+        (event-baseline_in_samples > 0) and \
+        (event-baseline_in_samples+trial_length_in_samples) < len(data)]
 
-    for i, x in enumerate(event):
-        start = int(x) - pre
-        avgBaseline.append(np.mean(data[start : start + pre]))
-        try:
-            snips[i] = data[start : start+length]
-        except ValueError: # Deals with recording arrays that do not have a full final trial
-            snips = snips[:i]
-            avgBaseline = avgBaseline[:i]
-            nSnips = i
-            break # Exits for loop
+    n_snips = len(events_in_samples)
+    snips = np.empty([n_snips, trial_length_in_samples])
+    
+    trial_start = [event - baseline_in_samples for event in events_in_samples]
+    trial_end = [start + trial_length_in_samples for start in trial_start]
 
-    if adjustBaseline == True:
-        snips = np.subtract(snips.transpose(), avgBaseline).transpose()
-        snips = np.divide(snips.transpose(), avgBaseline).transpose()
+    for idx, (start, end) in enumerate(zip(trial_start, trial_end)):
+        snips[idx] = data[start : end]
+
+    if adjust_baseline == True:
+        average_baseline = np.mean(snips[:,:baseline_in_samples], axis=1)
+        snips = np.subtract(snips.transpose(), average_baseline).transpose()
+        # snips = np.divide(snips.transpose(), np.abs(average_baseline)).transpose()
 
     if bins > 0:
-        if length % bins != 0:
-            snips = snips[:,:-(length % bins)]
+        if trial_length_in_samples % bins != 0:
+            snips = snips[:,:-(trial_length_in_samples % bins)]
         totaltime = snips.shape[1] / int(fs)
-        snips = np.mean(snips.reshape(nSnips,bins,-1), axis=2)
+        snips = np.mean(snips.reshape(n_snips,bins,-1), axis=2)
         pps = bins/totaltime
               
-    return snips, pps
+    return snips, int(fs)
 
 def mastersnipper(data, dataUV, data_filt, fs, events,
                   trialLength=30,
