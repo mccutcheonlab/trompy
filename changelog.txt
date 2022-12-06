@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.15.0
+
+06/12/2022
+
+- Major update with changes to barscatter, shadedError, snipper
+- Removed GUIs from package
+
 ## 0.14.0
 
 20/03/2022
