@@ -37,8 +37,8 @@ def make_data_array():
 
 
 
-# def test_alpha():
-#     output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
+def test_alpha():
+    output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
 
 
 def check_colors(data_in, n_colors):
@@ -96,7 +96,8 @@ if __name__ == "__main__":
     # test_improper_structures()
     # test_different_working_structures()
     # test_many_colors()
-    test_kwargs()
+    # test_kwargs()
+    test_alpha()
 
 
 
