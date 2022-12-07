@@ -35,7 +35,7 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         Time in minutes at beginning and end to ignore when normalizing signal.
         If too long (> a quarter of total time) then it is reduced. The default is 5 (min).
     normalize_method : Str, optional
-        Default is zscore. But can also use old method which uses 3*SD.
+        Default is zscore. Other options are 'df' for deltaF/F and "old" which scales based on an arbitrary 3*SD.
     fs : Int, optional
         Used when normalizing signal. 1017 is default.
 
@@ -80,12 +80,14 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
             nsamples = normalize_time_cutoff*60*fs
             
         cutoff_range = range(nsamples, len(df)-nsamples)
-        mean=abs(np.mean(df[cutoff_range]))
+        mean=np.mean(df[cutoff_range])
         sd=np.std(df[cutoff_range])
         
         if normalize_method == "zscore":
             df_corr = np.subtract(df, mean)
             df=np.divide(df_corr, sd)
+        elif normalize_method == "df":
+            df=np.divide(df, np.abs(mean))*100
         elif normalize_method == "old":
             df=np.divide(df, sd*3)
     
