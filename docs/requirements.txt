@@ -14,7 +14,7 @@ MarkupSafe==2.0.1
 packaging==21.3
 pip==21.2.4
 pycparser==2.21
-Pygments==2.11.2
+Pygments==2.15.0
 pyOpenSSL==22.0.0
 pyparsing==3.0.4
 PySocks==1.7.1
