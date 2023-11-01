@@ -36,7 +36,6 @@ def make_data_array():
     return data_array
 
 
-
 def test_alpha():
     output = tp.barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
 
@@ -76,6 +75,10 @@ def test_improper_structures():
     with pytest.raises(TypeError):
         tp.barscatter(data_in)
 
+def test_spaced():
+    data_in = [make_data(3)]
+    tp.barscatter(data_in, spaced=True)
+
 def test_different_working_structures():
     data_array = make_data_array()
 
@@ -97,7 +100,9 @@ if __name__ == "__main__":
     # test_different_working_structures()
     # test_many_colors()
     # test_kwargs()
-    test_alpha()
+    # test_alpha()
+    test_spaced()
+    
 
 
 

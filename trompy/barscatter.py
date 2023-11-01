@@ -161,13 +161,13 @@ class BarScatter():
 
     def xyspacer(self, x, y_vals, bindist=20, space=0.1):
         """ Helper function for barscatter for spacing individual datapoints"""
-        
+
         histrange=[]
         histrange.append(min(self.ax.get_ylim()[0], min(y_vals)))
         histrange.append(max(self.ax.get_ylim()[1], max(y_vals)))
 
         yhist = np.histogram(y_vals, bins=bindist, range=histrange)
-        
+
         self.x_vals=[]
         for ybin in yhist[0]:
             if ybin == 1:
@@ -177,7 +177,7 @@ class BarScatter():
                 for val in temp_vals:
                     self.x_vals.append(val)
                     
-        self.y_vals = np.sort(self.y_vals)
+        self.y_vals = np.sort(y_vals)
     
     def make_bars(self, errorbars):
         self.barlist = []
@@ -193,7 +193,7 @@ class BarScatter():
                             linewidth=self.linewidth,
                             **self.bar_kwargs))
     
-    def make_scatters(self, paired, spaced, yspace, xspace, scatterlinecolor, scattersize, scatteroffset):
+    def make_scatters(self, paired, spaced, xspace, yspace, scatterlinecolor, scattersize, scatteroffset):
         self.sclist = []
         self.x_vals =  self.x_vals + (scatteroffset*self.width_of_bars)/2
         
@@ -201,8 +201,8 @@ class BarScatter():
             for x, Yarray, scf, sce  in zip(self.x_vals.flatten(), self.data.flatten(),
                                             self.scfacecolorArray, self.scedgecolorArray):
                 if spaced == True:
-                    try: 
-                        self.x_vals, self.y_vals = self.xyspacer(self.ax, x, Yarray, bindist=yspace, space=xspace)
+                    try:
+                        self.xyspacer(x, Yarray, bindist=yspace, space=xspace)
                     except:
                         print("Could not space all sets of points.")
                         self.x_vals = [x] * len(Yarray)
@@ -370,6 +370,7 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
 # #TODO make labels without offsets
 # #TODO add tick kwargs
 # #TODO catch exception for outer list or first dimension as 1, e.g. squeeze
+# #TODO allow legends to be added
 
 # # def barscatter(data_in, transpose = False,
 # #                 groupwidth = .75,
@@ -521,5 +522,6 @@ def barscatter(data_in, ax=[], transpose=False, paired=False,
     
 #     return ax, barx, barlist, sclist
       
-# if __name__ == "__main__":
-#     barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
+if __name__ == "__main__":
+    print("Updated version")
+    # barscatter([[1, 2, 3, 4], [5, 6, 7, 8]], scatteralpha=0.2, paired=True)
