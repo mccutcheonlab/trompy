@@ -25,3 +25,6 @@ pip install --upgrade trompy
 
 ## For converting readme.md to readme.rst
 pandoc --columns=100 --output=README.rst --to rst README.md
+
+
+# How to write tests
