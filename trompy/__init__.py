@@ -1,6 +1,6 @@
 from trompy.barscatter import barscatter # ,  prep_data, data2obj1D, data2obj2D, xyspacer
 from trompy.medfilereader import medfilereader, medfilereader_licks, isnumeric, checknsessions, tstamp_to_tdate
-from trompy.metafile_utils import metafilemaker, metafilereader
+from trompy.metafile_utils import metafilereader
 from trompy.snipper_utils import processdata, snipper, mastersnipper, zscore, findnoise, removenoise, med_abs_dev, makerandomevents, time2samples, event2sample, resample_snips
 from trompy.general_utils import remcheck, random_array, getuserhome, flatten_list, discrete2continuous, findpercentilevalue, logical_subset, find_overlap, download_data
 from trompy.lick_utils import lickCalc, removeshortbursts, calculate_burst_prob, weib_davis, fit_weibull
