@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.15.1
+
+21/02/2024
+
+- Updated metafilereader to accept .xls and .xlsx files (included test script)
+- Removed metafilemaker as has not been required for a while
+
 ## 0.15.0
 
 06/12/2022
