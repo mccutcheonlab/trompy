@@ -4,11 +4,10 @@ Created on Fri Apr 17 13:40:05 2020
 
 @author: James Edgar McCutcheon
 """
-
+from pathlib import Path
 import numpy as np
 import scipy.optimize as opt
 import scipy.stats as stats
-
 
 def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
@@ -125,7 +124,8 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         lickData['licklength'] = []
         lickData['longlicks'] = []
 
-    lickData['licks'] = np.concatenate([[0], licks])
+    # lickData['licks'] = np.concatenate([[0], licks])
+    lickData['licks'] = licks
     lickData['ilis'] = np.diff(lickData['licks'])
     if ignorelongilis:
         lickData['ilis'] = [x for x in lickData['ilis'] if x < burstThreshold]
@@ -134,20 +134,21 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     lickData['total'] = len(licks)
     
     # Calculates start, end, number of licks and time for each BURST 
-    lickData['bStart'] = [val for i, val in enumerate(lickData['licks']) if (val - lickData['licks'][i-1] > burstThreshold)]  
-    lickData['bInd'] = [i for i, val in enumerate(lickData['licks']) if (val - lickData['licks'][i-1] > burstThreshold)]
+    lickData['bInd'] = [0] + (np.where(np.diff(lickData['licks']) > burstThreshold)[0] + 1).tolist()
+    lickData['bStart'] = [lickData['licks'][i] for i in lickData['bInd']]
     lickData['bEnd'] = [lickData['licks'][i-1] for i in lickData['bInd'][1:]]
     lickData['bEnd'].append(lickData['licks'][-1])
 
     lickData['bLicks'] = np.diff(lickData['bInd'] + [len(lickData['licks'])])
-    
+
     # calculates which bursts are above the minimum threshold
     inds = [i for i, val in enumerate(lickData['bLicks']) if val>minburstlength-1]
     
     lickData['bLicks'] = removeshortbursts(lickData['bLicks'], inds)
     lickData['bStart'] = removeshortbursts(lickData['bStart'], inds)
     lickData['bEnd'] = removeshortbursts(lickData['bEnd'], inds)
-      
+    lickData['bInd'] = removeshortbursts(lickData['bInd'], inds)
+
     lickData['bTime'] = np.subtract(lickData['bEnd'], lickData['bStart'])
     lickData['bNum'] = len(lickData['bStart'])
     if lickData['bNum'] > 0:
@@ -262,8 +263,37 @@ def fit_weibull(xdata, ydata):
 if __name__ == '__main__':
     print('Testing functions')
     import trompy as tp
-    filename = "C:\Github\Lick-Calc-GUI\data\!2017-07-28_09h46m.Subject pcf1.06"
+    filename = Path("C:/Users/jmc010/Github/trompy/tests/test_data/03_W.med")
 
-    data = tp.medfilereader(filename)[4][1:]
+    data = tp.medfilereader(filename, vars_to_extract=["e"], remove_var_header=True)
+    print(data[0])
 
-    lickdata = lickCalc(data)
+    lickdata = lickCalc(data, minburstlength=10)
+
+    print(lickdata['freq'])
+
+    print("first lick", data[0])
+    print("last lick", data[-1])
+
+    print("total licks from data", len(data))
+    print("total licks from lickcalc", lickdata['total'])
+
+    print("licks per burst by key", lickdata['bMean'])
+
+    print("number of bursts", lickdata['bNum'])
+
+    print("first burst index", lickdata['bInd'][0])
+    print("time of first burst", lickdata['bStart'][0])
+    print("nlicks in first burst", lickdata['bLicks'][0])
+    
+
+    print("total licks from burst calculation", lickdata['bMean'] * lickdata['bNum'])
+
+"""
+issue seems to be that the first burst isn't being picked up
+maybe because the first lick is too early
+
+for future re-write could make into a class
+""" 
+
+
