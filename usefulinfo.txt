@@ -12,8 +12,13 @@ Make a new Release using exact name e.g. "v0.12.3-alpha" as used in setup.py
 ## For uploading new pypi release
 1. Ensure that setup.py and __init__.py are up-to-date
 2. Navigate to trompy folder and run: python setup.py sdist
-3. twine upload dist/* (need to enter pypi username and password) (password in 1password)
+3. twine upload dist/* ~~(need to enter pypi username and password)~~ (password in 1password)
 (can try twine upload --skip-existing dist/*)
+
+Now need to use token so format is as follows (with token stored in 1password)
+
+twine upload -u __token__ -p pypi-xxx --skip-existing dist/* --verbose 
+
 
 ## To check new release
 
