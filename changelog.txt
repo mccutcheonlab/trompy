@@ -2,11 +2,15 @@
 
 ## 0.15.2
 
+22/02/2024
+
 - Updated medfile reader
 -- Now accepts uppercase letters for variables
 -- More Pythonic argument names (old arguments still work)
 -- Fixed bug when all variables were extracted
 -- Allows output as dictionary with keys as variable names (letters)
+
+- Fixed bug in lickCalc causing some bursts not to be counted if too early in session
 
 ## 0.15.1
 
