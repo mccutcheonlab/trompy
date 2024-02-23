@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.15.3
+
+23/02/2024
+
+- Added function to calculate least significant difference posthocs
+
 ## 0.15.2
 
 22/02/2024
