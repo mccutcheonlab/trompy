@@ -124,6 +124,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-notebooks/*
+#notebooks/*
 *.code-workspace
 launch.json

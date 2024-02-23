@@ -4,7 +4,7 @@ from trompy.metafile_utils import metafilereader
 from trompy.snipper_utils import processdata, snipper, mastersnipper, zscore, findnoise, removenoise, med_abs_dev, makerandomevents, time2samples, event2sample, resample_snips
 from trompy.general_utils import remcheck, random_array, getuserhome, flatten_list, discrete2continuous, findpercentilevalue, logical_subset, find_overlap, download_data
 from trompy.lick_utils import lickCalc, removeshortbursts, calculate_burst_prob, weib_davis, fit_weibull
-from trompy.stats_utils import sidakcorr, mean_and_sem, bonferroni_corrected_ttest
+from trompy.stats_utils import sidakcorr, mean_and_sem, bonferroni_corrected_ttest, lsd_pval
 from trompy.fig_utils import setsameaxislimits, invisible_axes, shadedError, ax2prop, lighten_color, get_violinstats
 from trompy.lick_figs import licklengthFig, iliFig, burstlengthFig, ibiFig, burstprobFig, sessionlicksFig
 from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trialsMultShadedFig, trialstiledFig, makeheatmap
