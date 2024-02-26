@@ -1,6 +1,8 @@
 
 from pathlib import Path
 import numpy as np
+from scipy import stats
+import scipy.optimize as opt
 
 class Lickcalc:
     def __init__(self, **kwargs):

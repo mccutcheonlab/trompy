@@ -6,7 +6,6 @@ Created on Fri Apr 17 16:22:10 2020
 """
 import matplotlib.pyplot as plt
 import numpy as np
-from trompy import weib_davis
 
 def licklengthFig(ax, data, contents = "", color='grey'):
     """ Figure to show histogram of average lick length.

@@ -10,4 +10,4 @@ from trompy.lick_figs import licklengthFig, iliFig, burstlengthFig, ibiFig, burs
 from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trialsMultShadedFig, trialstiledFig, makeheatmap
 from trompy.roc_utils import rocN, rocshuf, nanroc, run_roc_comparison, plot_ROC_and_line
 from trompy.merge_fed_files import merge_files, parse_args
-from trompy.lickcalc import Lickcalc #, calculate_burst_prob, weib_davis, fit_weibull
+from trompy.lickcalc import Lickcalc, weib_davis, fit_weibull
