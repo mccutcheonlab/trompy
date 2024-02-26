@@ -1,5 +1,12 @@
 # trompy changelog
 
+## 0.15.4
+
+26/02/2024
+
+- Rewrote lickcalc function to use class definition
+-- Included option for minimum run length
+
 ## 0.15.3
 
 23/02/2024
