@@ -126,18 +126,22 @@ def test_overlap():
         
 def test_diff_baselines():
     data = np.random.random(10000)
-    data[5000:] = data[5000:]*10
-    events = [4000.1, 5005.1, 9000.1]
+    data[5000:] = data[5000:]+5
+    events = [4000, 5005, 9000]
     output, _ = tp.snipper(data, events, baseline_length=10, trial_length=20, fs=1, adjust_baseline=False)
     print(output)
     # assert np.shape(output) == (5, 30)
 
     output, _ = tp.snipper(data, events, baseline_length=[10, 5], trial_length=20, fs=1, adjust_baseline=True)
-    print(output)
-    # events[2] = np.nan
-    # events[3] = np.inf
-    # output, _ = tp.snipper(data, events, baseline_length=[10, 5])
-    # assert np.shape(output) == (3, 30) #checks that nans and infs removed
+    bl = output[1][:5]
+    non_bl = output[1][5:10]
+    
+    assert np.mean(bl)+4 < np.mean(non_bl)
+    
+    print(np.mean(bl), np.mean(non_bl))
+    
+    # add check to see what happens if incorrect number of values given for baseline or if trial length is too short
+
 
 # TODO: check with varied fs
 
