@@ -98,9 +98,6 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
                  bins = 0, **kwargs):
     """ Makes 'snips' of a data file aligned to an event of interest.
 
-    If a timelocked map is needed to align data precisely (e.g. with TDT equipment)
-    then it is necessary to pass a t2sMap to the function.
-
     Parameters
     ----------
     data : List or array of floats
@@ -109,8 +106,10 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
         Timestamps of events to be used to align data.
     fs : Float, optional
         Sampling frequency. The default is 1.
-    pre_trial : Int, optional
-        Number of seconds to include before event. The default is 10.
+    baseline_length : Int or List of two Ints, optional
+        Number of seconds to include before event, if single value.
+        For baseline between -x and -y, provide a list of [x, y].
+        The default is 10.
     trial_length : Int, optional
         Total length (in seconds) of each snip. The default is 30.
     adjust_baseline : Bool, optional
@@ -152,26 +151,37 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
     timestamps = [i for i in timestamps if np.isfinite(i)]
     
     events_in_samples = [ceil(timestamp*fs) for timestamp in timestamps]
+    
+    try:
+        if len(baseline_length) == 2:
+            baseline_start_in_samples = int(baseline_length[0]*fs)
+            baseline_end_in_samples = int((baseline_length[1]-baseline_length[0])*fs)
+        else:
+            print("Incorrect number of values given for baseline_length. Using first value only.")
+            baseline_start_in_samples = int(baseline_length[0]*fs)
+            baseline_end_in_samples = int(baseline_length[0]*fs)
+    except TypeError:
+        baseline_start_in_samples = int(baseline_length*fs)
+        baseline_end_in_samples = int(baseline_length*fs)
 
-    baseline_in_samples = int(baseline_length*fs)
     trial_length_in_samples = int(trial_length*fs)
 
     # removes events where an entire snip cannot be made
     events_in_samples = [event for event in events_in_samples if \
-        (event-baseline_in_samples > 0) and \
-        (event-baseline_in_samples+trial_length_in_samples) < len(data)]
+        (event-baseline_start_in_samples > 0) and \
+        (event-baseline_start_in_samples+trial_length_in_samples) < len(data)]
 
     n_snips = len(events_in_samples)
     snips = np.empty([n_snips, trial_length_in_samples])
     
-    trial_start = [event - baseline_in_samples for event in events_in_samples]
+    trial_start = [event - baseline_start_in_samples for event in events_in_samples]
     trial_end = [start + trial_length_in_samples for start in trial_start]
 
     for idx, (start, end) in enumerate(zip(trial_start, trial_end)):
         snips[idx] = data[start : end]
 
     if adjust_baseline == True:
-        average_baseline = np.mean(snips[:,:baseline_in_samples], axis=1)
+        average_baseline = np.mean(snips[:,:baseline_end_in_samples], axis=1)
         snips = np.subtract(snips.transpose(), average_baseline).transpose()
         # snips = np.divide(snips.transpose(), np.abs(average_baseline)).transpose()
 
