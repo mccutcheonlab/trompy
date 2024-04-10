@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.15.5
+
+10/04/2024
+
+- Updated snipper function with better baseline options
+
 ## 0.15.4
 
 26/02/2024
