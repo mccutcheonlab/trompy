@@ -23,7 +23,7 @@ def test_output():
 
     events[2] = np.nan
     events[3] = np.inf
-    output, pps = tp.snipper(data, events)
+    output, _ = tp.snipper(data, events)
     assert np.shape(output) == (3, 30) #checks that nans and infs removed
 
 def create_gcamp_kernel(t, tau=2.6):
@@ -123,17 +123,38 @@ def test_overlap():
 
         output, _ = tp.snipper(data, events, fs=fs)
         assert len(output) == 1
+        
+def test_diff_baselines():
+    data = np.random.random(10000)
+    data[5000:] = data[5000:]+5
+    events = [4000, 5005, 9000]
+    output, _ = tp.snipper(data, events, baseline_length=10, trial_length=20, fs=1, adjust_baseline=False)
+    #print(output)
+    # assert np.shape(output) == (5, 30)
+
+    data = data + 10
+    output, _ = tp.snipper(data, events, baseline_length=[10, 5], trial_length=20, fs=1, adjust_baseline=True)
+    bl = output[1][:5]
+    non_bl = output[1][5:10]
+    
+    assert np.mean(bl)+4 < np.mean(non_bl)
+    print(output)
+    print(np.mean(bl), np.mean(non_bl))
+    
+    # add check to see what happens if incorrect number of values given for baseline or if trial length is too short
+
 
 # TODO: check with varied fs
 
 if __name__ == "__main__":
-    test_output()
-    test_peaks()
-    test_adjust_baseline() 
-    test_bins()
-    test_trial_length()
-    test_no_events()
-    test_overlap()
+    # test_output()
+    # test_peaks()
+    test_diff_baselines()
+    # test_adjust_baseline() 
+    # test_bins()
+    # test_trial_length()
+    # test_no_events()
+    # test_overlap()
 
 
 # %%
