@@ -4,15 +4,45 @@ Created on Fri Apr 17 10:12:10 2020
 
 @author: James Edgar McCutcheon
 """
-
+from pathlib import Path
 import numpy as np
 import string
 import datetime
 
-def medfilereader(filename, varsToExtract = 'all',
-                  sessionToExtract = 1,
+def medfilereader(filename, vars_to_extract='all', session_to_extract=1, verbose=False, remove_var_header=False, dictionary_output=False, **kwargs):
+    """
+    Reads in Med Associates file stored as single column and returns variables as lists.
+
+    Parameters
+    ----------
+    filename : str
+        File to be read in.
+    vars_to_extract : str or list of str, optional
+        Variables to extract from the file. Default is 'all'.
+    session_to_extract : int, optional
+        Specifies the session to extract from the file. Default is 1.
+    verbose : bool, optional
+        If True, prints statements with file information. Default is False.
+    remove_var_header : bool, optional
+        If True, removes the first value in each variable array. Useful when negative numbers are used as markers to signal array start. Default is False.
+    dictionary_output : bool, optional
+        If True, returns the variables as a dictionary with variable names as keys. Default is False.
+    **kwargs : dict, optional
+        Additional keyword arguments.
+
+    Returns
+    -------
+    vars_to_return : list or dict
+        Variables extracted from the medfile. If dictionary_output is False, returns a list of lists of numbers (int or float). If dictionary_output is True, returns a dictionary with variable names as keys and lists of numbers as values.
+    """
+    # Function code goes here
+    pass
+def medfilereader(filename, vars_to_extract = 'all',
+                  session_to_extract = 1,
                   verbose = False,
-                  remove_var_header = False):
+                  remove_var_header = False,
+                  dictionary_output = False,
+                  **kwargs):
     
     """Reads in Med Associates file stored as single column and returns variables as lists.
     
@@ -34,24 +64,29 @@ def medfilereader(filename, varsToExtract = 'all',
     varsToReturn : list of lists of numbers (int or float)
         Variables extracted from medfile as lists or a list of lists ('all')
     """
+    if 'varsToExtract' in kwargs:
+        vars_to_extract = kwargs['varsToExtract']
 
-    if varsToExtract == 'all':
-        numVarsToExtract = np.arange(0,26)
+    if 'sessionToExtract' in kwargs:
+        vars_to_extract = kwargs['sessionToExtract']
+
+    if vars_to_extract == 'all':
+        num_vars_to_extract = np.arange(0,26)
     else:
-        numVarsToExtract = [ord(x)-97 for x in varsToExtract]
+        num_vars_to_extract = [ord(x.lower())-97 for x in vars_to_extract]
     
-    f = open(filename, 'r')
+    f = open(Path(filename), 'r')
     f.seek(0)
     filerows = f.readlines()[8:]
     datarows = [isnumeric(x) for x in filerows]
     matches = [i for i,x in enumerate(datarows) if x == 0.3]
-    if sessionToExtract > len(matches):
-        print('Session ' + str(sessionToExtract) + ' does not exist.')
+    if session_to_extract > len(matches):
+        print('Session ' + str(session_to_extract) + ' does not exist.')
     if verbose == True:
         print('There are ' + str(len(matches)) + ' sessions in ' + filename)
-        print('Analyzing session ' + str(sessionToExtract))
+        print('Analyzing session ' + str(session_to_extract))
     
-    varstart = matches[sessionToExtract - 1]
+    varstart = matches[session_to_extract - 1]
     medvars = [[] for n in range(26)]
     
     k = int(varstart + 27)
@@ -62,13 +97,18 @@ def medfilereader(filename, varsToExtract = 'all',
         k = k + medvarsN
         
     if remove_var_header == True:
-        varsToReturn = [medvars[i][1:] for i in numVarsToExtract]
+        vars_to_return = [medvars[i][1:] for i in num_vars_to_extract]
     else:
-        varsToReturn = [medvars[i] for i in numVarsToExtract]
+        vars_to_return = [medvars[i] for i in num_vars_to_extract]
 
-    if np.shape(varsToReturn)[0] == 1:
-        varsToReturn = varsToReturn[0]
-    return varsToReturn
+    if len(vars_to_return) == 1:
+        vars_to_return = vars_to_return[0]
+
+    if dictionary_output == True:
+        num_vars_to_extract = [chr(x + 97) for x in num_vars_to_extract]
+        vars_to_return = {num_vars_to_extract[i]: vars_to_return[i] for i in range(len(vars_to_return))}
+
+    return vars_to_return
 
 def isnumeric(s):
     """Converts strings into numbers (floats)
@@ -156,3 +196,15 @@ def medfilereader_licks(filename,
             val.pop(0)
 
     return medvars
+
+if __name__ == '__main__':
+    print('Testing functions')
+    import trompy as tp
+    filename = Path("C:/Users/jmc010/Github/trompy/tests/test_data/!2016-08-12_09h33m.Subject 14")
+
+    data = tp.medfilereader(filename, vars_to_extract=["e", "x"], dictionary_output=True)
+    print(len(data))
+    print(data.keys())
+
+    for key, val in data.items():
+        print(key, len(val))

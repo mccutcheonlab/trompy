@@ -1,5 +1,37 @@
 # trompy changelog
 
+## 0.15.4
+
+26/02/2024
+
+- Rewrote lickcalc function to use class definition
+-- Included option for minimum run length
+
+## 0.15.3
+
+23/02/2024
+
+- Added function to calculate least significant difference posthocs
+
+## 0.15.2
+
+22/02/2024
+
+- Updated medfile reader
+-- Now accepts uppercase letters for variables
+-- More Pythonic argument names (old arguments still work)
+-- Fixed bug when all variables were extracted
+-- Allows output as dictionary with keys as variable names (letters)
+
+- Fixed bug in lickCalc causing some bursts not to be counted if too early in session
+
+## 0.15.1
+
+21/02/2024
+
+- Updated metafilereader to accept .xls and .xlsx files (included test script)
+- Removed metafilemaker as has not been required for a while
+
 ## 0.15.0
 
 06/12/2022
