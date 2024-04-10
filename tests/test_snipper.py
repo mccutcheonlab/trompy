@@ -129,15 +129,16 @@ def test_diff_baselines():
     data[5000:] = data[5000:]+5
     events = [4000, 5005, 9000]
     output, _ = tp.snipper(data, events, baseline_length=10, trial_length=20, fs=1, adjust_baseline=False)
-    print(output)
+    #print(output)
     # assert np.shape(output) == (5, 30)
 
+    data = data + 10
     output, _ = tp.snipper(data, events, baseline_length=[10, 5], trial_length=20, fs=1, adjust_baseline=True)
     bl = output[1][:5]
     non_bl = output[1][5:10]
     
     assert np.mean(bl)+4 < np.mean(non_bl)
-    
+    print(output)
     print(np.mean(bl), np.mean(non_bl))
     
     # add check to see what happens if incorrect number of values given for baseline or if trial length is too short
@@ -146,10 +147,10 @@ def test_diff_baselines():
 # TODO: check with varied fs
 
 if __name__ == "__main__":
-    test_output()
+    # test_output()
     # test_peaks()
     test_diff_baselines()
-    test_adjust_baseline() 
+    # test_adjust_baseline() 
     # test_bins()
     # test_trial_length()
     # test_no_events()

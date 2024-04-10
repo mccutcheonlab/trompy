@@ -155,7 +155,7 @@ def snipper(data, timestamps, fs=1, baseline_length=10, trial_length=30,
     try:
         if len(baseline_length) == 2:
             baseline_start_in_samples = int(baseline_length[0]*fs)
-            baseline_end_in_samples = int((baseline_length[1]-baseline_length[0])*fs)
+            baseline_end_in_samples = int((baseline_length[0]-baseline_length[1])*fs)
         else:
             print("Incorrect number of values given for baseline_length. Using first value only.")
             baseline_start_in_samples = int(baseline_length[0]*fs)
