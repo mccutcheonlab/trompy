@@ -165,7 +165,7 @@ class Lickcalc:
             return np.array(self.burst_start[1:]) - np.array(self.burst_end[:-1])
     
     def get_runs(self):
-        split_points = np.where(np.array(self.get_ilis()) > self.run_threshold)[0] + 1
+        split_points = np.where(np.array(np.diff(self.licks)) > self.run_threshold)[0] + 1
         return np.split(self.licks, split_points)
     
     def get_run_start(self):
