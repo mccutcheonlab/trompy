@@ -5,6 +5,7 @@ Created on Fri Apr 17 13:40:05 2020
 @author: James Edgar McCutcheon
 """
 from pathlib import Path
+from trompy.lickcalc import Lickcalc
 
 def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
