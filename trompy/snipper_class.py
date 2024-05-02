@@ -1,5 +1,6 @@
 import numpy as np
 from math import ceil, floor
+import matplotlib.pyplot as plt
 
 class Snipper:
     def __init__(self, data, start, **kwargs):
@@ -7,28 +8,15 @@ class Snipper:
         self.start = [i for i in start if np.isfinite(i)]
         self.kwargs = kwargs
 
-        if 'end' in kwargs:
-            self.end = [i for i in kwargs['end'] if np.isfinite(i)]
-        else:
-            self.end = None
-
-        if 'fs' in kwargs:
-            self.fs = kwargs['fs']
-
-        if 'pre' in kwargs:
-            self.pre = kwargs['pre']
-        else:
-            self.pre = 10
-
-        if 'post' in kwargs:
-            self.post = kwargs['post']
-        else:
-            self.post = 10
-
-        if 'binlength' in kwargs:
-            self.binlength = kwargs['binlength']
-        else:
-            self.binlength = None
+        self.end = kwargs.get('end', None)
+        self.fs = kwargs.get('fs', 1)
+        self.pre = kwargs.get('pre', 10)
+        self.post = kwargs.get('post', 10)
+        self.baselinelength = kwargs.get('baselinelength', self.pre)
+        self.adjustbaseline = kwargs.get('adjustbaseline', True)
+        self.binlength = kwargs.get('binlength', None)
+        self.zscore = kwargs.get('zscore', False)
+        self.truncate = kwargs.get('truncate', False)
 
     # should I return snips directly when making the class or wait for the user to call a method?
 
@@ -56,11 +44,18 @@ class Snipper:
             for idx, (start, end) in enumerate(zip(self.trial_start, self.trial_end)):
                 self.snips[idx] = self.data[start : end]
 
+        if self.truncate:
+            self.truncate_to_same_length()
 
-        # adjust baseline
+        if self.adjustbaseline:
+            self.set_baseline()
+            self.adjust_baseline()
+
         if self.binlength:
             self.bin_snips()
-            return self.binned_snips
+
+        if self.zscore:
+            self.zscore_snips()
 
         return self.snips
     
@@ -70,8 +65,30 @@ class Snipper:
         for start, stop in zip(self.events_in_samples, self.event_end_in_samples):
             self.snips.append(self.data[start - int(self.pre * self.fs) : stop + int(self.post * self.fs)])\
 
+    def set_baseline(self):
+        try:
+            if len(self.baselinelength) == 2:
+                self.baseline_start_in_samples = int(self.baselinelength[0] * self.fs)
+                self.baseline_end_in_samples = int((self.baselinelength[0] - self.baselinelength[1]) * self.fs)
+            else:
+                print("Incorrect number of values given for baselinelength. Using first value only.")
+                self.baseline_start_in_samples = int(self.baselinelength[0] * self.fs)
+                self.baseline_end_in_samples = int(self.baselinelength[0] * self.fs)
+        except TypeError:
+            self.baseline_start_in_samples = int(self.baselinelength * self.fs)
+            self.baseline_end_in_samples = int(self.baselinelength * self.fs)
+    
     def adjust_baseline(self):
-        pass
+
+        if type(self.snips) == list:
+            adj_snips = []
+            for snip in self.snips:
+                baseline = np.mean(snip[: self.baseline_end_in_samples])
+                adj_snips.append(np.subtract(snip, baseline))
+            self.snips = adj_snips
+        else:
+            average_baseline = np.mean(self.snips[:, : self.baseline_end_in_samples], axis=1)
+            self.snips = np.subtract(self.snips.transpose(), average_baseline).transpose()
 
     def put_snip_in_bins(self, snip):
         bins = int(len(snip)/(self.fs * self.binlength))
@@ -82,18 +99,35 @@ class Snipper:
             return np.reshape(snip[:-remainder_samples], (bins, -1)).mean(axis=1)
     
     def bin_snips(self):
-        self.binned_snips = [self.put_snip_in_bins(snip) for snip in self.snips]
+        self.snips = [self.put_snip_in_bins(snip) for snip in self.snips]
 
+    def zscore_snips(self):
+        self.snips = (self.snips - np.mean(self.snips, axis=1)[:, np.newaxis]) / np.std(self.snips, axis=1)[:, np.newaxis]
 
+    def remove_artifacts(self):
+        pass
+
+    def truncate_to_same_length(self):
+        pass
+
+    def plot(self, ax=None, **kwargs):
+        if ax == None:
+            f, ax = plt.subplots(1, 1)
+
+        
+
+    def plot_heatmap(self):
+        pass
     
         
 if __name__ == '__main__':
     data = np.random.rand(100000)
     start = [20, 75]
     end = [30, 80]
-    snipper = Snipper(data, start, end=end, fs=1017, pre=10, post=10, binlength=0.1)
+    snipper = Snipper(data, start, end=end, fs=1017, pre=10, post=10, binlength=0.1, adjustbaseline=False, baselinelength=[10, 5])
     snips = snipper.get_snips()
     print(snips)  
+    print(snipper.binlength)
     for snip in snips:
         print(len(snip))
 
@@ -102,3 +136,5 @@ if __name__ == '__main__':
     print(snips)  
     for snip in snips:
         print(len(snip))
+
+    snipper.plot()
