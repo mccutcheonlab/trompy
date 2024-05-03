@@ -1,6 +1,10 @@
+from pathlib import Path
 import numpy as np
 from math import ceil, floor
+import pickle
 import matplotlib.pyplot as plt
+from trompy.lick_utils import lickCalc
+from trompy.snipper_utils import findnoise, makerandomevents
 
 class Snipper:
     def __init__(self, data, start, **kwargs):
@@ -17,15 +21,16 @@ class Snipper:
         self.binlength = kwargs.get('binlength', None)
         self.zscore = kwargs.get('zscore', False)
         self.truncate = kwargs.get('truncate', False)
+        self.remove_artifacts = kwargs.get('remove_artifacts', False)
 
     # should I return snips directly when making the class or wait for the user to call a method?
 
     def get_snips(self):
         
-        self.events_in_samples = [ceil(timestamp*self.fs) for timestamp in self.start]
+        self.events_in_samples = [int(timestamp*self.fs) for timestamp in self.start]
 
         if self.end:
-            self.event_end_in_samples = [ceil(timestamp*self.fs) for timestamp in self.end]
+            self.event_end_in_samples = [int(timestamp*self.fs) for timestamp in self.end]
             self.longsnipper()
         else:
             self.trial_length_in_samples = int((self.pre + self.post) * self.fs)
@@ -38,14 +43,17 @@ class Snipper:
             self.nsnips = len(self.events_in_samples)
             self.snips = np.empty([self.nsnips, self.trial_length_in_samples])
         
-            self.trial_start = [event - int(self.pre * self.fs) for event in self.events_in_samples]
-            self.trial_end = [event + int(self.post * self.fs) for event in self.events_in_samples]
+            self.trial_start = [event - ceil(self.pre * self.fs) for event in self.events_in_samples]
+            self.trial_end = [event + ceil(self.post * self.fs) for event in self.events_in_samples]
 
-            for idx, (start, end) in enumerate(zip(self.trial_start, self.trial_end)):
-                self.snips[idx] = self.data[start : end]
+            for idx, timestamp in enumerate(self.trial_start):
+                self.snips[idx] = self.data[timestamp : timestamp + self.trial_length_in_samples]
 
         if self.truncate:
             self.truncate_to_same_length()
+
+        if self.remove_artifacts:
+            self.remove_artifacts_from_snips()
 
         if self.adjustbaseline:
             self.set_baseline()
@@ -104,8 +112,15 @@ class Snipper:
     def zscore_snips(self):
         self.snips = (self.snips - np.mean(self.snips, axis=1)[:, np.newaxis]) / np.std(self.snips, axis=1)[:, np.newaxis]
 
-    def remove_artifacts(self):
-        pass
+    def remove_artifacts_from_snips(self):
+        self.artifact_threshold = 10
+        bgMAD = findnoise(self.data, makerandomevents(120, int(len(self.data)/self.fs)-120),
+                              fs=self.fs, 
+                              method='sum')
+
+        sigSum = [np.sum(abs(i)) for i in self.snips]
+        noiseindex = [i > bgMAD*self.artifact_threshold for i in sigSum]
+        self.snips = [self.snips[i] for i in range(len(self.snips)) if not noiseindex[i]]
 
     def truncate_to_same_length(self):
         pass
@@ -114,6 +129,10 @@ class Snipper:
         if ax == None:
             f, ax = plt.subplots(1, 1)
 
+        for snip in self.snips:
+            ax.plot(snip, color='black', alpha=0.5)
+        ax.plot(np.mean(self.snips, axis=0), color='red', linewidth=2)
+
         
 
     def plot_heatmap(self):
@@ -121,20 +140,32 @@ class Snipper:
     
         
 if __name__ == '__main__':
-    data = np.random.rand(100000)
-    start = [20, 75]
-    end = [30, 80]
-    snipper = Snipper(data, start, end=end, fs=1017, pre=10, post=10, binlength=0.1, adjustbaseline=False, baselinelength=[10, 5])
-    snips = snipper.get_snips()
-    print(snips)  
-    print(snipper.binlength)
-    for snip in snips:
-        print(len(snip))
+    # data = np.random.rand(100000)
+    # start = [20, 75]
+    # end = [30, 80]
+    # snipper = Snipper(data, start, end=end, fs=1017, pre=10, post=10, binlength=0.1, adjustbaseline=False, baselinelength=[10, 5])
+    # snips = snipper.get_snips()
+    # print(snips)  
+    # print(snipper.binlength)
+    # for snip in snips:
+    #     print(len(snip))
 
-    snipper.binlength = 0.2
-    snips = snipper.get_snips()
-    print(snips)  
-    for snip in snips:
-        print(len(snip))
+    # snipper.binlength = 0.2
+    # snips = snipper.get_snips()
+    # print(snips)  
+    # for snip in snips:
+    #     print(len(snip))
 
-    snipper.plot()
+    DATAPATH = Path("C:/Users/jmc010/Data/histamine/restricted_dark_full_data.pickle")
+
+    with open(DATAPATH, 'rb') as handle:
+        restricted_dark = pickle.load(handle)
+    
+    d = restricted_dark["HL208_6"]
+    lickdata = lickCalc(d["licks"], minrunlength=3)
+    data = d["corrected"]
+    fs = d["fs"]
+    start = lickdata["rStart"]
+
+    snipper = Snipper(data, start, fs=fs, binlength=0.1, remove_artifacts=True, adjustbaseline=True, baselinelength=[10, 5])
+    s = snipper.get_snips()
