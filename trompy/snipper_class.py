@@ -206,7 +206,7 @@ class Snipper:
             
     def check_for_ragged_array(self):
         # add little code to check whether self.snips is a 2D matrix
-        # pass
+        pass
 
 if __name__ == '__main__':
     # data = np.random.rand(100000)
