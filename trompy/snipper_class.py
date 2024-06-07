@@ -9,7 +9,7 @@ from trompy.snipper_utils import findnoise, makerandomevents
 class Snipper:
     def __init__(self, data, start, **kwargs):
         self.data = data
-        self.start = [i for i in start if np.isfinite(i)]
+        self.start = np.array([i for i in start if np.isfinite(i)])
         self.kwargs = kwargs
 
         self.end = kwargs.get('end', None)
@@ -21,8 +21,14 @@ class Snipper:
         self.binlength = kwargs.get('binlength', None)
         self.zscore = kwargs.get('zscore', False)
         self.truncate = kwargs.get('truncate', False)
-        self.mineventlength = kwargs.get('mineventlength', 0)
         self.remove_artifacts = kwargs.get('remove_artifacts', False)
+        
+        self.get_snips()
+        
+        # try:
+        #     self.get_snips()
+        # except:
+        #     print("Could not make snips. Check inputs.")
 
     # should I return snips directly when making the class or wait for the user to call a method?
 
@@ -31,6 +37,7 @@ class Snipper:
         self.events_in_samples = [int(timestamp*self.fs) for timestamp in self.start]
 
         if self.end:
+            self.end = np.array([i for i in self.end if np.isfinite(i)])
             self.event_end_in_samples = [int(timestamp*self.fs) for timestamp in self.end]
             self.longsnipper()
         else:
@@ -77,16 +84,32 @@ class Snipper:
         for start, stop in zip(self.events_in_samples, self.event_end_in_samples):
             self.snips.append(self.data[start - int(self.pre * self.fs) : stop + int(self.post * self.fs)])
             
-    def truncate_to_same_length(self):
+        self.snips = np.array(self.snips, dtype=object)
+            
+    def truncate_to_same_length(self, cols_to_add=2, mineventlength=6):
+        # test if snips are already the same length here and exit
+        
+        self.mineventlength = mineventlength
+        self.snips = self.snips[np.where(self.end - self.start > self.mineventlength)]
+        
         self.bins_per_trial = int((self.mineventlength + self.pre + self.post) / self.binlength)
         self.truncated_array = np.empty([len(self.snips), self.bins_per_trial])
-        self.bins_per_section = int(self.bins_per_trial/2)
+        # self.bins_per_section = int(self.bins_per_trial/2)
+        
+        self.bins_early = int((self.pre + self.mineventlength/2) / self.binlength)
+        self.bins_late = int((self.post + self.mineventlength/2) / self.binlength)     
         
         for idx, snip in enumerate(self.snips):
-            self.truncated_array[idx,:self.bins_per_section] = snip[:self.bins_per_section]
-            self.truncated_array[idx,-self.bins_per_section] = snip[-self.bins_per_section]
+            self.truncated_array[idx,:self.bins_early] = snip[:self.bins_early]
+            self.truncated_array[idx,-self.bins_late:] = snip[-self.bins_late:]
 
         self.snips = self.truncated_array
+        
+        # to add padding if necessary
+        if cols_to_add > 0:
+            left, right = np.hsplit(self.snips, [self.bins_early])
+            padding = np.zeros([len(self.snips), cols_to_add])
+            self.snips = np.hstack((left, padding, right))
 
     def remove_artifacts_from_snips(self):
         self.artifact_threshold = 10
@@ -113,7 +136,7 @@ class Snipper:
     
     def adjust_baseline(self):
         # doesn't currently use baseline start, only calculates baseline from beginning of snip to baseline end
-        if type(self.snips) == list:
+        if len(self.snips.shape) == 1:
             adj_snips = []
             for snip in self.snips:
                 baseline = np.mean(snip[: self.baseline_end_in_samples])
@@ -182,9 +205,10 @@ class Snipper:
             error_values = np.std(self.snips, axis=0) / np.sqrt(len(self.snips))
         else:
             error_values = np.std(self.snips, axis=0)
-            
-        ax.plot(mean, color=color)
-        ax.fill_between(range(len(mean)), mean-error_values, mean+error_values, color=color, alpha=0.3)
+        
+        if not self.axis_break:
+            ax.plot(mean, color=color)
+            ax.fill_between(range(len(mean)), mean-error_values, mean+error_values, color=color, alpha=0.3)
         
         return f, ax
 
