@@ -4,7 +4,7 @@ from math import ceil, floor
 import pickle
 import matplotlib.pyplot as plt
 from trompy.lick_utils import lickCalc
-from trompy.snipper_utils import findnoise, makerandomevents
+from trompy.snipper_utils import findnoise, makerandomevents, med_abs_dev
 
 class Snipper:
     def __init__(self, data, start, **kwargs):
@@ -22,15 +22,11 @@ class Snipper:
         self.zscore = kwargs.get('zscore', False)
         self.truncate = kwargs.get('truncate', False)
         self.remove_artifacts = kwargs.get('remove_artifacts', False)
-        
-        self.get_snips()
-        
-        # try:
-        #     self.get_snips()
-        # except:
-        #     print("Could not make snips. Check inputs.")
 
-    # should I return snips directly when making the class or wait for the user to call a method?
+        try:
+            self.get_snips()
+        except:
+            print("Could not make snips. Check inputs.")
 
     def get_snips(self):
         
@@ -111,16 +107,33 @@ class Snipper:
             padding = np.zeros([len(self.snips), cols_to_add])
             self.snips = np.hstack((left, padding, right))
 
-    def remove_artifacts_from_snips(self):
-        self.artifact_threshold = 10
-        bgMAD = findnoise(self.data, makerandomevents(120, int(len(self.data)/self.fs)-120),
-                              fs=self.fs, 
-                              method='sum')
+    def find_potential_artifacts(self, threshold=10, method="sum"):
+        
+        randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
+        randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
 
-        sigSum = [np.sum(abs(i)) for i in self.snips]
-        self.noiseindex = [i > bgMAD * self.artifact_threshold for i in sigSum]
-        self.snips = [self.snips[i] for i in range(len(self.snips)) if not self.noiseindex[i]]
+        self.get_MAD(randomsnips, method=method)
+        if method == 'sum':
+            sig_to_compare = [np.sum(abs(i)) for i in self.snips]
+            
+        elif method == 'sd':
+            sig_to_compare = [np.std(i) for i in self.snips]
 
+        self.noiseindex = [i > self.bgMAD * threshold for i in sig_to_compare]
+        
+        if np.sum(self.noiseindex) > 0:
+            print(f"Found {np.sum(self.noiseindex)} potential artifacts.")
+            self.snips = [self.snips[i] for i in range(len(self.snips)) if not self.noiseindex[i]]
+
+    def get_MAD(self, snips, method="sd"):
+        
+        if method == 'sum':
+            bgSum = [np.sum(abs(i)) for i in snips]
+            self.bgMAD = med_abs_dev(bgSum)
+        elif method == 'sd':
+            bgSD = [np.std(i) for i in snips]
+            self.bgMAD = med_abs_dev(bgSD)
+    
     def set_baseline(self):
         try:
             if len(self.baselinelength) == 2:
@@ -136,6 +149,7 @@ class Snipper:
     
     def adjust_baseline(self):
         # doesn't currently use baseline start, only calculates baseline from beginning of snip to baseline end
+        print(type(self.snips))
         if len(self.snips.shape) == 1:
             adj_snips = []
             for snip in self.snips:
@@ -206,13 +220,15 @@ class Snipper:
         else:
             error_values = np.std(self.snips, axis=0)
         
-        if not self.axis_break:
-            ax.plot(mean, color=color)
-            ax.fill_between(range(len(mean)), mean-error_values, mean+error_values, color=color, alpha=0.3)
+        ax.plot(mean, color=color)
+        ax.fill_between(range(len(mean)), mean-error_values, mean+error_values, color=color, alpha=0.3)
         
         return f, ax
 
-    def plot_heatmap(self):
+    def plot_heatmap(self, ax=None, **kwargs):
+        if ax == None:
+            f, ax = plt.subplots(1, 1)
+            
         # can use existence of self.bins_per_section
         pass
     
