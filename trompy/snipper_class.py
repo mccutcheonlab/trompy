@@ -123,7 +123,7 @@ class Snipper:
         
         if np.sum(self.noiseindex) > 0:
             print(f"Found {np.sum(self.noiseindex)} potential artifacts.")
-            self.snips = [self.snips[i] for i in range(len(self.snips)) if not self.noiseindex[i]]
+            self.snips = np.array([self.snips[i] for i in range(len(self.snips)) if not self.noiseindex[i]])
 
     def get_MAD(self, snips, method="sd"):
         
