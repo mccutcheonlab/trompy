@@ -82,7 +82,7 @@ class Snipper:
             
         self.snips = np.array(self.snips, dtype=object)
             
-    def truncate_to_same_length(self, cols_to_add=2, mineventlength=6):
+    def truncate_to_same_length(self, cols_to_add=2, mineventlength=6, eventbalance=None):
         # test if snips are already the same length here and exit
         
         self.mineventlength = mineventlength
@@ -91,9 +91,16 @@ class Snipper:
         self.bins_per_trial = int((self.mineventlength + self.pre + self.post) / self.binlength)
         self.truncated_array = np.empty([len(self.snips), self.bins_per_trial])
         # self.bins_per_section = int(self.bins_per_trial/2)
-        
-        self.bins_early = int((self.pre + self.mineventlength/2) / self.binlength)
-        self.bins_late = int((self.post + self.mineventlength/2) / self.binlength)     
+        try:
+            assert(eventbalance[1] + eventbalance[2] == mineventlength)
+            early_t = eventbalance[1]
+            late_t = eventbalance[2]
+        except:
+            early_t = self.mineventlength/2
+            late_t = self.mineventlength/2
+            
+        self.bins_early = int((self.pre + early_t) / self.binlength)
+        self.bins_late = int((self.post + late_t) / self.binlength)
         
         for idx, snip in enumerate(self.snips):
             self.truncated_array[idx,:self.bins_early] = snip[:self.bins_early]
