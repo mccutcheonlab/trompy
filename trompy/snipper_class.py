@@ -92,10 +92,11 @@ class Snipper:
         self.truncated_array = np.empty([len(self.snips), self.bins_per_trial])
         # self.bins_per_section = int(self.bins_per_trial/2)
         try:
-            assert(eventbalance[1] + eventbalance[2] == mineventlength)
-            early_t = eventbalance[1]
-            late_t = eventbalance[2]
+            assert(eventbalance[0] + eventbalance[1] == mineventlength)
+            early_t = eventbalance[0]
+            late_t = eventbalance[1]
         except:
+            print("No event balance given. Using default 50-50 split.")
             early_t = self.mineventlength/2
             late_t = self.mineventlength/2
             
