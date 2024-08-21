@@ -126,6 +126,9 @@ class Snipper:
             
         elif method == 'sd':
             sig_to_compare = [np.std(i) for i in self.snips]
+        
+        elif method == 'diff':
+            sig_to_compare = [np.max(np.diff(i)) for i in self.snips]
 
         self.noiseindex = [i > self.bgMAD * threshold for i in sig_to_compare]
         
@@ -148,6 +151,9 @@ class Snipper:
         elif method == 'sd':
             bgSD = [np.std(i) for i in snips]
             self.bgMAD = med_abs_dev(bgSD)
+        elif method == 'diff':
+            bgDiff = [np.max(np.diff(i)) for i in snips]
+            self.bgMAD = med_abs_dev(bgDiff)
     
     def set_baseline(self):
         try:
