@@ -88,6 +88,9 @@ class Snipper:
         self.mineventlength = mineventlength
         self.snips = self.snips[np.where(self.end - self.start > self.mineventlength)]
         
+        if getattr(self, 'noiseindex', None) is not None:
+            self.noiseindex = self.noiseindex[np.where(self.end - self.start > self.mineventlength)]
+        
         self.bins_per_trial = int((self.mineventlength + self.pre + self.post) / self.binlength)
         self.truncated_array = np.empty([len(self.snips), self.bins_per_trial])
         # self.bins_per_section = int(self.bins_per_trial/2)
@@ -115,7 +118,7 @@ class Snipper:
             padding = np.zeros([len(self.snips), cols_to_add])
             self.snips = np.hstack((left, padding, right))
 
-    def find_potential_artifacts(self, threshold=10, method="sum", showplot=False):
+    def find_potential_artifacts(self, threshold=10, method="sum", showplot=False, remove=True):
         
         randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
         randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
@@ -130,7 +133,8 @@ class Snipper:
         elif method == 'diff':
             sig_to_compare = [np.max(np.diff(i)) for i in self.snips]
 
-        self.noiseindex = [i > self.bgMAD * threshold for i in sig_to_compare]
+        self.noiseindex = np.array([i > self.bgMAD * threshold for i in sig_to_compare])
+        print(f"Found {np.sum(self.noiseindex)} potential artifacts.")
         
         if showplot:
             for snip, noise in zip(self.snips, self.noiseindex):
@@ -138,10 +142,19 @@ class Snipper:
                     plt.plot(snip, color='red', alpha=0.3)
                 else:
                     plt.plot(snip, color='black', alpha=0.3)
+                    
+        if remove:
+            self.remove_snips_with_artifacts()
+    
+    def remove_snips_with_artifacts(self):
+        if getattr(self, 'noiseindex', None) is None:
+            print("No noiseindex found. Run find_potential_artifacts first.")
+            return
         
         if np.sum(self.noiseindex) > 0:
-            print(f"Found {np.sum(self.noiseindex)} potential artifacts.")
             self.snips = np.array([self.snips[i] for i in range(len(self.snips)) if not self.noiseindex[i]])
+        else:
+            print("No artifacts found.")
             
     def get_MAD(self, snips, method="sd"):
         
