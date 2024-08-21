@@ -126,7 +126,7 @@ class Snipper:
             else:
                 snips_to_use = self.snips
                 
-            self.noiseindex = np.array([np.max(np.diff(i)) > threshold for i in snips_to_use])
+            self.noiseindex = np.array([np.max(np.abs(np.diff(i))) > threshold for i in snips_to_use])
         else:       
             randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
             randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
@@ -139,7 +139,7 @@ class Snipper:
                 sig_to_compare = [np.std(i) for i in self.snips]
             
             elif method == 'diff':
-                sig_to_compare = [np.max(np.diff(i)) for i in self.snips]
+                sig_to_compare = [np.max(np.abs(np.diff(i))) for i in self.snips]
 
             self.noiseindex = np.array([i > self.bgMAD * threshold for i in sig_to_compare])
             
@@ -174,7 +174,7 @@ class Snipper:
             bgSD = [np.std(i) for i in snips]
             self.bgMAD = med_abs_dev(bgSD)
         elif method == 'diff':
-            bgDiff = [np.max(np.diff(i)) for i in snips]
+            bgDiff = [np.max(np.abs(np.diff(i))) for i in snips]
             self.bgMAD = med_abs_dev(bgDiff)
     
     def set_baseline(self):
