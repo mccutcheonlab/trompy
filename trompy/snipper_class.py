@@ -118,10 +118,15 @@ class Snipper:
             padding = np.zeros([len(self.snips), cols_to_add])
             self.snips = np.hstack((left, padding, right))
 
-    def find_potential_artifacts(self, threshold=10, method="sum", showplot=False, remove=True):
+    def find_potential_artifacts(self, threshold=10, method="sum", showplot=False, remove=True, rolling_window=None):
         
         if method == "absolute_diff":
-            self.noiseindex = np.array([np.max(np.diff(i)) > threshold for i in self.snips])
+            if rolling_window != None:
+                snips_to_use = [np.convolve(snip, np.ones(rolling_window)/rolling_window, mode='valid') for snip in self.snips]
+            else:
+                snips_to_use = self.snips
+                
+            self.noiseindex = np.array([np.max(np.diff(i)) > threshold for i in snips_to_use])
         else:       
             randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
             randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
