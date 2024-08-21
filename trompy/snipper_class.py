@@ -120,20 +120,24 @@ class Snipper:
 
     def find_potential_artifacts(self, threshold=10, method="sum", showplot=False, remove=True):
         
-        randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
-        randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
+        if method == "absolute_diff":
+            self.noiseindex = np.array([np.max(np.diff(i)) > threshold for i in self.snips])
+        else:       
+            randomevents = makerandomevents(120, int(len(self.data)/self.fs)-120)
+            randomsnips = Snipper(self.data, randomevents, fs=self.fs, pre=self.pre, post=self.post, adjustbaseline=False, binlength=self.binlength).snips
 
-        self.get_MAD(randomsnips, method=method)
-        if method == 'sum':
-            sig_to_compare = [np.sum(abs(i)) for i in self.snips]
+            self.get_MAD(randomsnips, method=method)
+            if method == 'sum':
+                sig_to_compare = [np.sum(abs(i)) for i in self.snips]
+                
+            elif method == 'sd':
+                sig_to_compare = [np.std(i) for i in self.snips]
             
-        elif method == 'sd':
-            sig_to_compare = [np.std(i) for i in self.snips]
-        
-        elif method == 'diff':
-            sig_to_compare = [np.max(np.diff(i)) for i in self.snips]
+            elif method == 'diff':
+                sig_to_compare = [np.max(np.diff(i)) for i in self.snips]
 
-        self.noiseindex = np.array([i > self.bgMAD * threshold for i in sig_to_compare])
+            self.noiseindex = np.array([i > self.bgMAD * threshold for i in sig_to_compare])
+            
         print(f"Found {np.sum(self.noiseindex)} potential artifacts.")
         
         if showplot:
