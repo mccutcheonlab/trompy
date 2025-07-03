@@ -62,7 +62,7 @@ class Snipper:
         self.set_baseline()
         if self.adjustbaseline:
             self.adjust_baseline()
-
+            
         if self.binlength:
             self.bin_snips()
             self.binned = True
@@ -86,6 +86,8 @@ class Snipper:
         # test if snips are already the same length here and exit
         
         self.mineventlength = mineventlength
+        if type(self.snips) == list:
+            self.snips = np.array(self.snips)
         self.snips = self.snips[np.where(self.end - self.start > self.mineventlength)]
         
         if getattr(self, 'noiseindex', None) is not None:
@@ -192,13 +194,13 @@ class Snipper:
     
     def adjust_baseline(self):
         # doesn't currently use baseline start, only calculates baseline from beginning of snip to baseline end
-        print(type(self.snips))
+
         if len(self.snips.shape) == 1:
             adj_snips = []
             for snip in self.snips:
                 baseline = np.mean(snip[: self.baseline_end_in_samples])
                 adj_snips.append(np.subtract(snip, baseline))
-            self.snips = adj_snips
+            self.snips = np.array(adj_snips, dtype=object)
         else:
             average_baseline = np.mean(self.snips[:, : self.baseline_end_in_samples], axis=1)
             self.snips = np.subtract(self.snips.transpose(), average_baseline).transpose()
@@ -212,7 +214,10 @@ class Snipper:
             return np.reshape(snip[:-remainder_samples], (bins, -1)).mean(axis=1)
     
     def bin_snips(self):
-        self.snips = np.array([self.put_snip_in_bins(snip) for snip in self.snips])
+        if len(self.snips.shape) == 1:
+            self.snips = np.array([self.put_snip_in_bins(snip) for snip in self.snips], dtype=object)
+        else:
+            self.snips = np.array([self.put_snip_in_bins(snip) for snip in self.snips])
 
     def zscore_snips(self):
         if self.binned:
