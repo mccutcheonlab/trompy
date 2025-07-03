@@ -66,7 +66,8 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         df = np.multiply(100, np.divide(Y_dF_all, Y_fit_all))
         
     else:
-        print(method, 'is not a valid method.')
+        print(method, 'is not a valid method. Exiting without any snipper output')
+        return None
         
     if normalize==True:
         fs = int(fs)

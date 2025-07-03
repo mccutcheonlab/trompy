@@ -117,8 +117,9 @@ class Lickcalc:
 
     def get_burst_inds(self):
         burst_inds = (np.where(np.diff(self.licks) > self.burst_threshold)[0] + 1).tolist()
-        if burst_inds[0] != 0:
-            burst_inds = [0] + burst_inds
+        print("yay")
+        burst_inds = [0] + burst_inds
+        print(burst_inds)
         return burst_inds
     
     def get_burst_licks(self):
