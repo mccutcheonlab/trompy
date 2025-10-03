@@ -19,7 +19,7 @@ pyOpenSSL==22.0.0
 pyparsing==3.0.4
 PySocks==1.7.1
 pytz==2021.3
-requests==2.32.0
+requests==2.32.4
 setuptools==65.5.1
 snowballstemmer==2.2.0
 Sphinx==3.5.3
