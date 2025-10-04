@@ -33,3 +33,25 @@ pandoc --columns=100 --output=README.rst --to rst README.md
 
 
 # How to write tests
+
+## Release workflow (example PowerShell commands)
+
+# 1) Bump version in trompy/_version.py to the next version (e.g. 0.15.8)
+# Edit trompy/_version.py and update __version__ accordingly.
+
+# 2) Commit changes and tag
+git add trompy/_version.py setup.py CHANGELOG.md
+git commit -m "Prep for v0.15.8"
+git tag -a v0.15.8 -m "Release v0.15.8"
+git push origin main --follow-tags
+
+# 3) Build sdist (run from repo root)
+cd trompy
+python setup.py sdist
+
+# 4) Upload to PyPI with token (store token securely; example shown)
+twine upload -u __token__ -p pypi-XXX --skip-existing dist/* --verbose
+
+# 5) Verify
+pip install --upgrade trompy
+

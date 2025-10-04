@@ -1,5 +1,15 @@
 # trompy changelog
 
+## 0.15.8
+
+04/10/2025
+
+- Bumped package version to 0.15.8
+- Made package imports lazy: `trompy/__init__.py` now lazy-loads submodules on first access to reduce import cost and optional dependency requirements
+- Single source of truth for version: added `trompy/_version.py` and updated `setup.py` to read the version without importing the package
+- Improved test setup: added `tests/conftest.py` to force a non-interactive matplotlib backend, isolate NumPy RNG per test, and provide a test-only `audioop` shim for CI/local testing; removed test shim from the repo root
+- Updated `usefulinfo.txt` with an explicit PowerShell release workflow and updated `setup.py` download_url
+
 ## 0.15.7
 
 04/10/2025
