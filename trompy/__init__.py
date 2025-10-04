@@ -1,14 +1,150 @@
-from trompy.barscatter import barscatter # ,  prep_data, data2obj1D, data2obj2D, xyspacer
-from trompy.medfilereader import medfilereader, medfilereader_licks, isnumeric, checknsessions, tstamp_to_tdate
-from trompy.metafile_utils import metafilereader
-from trompy.snipper_utils import processdata, snipper, mastersnipper, zscore, findnoise, removenoise, med_abs_dev, makerandomevents, time2samples, event2sample, resample_snips
-from trompy.general_utils import remcheck, random_array, getuserhome, flatten_list, discrete2continuous, findpercentilevalue, logical_subset, find_overlap, download_data
-from trompy.lick_utils import lickCalc
-from trompy.stats_utils import sidakcorr, mean_and_sem, bonferroni_corrected_ttest, lsd_pval
-from trompy.fig_utils import setsameaxislimits, invisible_axes, shadedError, ax2prop, lighten_color, get_violinstats
-from trompy.lick_figs import licklengthFig, iliFig, burstlengthFig, ibiFig, burstprobFig, sessionlicksFig
-from trompy.trials_figs import trialsFig, trialsMultFig, trialsShadedFig, trialsMultShadedFig, trialstiledFig, makeheatmap
-from trompy.roc_utils import rocN, rocshuf, nanroc, run_roc_comparison, plot_ROC_and_line
-from trompy.merge_fed_files import merge_files, parse_args
-from trompy.lickcalc import Lickcalc, weib_davis, fit_weibull
-from trompy.snipper_class import Snipper
+__all__ = [
+	"barscatter",
+	"medfilereader",
+	"medfilereader_licks",
+	"isnumeric",
+	"checknsessions",
+	"tstamp_to_tdate",
+	"metafilereader",
+	"processdata",
+	"snipper",
+	"mastersnipper",
+	"zscore",
+	"findnoise",
+	"removenoise",
+	"med_abs_dev",
+	"makerandomevents",
+	"time2samples",
+	"event2sample",
+	"resample_snips",
+	"remcheck",
+	"random_array",
+	"getuserhome",
+	"flatten_list",
+	"discrete2continuous",
+	"findpercentilevalue",
+	"logical_subset",
+	"find_overlap",
+	"download_data",
+	"lickCalc",
+	"sidakcorr",
+	"mean_and_sem",
+	"bonferroni_corrected_ttest",
+	"lsd_pval",
+	"setsameaxislimits",
+	"invisible_axes",
+	"shadedError",
+	"ax2prop",
+	"lighten_color",
+	"get_violinstats",
+	"licklengthFig",
+	"iliFig",
+	"burstlengthFig",
+	"ibiFig",
+	"burstprobFig",
+	"sessionlicksFig",
+	"trialsFig",
+	"trialsMultFig",
+	"trialsShadedFig",
+	"trialsMultShadedFig",
+	"trialstiledFig",
+	"makeheatmap",
+	"rocN",
+	"rocshuf",
+	"nanroc",
+	"run_roc_comparison",
+	"plot_ROC_and_line",
+	"merge_files",
+	"parse_args",
+	"Lickcalc",
+	"weib_davis",
+	"fit_weibull",
+	"Snipper",
+]
+
+try:
+	# single-source-of-truth version — import from tiny _version module
+	from ._version import __version__
+except Exception:
+	__version__ = "0.0.0"
+
+# Map exported name -> module that defines it.
+_import_map = {
+	"barscatter": "trompy.barscatter",
+	"medfilereader": "trompy.medfilereader",
+	"medfilereader_licks": "trompy.medfilereader",
+	"isnumeric": "trompy.medfilereader",
+	"checknsessions": "trompy.medfilereader",
+	"tstamp_to_tdate": "trompy.medfilereader",
+	"metafilereader": "trompy.metafile_utils",
+	"processdata": "trompy.snipper_utils",
+	"snipper": "trompy.snipper_utils",
+	"mastersnipper": "trompy.snipper_utils",
+	"zscore": "trompy.snipper_utils",
+	"findnoise": "trompy.snipper_utils",
+	"removenoise": "trompy.snipper_utils",
+	"med_abs_dev": "trompy.snipper_utils",
+	"makerandomevents": "trompy.snipper_utils",
+	"time2samples": "trompy.snipper_utils",
+	"event2sample": "trompy.snipper_utils",
+	"resample_snips": "trompy.snipper_utils",
+	"remcheck": "trompy.general_utils",
+	"random_array": "trompy.general_utils",
+	"getuserhome": "trompy.general_utils",
+	"flatten_list": "trompy.general_utils",
+	"discrete2continuous": "trompy.general_utils",
+	"findpercentilevalue": "trompy.general_utils",
+	"logical_subset": "trompy.general_utils",
+	"find_overlap": "trompy.general_utils",
+	"download_data": "trompy.general_utils",
+	"lickCalc": "trompy.lick_utils",
+	"sidakcorr": "trompy.stats_utils",
+	"mean_and_sem": "trompy.stats_utils",
+	"bonferroni_corrected_ttest": "trompy.stats_utils",
+	"lsd_pval": "trompy.stats_utils",
+	"setsameaxislimits": "trompy.fig_utils",
+	"invisible_axes": "trompy.fig_utils",
+	"shadedError": "trompy.fig_utils",
+	"ax2prop": "trompy.fig_utils",
+	"lighten_color": "trompy.fig_utils",
+	"get_violinstats": "trompy.fig_utils",
+	"licklengthFig": "trompy.lick_figs",
+	"iliFig": "trompy.lick_figs",
+	"burstlengthFig": "trompy.lick_figs",
+	"ibiFig": "trompy.lick_figs",
+	"burstprobFig": "trompy.lick_figs",
+	"sessionlicksFig": "trompy.lick_figs",
+	"trialsFig": "trompy.trials_figs",
+	"trialsMultFig": "trompy.trials_figs",
+	"trialsShadedFig": "trompy.trials_figs",
+	"trialsMultShadedFig": "trompy.trials_figs",
+	"trialstiledFig": "trompy.trials_figs",
+	"makeheatmap": "trompy.trials_figs",
+	"rocN": "trompy.roc_utils",
+	"rocshuf": "trompy.roc_utils",
+	"nanroc": "trompy.roc_utils",
+	"run_roc_comparison": "trompy.roc_utils",
+	"plot_ROC_and_line": "trompy.roc_utils",
+	"merge_files": "trompy.merge_fed_files",
+	"parse_args": "trompy.merge_fed_files",
+	"Lickcalc": "trompy.lickcalc",
+	"weib_davis": "trompy.lickcalc",
+	"fit_weibull": "trompy.lickcalc",
+	"Snipper": "trompy.snipper_class",
+}
+
+import importlib
+
+def __getattr__(name: str):
+	# Lazy-load the attribute from the mapped module on first access
+	if name in _import_map:
+		module_name = _import_map[name]
+		module = importlib.import_module(module_name)
+		val = getattr(module, name)
+		globals()[name] = val  # cache for future lookups
+		return val
+	raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+def __dir__():
+	# Improve tab-completion / introspection
+	return sorted(list(globals().keys()) + list(_import_map.keys()))
