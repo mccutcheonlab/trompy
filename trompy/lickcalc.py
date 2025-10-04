@@ -7,42 +7,13 @@ import scipy.optimize as opt
 class Lickcalc:
     def __init__(self, **kwargs):
         ## Set default parameters
-
-        if "longlick_threshold" in kwargs:
-            self.longlick_threshold = kwargs['longlick_threshold']
-        else:
-            self.longlick_threshold = 0.3
-
-        if "burst_threshold" in kwargs:
-            self.burst_threshold = kwargs['burst_threshold']
-        else:
-            self.burst_threshold = 0.5
-
-        if "min_burst_length" in kwargs:
-            self.min_burst_length = kwargs['min_burst_length']
-        else:
-            self.min_burst_length = 1
-
-        if "run_threshold" in kwargs:
-            self.run_threshold = kwargs['run_threshold']
-        else:
-            self.run_threshold = 10
-
-        if "min_run_length" in kwargs:
-            self.min_run_length = kwargs['min_run_length']
-        else:
-            self.min_run_length = 1
-
-        if "binsize" in kwargs:
-            self.binsize = kwargs['binsize']
-        else:
-            self.binsize = 60
-
-        if "hist_density" in kwargs:
-            self.hist_density = kwargs['hist_density']
-        else:
-            self.hist_density = False     
-
+        self.longlick_threshold = kwargs.get('longlick_threshold', 0.3)
+        self.burst_threshold = kwargs.get('burst_threshold', 0.5)
+        self.min_burst_length = kwargs.get('min_burst_length', 1)
+        self.run_threshold = kwargs.get('run_threshold', 10)
+        self.min_run_length = kwargs.get('min_run_length', 1)
+        self.binsize = kwargs.get('binsize', 60)
+        self.hist_density = kwargs.get('hist_density', False)
         self.ignorelongilis = kwargs.get('ignorelongilis', False)
         
         ## Read in and process data
@@ -100,17 +71,18 @@ class Lickcalc:
         return self.offset - onsets
 
     def get_longlicks(self):
-        if min(self.licklength) < 0:
+        if np.min(self.licklength) < 0:
             print("One or more offsets precede onsets. Not doing lick length analysis.")
             return None
         else:
-            return [x for x in self.licklength if x > self.longlick_threshold]
+            return self.licklength[self.licklength > self.longlick_threshold]
 
     def get_ilis(self):
+        ilis = np.diff(self.licks)
         if self.ignorelongilis:
-            return [x for x in np.diff(self.licks) if x < self.burst_threshold]
+            return ilis[ilis < self.burst_threshold]
         else:
-            return np.diff(self.licks)
+            return ilis
 
     def get_total_licks(self):
         return len(self.licks)
@@ -121,7 +93,7 @@ class Lickcalc:
         return burst_inds
     
     def get_burst_licks(self):
-        return [int(x) for x in np.diff(self.burst_inds + [self.get_total_licks()])]
+        return np.diff(self.burst_inds + [self.total]).tolist()
     
     def get_burst_start(self):
         return self.licks[self.burst_inds].tolist()
@@ -144,10 +116,10 @@ class Lickcalc:
     def get_burst_mean(self, number=None):
         if self.burst_number == 0:
             return None
-        if number == None:
+        if number is None:
             return np.mean(self.burst_licks)
         elif number < self.burst_number:
-            return np.mean(self.burst_licks[number])
+            return np.mean(self.burst_licks[:number])
         else:
             return np.mean(self.burst_licks)
 

@@ -145,20 +145,15 @@ def _get_corresponding_offsets(lickdata, segment_licks):
     if lickdata.offset is None or not segment_licks:
         return []
     
-    # Find indices of segment licks in original lick list
-    segment_indices = []
-    licks_list = list(lickdata.licks)
-    
-    for seg_lick in segment_licks:
-        try:
-            idx = licks_list.index(seg_lick)
-            segment_indices.append(idx)
-        except ValueError:
-            continue
+    # Use numpy boolean indexing for O(n) performance instead of O(n²) .index() loop
+    segment_licks_array = np.array(segment_licks)
+    mask = np.isin(lickdata.licks, segment_licks_array)
+    segment_indices = np.where(mask)[0]
     
     # Return corresponding offsets
-    if segment_indices and len(lickdata.offset) > max(segment_indices):
-        return [lickdata.offset[i] for i in segment_indices if i < len(lickdata.offset)]
+    valid_indices = segment_indices[segment_indices < len(lickdata.offset)]
+    if len(valid_indices) > 0:
+        return lickdata.offset[valid_indices].tolist()
     
     return []
 
