@@ -117,9 +117,7 @@ class Lickcalc:
 
     def get_burst_inds(self):
         burst_inds = (np.where(np.diff(self.licks) > self.burst_threshold)[0] + 1).tolist()
-        print("yay")
         burst_inds = [0] + burst_inds
-        print(burst_inds)
         return burst_inds
     
     def get_burst_licks(self):
@@ -258,20 +256,6 @@ def fit_weibull(xdata, ydata):
 # to make it easier to for example do calculations of each quarter of a session - by licks, or by time
 # or to do calculations for different types of licks (e.g. licks during reward vs licks during non-reward)
 
-
-if __name__ == '__main__':
-    print('Testing functions')
-    import trompy as tp
-    filename = Path("C:/Users/jmc010/Github/trompy/tests/test_data/03_W.med")
-
-    data = tp.medfilereader(filename, vars_to_extract=["e", "f"], remove_var_header=True)
-
-    lickdata = Lickcalc(licks=data[0], offset=data[1], min_burst_length=3)
-
-    # print(dir(lickdata))
-
-
-    lickdata = Lickcalc(licks=[2.3,5.6,10.2])
 
 
     # lickdata = Lickcalc(licks="hello")
