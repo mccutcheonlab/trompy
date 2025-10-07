@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 """
-setup file for trompy pypi package
+setup file for trompy pypi package, has been superseded by pyproject.toml but kept for
+backwards compatibility with older pip versions
 """
 from setuptools import setup
 
@@ -32,7 +33,7 @@ setup(
   author = 'James E McCutcheon',                   # Type in your name
   author_email = 'j.mccutcheon@uit.no',      # Type in your E-Mail
   url = 'https://github.com/mccutcheonlab',   # Provide either the link to your github or to your website
-  download_url = 'https://github.com/mccutcheonlab/trompy/archive/v0.15.8.tar.gz',    # I explain this later on
+  download_url = f'https://github.com/mccutcheonlab/trompy/archive/v{read_version()}.tar.gz',    # Auto-generated from version
   keywords = ['neuroscience', 'behavior'],   # Keywords that define your package best
   install_requires=[            # I get to this in a second
           'numpy',

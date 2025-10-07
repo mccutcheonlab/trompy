@@ -34,7 +34,36 @@ pandoc --columns=100 --output=README.rst --to rst README.md
 
 # How to write tests
 
-## Release workflow (example PowerShell commands)
+## Release workflow (Modern - v0.16.0+)
+
+# With pyproject.toml, you only need to update ONE file for version changes!
+
+# 1) Bump version in trompy/_version.py (ONLY file that needs version update)
+# Edit trompy/_version.py and update __version__ (e.g., "0.16.0")
+# Download URLs auto-generate from this version number
+
+# 2) Update changelog
+# Edit changelog.txt and add release notes
+
+# 3) Commit changes
+git add trompy/_version.py changelog.txt
+git commit -m "Release v0.16.0"
+
+# 4) Create and push tag
+git tag -a v0.16.0 -m "Release v0.16.0"
+git push origin main --tags
+
+# 5) Build distributions (uses modern pyproject.toml)
+python -m build
+
+# 6) Upload to PyPI with token (store token securely in 1password)
+twine upload dist/trompy-0.16.0* -u __token__ -p pypi-XXX --skip-existing --verbose
+
+# 7) Verify installation
+pip install --upgrade trompy
+
+
+## Legacy Release workflow (example PowerShell commands - pre v0.16.0)
 
 # 1) Bump version in trompy/_version.py to the next version (e.g. 0.15.8)
 # Edit trompy/_version.py and update __version__ accordingly.
