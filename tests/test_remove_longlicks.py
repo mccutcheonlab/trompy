@@ -3,7 +3,7 @@ Test the remove_longlicks functionality
 """
 import numpy as np
 from trompy.lickcalc import Lickcalc
-from trompy.lick_utils import lickCalc
+from trompy.lick_utils import lickcalc
 
 
 def test_remove_longlicks_basic():
@@ -56,16 +56,16 @@ def test_remove_longlicks_affects_bursts():
 
 
 def test_remove_longlicks_with_lickCalc():
-    """Test that the lickCalc wrapper function works with remove_longlicks"""
+    """Test that the lickcalc wrapper function works with remove_longlicks"""
     licks = [1.0, 2.0, 3.0, 4.0, 5.0]
     offsets = [1.1, 2.1, 3.5, 4.1, 5.1]  # 3rd lick is 0.5s long
     
     # Test with remove_longlicks=False (default)
-    result_keep = lickCalc(licks, offset=offsets, longlickThreshold=0.3)
+    result_keep = lickcalc(licks, offset=offsets, longlickThreshold=0.3)
     assert result_keep['total'] == 5
     
     # Test with remove_longlicks=True
-    result_remove = lickCalc(licks, offset=offsets, longlickThreshold=0.3, 
+    result_remove = lickcalc(licks, offset=offsets, longlickThreshold=0.3, 
                             remove_longlicks=True)
     assert result_remove['total'] == 4
     assert len(result_remove['licks']) == 4

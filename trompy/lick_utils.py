@@ -6,6 +6,7 @@ Created on Fri Apr 17 13:40:05 2020
 """
 from pathlib import Path
 import numpy as np
+import warnings
 from trompy.lickcalc import Lickcalc
 
 
@@ -241,14 +242,14 @@ def _create_empty_burst_division(lickdata, division_number):
         'max_lick_duration': np.nan
     }
 
-def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
+def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
              minrunlength=1,
              binsize=60, histDensity = False, remove_longlicks=False,
              only_return_first_n_bursts=False,
              time_divisions=None, burst_divisions=None, session_length=None):
     """
-    Calcuates various parameters for a train of licking data including bursting 
+    Calculates various parameters for a train of licking data including bursting 
     parameters and returns as a dictionary. Legacy function that returns a dictionary.
 
     Parameters
@@ -352,15 +353,15 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     Examples
     --------
     Basic usage (backward compatible):
-    >>> results = lickCalc(lick_times)
+    >>> results = lickcalc(lick_times)
     
     With temporal divisions:
-    >>> results = lickCalc(lick_times, time_divisions=4)
+    >>> results = lickcalc(lick_times, time_divisions=4)
     >>> for div in results['time_divisions']:
     ...     print(f"Division {div['division_number']}: {div['total_licks']} licks")
     
     With both time and burst divisions:
-    >>> results = lickCalc(lick_times, time_divisions=3, burst_divisions=2)
+    >>> results = lickcalc(lick_times, time_divisions=3, burst_divisions=2)
     """
 
     lickdata = Lickcalc(licks=licks,
@@ -422,6 +423,29 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     return results
 
 
+def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
+             ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
+             minrunlength=1,
+             binsize=60, histDensity = False, remove_longlicks=False,
+             only_return_first_n_bursts=False,
+             time_divisions=None, burst_divisions=None, session_length=None):
+    """
+    Deprecated: Use `lickcalc` (lowercase) instead.
+    
+    This function is maintained for backward compatibility but will be removed
+    in a future version. Please update your code to use `lickcalc`.
+    """
+    warnings.warn(
+        "lickCalc is deprecated and will be removed in a future version. "
+        "Please use lickcalc (all lowercase) instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return lickcalc(licks, offset, burstThreshold, runThreshold,
+                   ignorelongilis, longlickThreshold, minburstlength,
+                   minrunlength, binsize, histDensity, remove_longlicks,
+                   only_return_first_n_bursts, time_divisions, burst_divisions,
+                   session_length)
 
 
 

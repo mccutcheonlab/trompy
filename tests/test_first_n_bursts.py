@@ -4,7 +4,7 @@ Tests for only_return_first_n_bursts parameter in Lickcalc and lickCalc
 import numpy as np
 import pytest
 from trompy.lickcalc import Lickcalc
-from trompy.lick_utils import lickCalc
+from trompy.lick_utils import lickcalc
 
 
 def test_first_n_bursts_basic():
@@ -73,14 +73,14 @@ def test_first_n_bursts_statistics():
     
 
 def test_first_n_bursts_with_lickCalc():
-    """Test that only_return_first_n_bursts works with lickCalc wrapper function"""
+    """Test that only_return_first_n_bursts works with lickcalc wrapper function"""
     licks = [1.0, 1.3, 1.6,  # Burst 1
              3.0, 3.3, 3.6, 3.9,  # Burst 2
              5.0, 5.3,  # Burst 3
              7.0, 7.3, 7.6]  # Burst 4
     
-    # Using lickCalc wrapper
-    result = lickCalc(licks, burstThreshold=0.5, only_return_first_n_bursts=2)
+    # Using lickcalc wrapper
+    result = lickcalc(licks, burstThreshold=0.5, only_return_first_n_bursts=2)
     
     assert result['bNum'] == 2
     assert len(result['bLicks']) == 2
@@ -143,3 +143,25 @@ def test_first_n_bursts_false_default():
     
     assert default_result.burst_number == explicit_false.burst_number == 3
     assert default_result.burst_licks == explicit_false.burst_licks
+
+
+def test_lickCalc_deprecated_warning():
+    """Test that the deprecated lickCalc (uppercase C) produces a deprecation warning"""
+    import warnings
+    from trompy.lick_utils import lickCalc
+    
+    licks = [1.0, 1.3, 1.6, 3.0, 3.3]
+    
+    # Should produce a DeprecationWarning
+    with warnings.catch_warnings(record=True) as w:
+        warnings.simplefilter("always")
+        result = lickCalc(licks, burstThreshold=0.5)
+        
+        # Check that a warning was raised
+        assert len(w) == 1
+        assert issubclass(w[0].category, DeprecationWarning)
+        assert "lickCalc is deprecated" in str(w[0].message)
+        assert "lickcalc" in str(w[0].message)
+    
+    # But should still return correct results
+    assert result['total'] == 5
