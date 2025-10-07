@@ -15,18 +15,39 @@ class Lickcalc:
         self.binsize = kwargs.get('binsize', 60)
         self.hist_density = kwargs.get('hist_density', False)
         self.ignorelongilis = kwargs.get('ignorelongilis', False)
+        self.remove_longlicks = kwargs.get('remove_longlicks', False)
         
         ## Read in and process data
-        self.licks = np.array(kwargs.get('licks', None))
+        self.licks_raw = np.array(kwargs.get('licks', None))  # Store original licks
+        self.licks = self.licks_raw.copy()
 
         if "offset" in kwargs:
-            self.offset = np.array(kwargs['offset'])
-            self.licklength = self.get_licklengths()
-            if len(self.licklength) > 0:
-                self.longlicks = self.get_longlicks()
+            self.offset_raw = np.array(kwargs['offset'])  # Store original offsets
+            self.offset = self.offset_raw.copy()
+            
+            # Calculate lick lengths first (before any filtering)
+            temp_licklength = self.get_licklengths()
+            
+            if len(temp_licklength) > 0:
+                # Identify longlicks before filtering
+                temp_longlicks = temp_licklength[temp_licklength > self.longlick_threshold]
+                self.longlicks = temp_longlicks if len(temp_longlicks) > 0 else None
+                
+                # Remove longlicks if requested
+                if self.remove_longlicks and self.longlicks is not None:
+                    # Create mask to keep only non-longlicks
+                    keep_mask = temp_licklength <= self.longlick_threshold
+                    n_to_keep = min(len(self.licks), len(keep_mask))
+                    self.licks = self.licks[:n_to_keep][keep_mask[:n_to_keep]]
+                    self.offset = self.offset[:n_to_keep][keep_mask[:n_to_keep]]
+                
+                # Calculate final licklength on filtered data
+                self.licklength = self.get_licklengths()
             else:
                 self.longlicks = None
+                self.licklength = temp_licklength
         else:
+            self.offset_raw = None
             self.offset = None
             self.licklength = None
             self.longlicks = None
@@ -99,7 +120,7 @@ class Lickcalc:
         return self.licks[self.burst_inds].tolist()
     
     def get_burst_end(self):
-        end = self.licks[np.array(self.burst_inds[1:]) - 1]
+        end = self.licks[np.array(self.burst_inds[1:], dtype=int) - 1]
         return end.tolist() + [self.licks[-1]]
     
     def get_burst_lengths(self):

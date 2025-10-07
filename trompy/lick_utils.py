@@ -182,6 +182,7 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             longlick_threshold=lickdata.longlick_threshold,
             min_burst_length=lickdata.min_burst_length,
             ignorelongilis=lickdata.ignorelongilis,
+            remove_longlicks=lickdata.remove_longlicks,
             run_threshold=lickdata.run_threshold,
             min_run_length=lickdata.min_run_length,
             binsize=lickdata.binsize,
@@ -242,8 +243,8 @@ def _create_empty_burst_division(lickdata, division_number):
 def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
              minrunlength=1,
-             binsize=60, histDensity = False, time_divisions=None, 
-             burst_divisions=None, session_length=None):
+             binsize=60, histDensity = False, remove_longlicks=False,
+             time_divisions=None, burst_divisions=None, session_length=None):
     """
     Calcuates various parameters for a train of licking data including bursting 
     parameters and returns as a dictionary. Legacy function that returns a dictionary.
@@ -270,6 +271,8 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         Size of bins for constructing histogram. The default is 60.
     histDensity : Boolean, optional
         Converts histogram into a density plot rather than absolute. The default is False.
+    remove_longlicks : Boolean, optional
+        If True, removes longlicks (duration > longlickThreshold) from all calculations. The default is False.
     time_divisions : Int, optional
         Number of equal time divisions to create for temporal analysis. The default is None.
     burst_divisions : Int, optional
@@ -362,6 +365,7 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
                         longlick_threshold=longlickThreshold,
                         min_burst_length=minburstlength,
                         ignorelongilis=ignorelongilis,
+                        remove_longlicks=remove_longlicks,
                         run_threshold=runThreshold,
                         min_run_length=minrunlength,
                         binsize=binsize,
