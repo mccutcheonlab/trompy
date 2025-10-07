@@ -4,7 +4,6 @@ Created on Wed Mar 23 13:57:05 2022
 
 @author: jmc010
 """
-from audioop import add
 import pytest
 import numpy as np
 import trompy as tp
