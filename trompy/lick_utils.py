@@ -183,6 +183,7 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             min_burst_length=lickdata.min_burst_length,
             ignorelongilis=lickdata.ignorelongilis,
             remove_longlicks=lickdata.remove_longlicks,
+            only_return_first_n_bursts=lickdata.only_return_first_n_bursts,
             run_threshold=lickdata.run_threshold,
             min_run_length=lickdata.min_run_length,
             binsize=lickdata.binsize,
@@ -244,6 +245,7 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
              minrunlength=1,
              binsize=60, histDensity = False, remove_longlicks=False,
+             only_return_first_n_bursts=False,
              time_divisions=None, burst_divisions=None, session_length=None):
     """
     Calcuates various parameters for a train of licking data including bursting 
@@ -273,6 +275,8 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         Converts histogram into a density plot rather than absolute. The default is False.
     remove_longlicks : Boolean, optional
         If True, removes longlicks (duration > longlickThreshold) from all calculations. The default is False.
+    only_return_first_n_bursts : Int or Boolean, optional
+        If an integer N, only returns statistics for the first N bursts. If fewer than N bursts exist, all are returned without error. The default is False.
     time_divisions : Int, optional
         Number of equal time divisions to create for temporal analysis. The default is None.
     burst_divisions : Int, optional
@@ -366,6 +370,7 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
                         min_burst_length=minburstlength,
                         ignorelongilis=ignorelongilis,
                         remove_longlicks=remove_longlicks,
+                        only_return_first_n_bursts=only_return_first_n_bursts,
                         run_threshold=runThreshold,
                         min_run_length=minrunlength,
                         binsize=binsize,

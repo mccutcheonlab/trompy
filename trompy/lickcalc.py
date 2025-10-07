@@ -16,6 +16,7 @@ class Lickcalc:
         self.hist_density = kwargs.get('hist_density', False)
         self.ignorelongilis = kwargs.get('ignorelongilis', False)
         self.remove_longlicks = kwargs.get('remove_longlicks', False)
+        self.only_return_first_n_bursts = kwargs.get('only_return_first_n_bursts', False)
         
         ## Read in and process data
         self.licks_raw = np.array(kwargs.get('licks', None))  # Store original licks
@@ -63,6 +64,10 @@ class Lickcalc:
 
         if self.min_burst_length > 1:
             self.remove_short_bursts()
+        
+        # Keep only first N bursts if requested
+        if self.only_return_first_n_bursts and isinstance(self.only_return_first_n_bursts, int):
+            self.keep_first_n_bursts(self.only_return_first_n_bursts)
 
         self.burst_number = self.get_burst_number()
         self.burst_mean = self.get_burst_mean()
@@ -130,6 +135,19 @@ class Lickcalc:
         inds_to_keep = [i for i, val in enumerate(self.burst_licks) if val >= self.min_burst_length]
         for burst_var in ['burst_inds', 'burst_licks', 'burst_start', 'burst_end', 'burst_lengths']:
             setattr(self, burst_var, [getattr(self, burst_var)[i] for i in inds_to_keep])
+    
+    def keep_first_n_bursts(self, n):
+        """Keep only the first N bursts. If fewer than N bursts exist, keeps all."""
+        if n <= 0:
+            return  # Do nothing if n is 0 or negative
+        
+        # Determine how many bursts to keep (min of n or total bursts)
+        n_to_keep = min(n, len(self.burst_inds))
+        
+        # Slice all burst-related lists to keep only first n bursts
+        for burst_var in ['burst_inds', 'burst_licks', 'burst_start', 'burst_end', 'burst_lengths']:
+            current_list = getattr(self, burst_var)
+            setattr(self, burst_var, current_list[:n_to_keep])
 
     def get_burst_number(self):
         return len(self.burst_inds)
