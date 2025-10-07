@@ -3,7 +3,7 @@ import numpy as np
 from math import ceil, floor
 import pickle
 import matplotlib.pyplot as plt
-from trompy.lick_utils import lickCalc
+from trompy.lick_utils import lickcalc
 from trompy.snipper_utils import findnoise, makerandomevents, med_abs_dev
 
 class Snipper:
@@ -320,7 +320,7 @@ if __name__ == '__main__':
         restricted_dark = pickle.load(handle)
     
     d = restricted_dark["HL208_6"]
-    lickdata = lickCalc(d["licks"], minrunlength=3)
+    lickdata = lickcalc(d["licks"], minrunlength=3)
     data = d["corrected"]
     fs = d["fs"]
     start = lickdata["rStart"]
