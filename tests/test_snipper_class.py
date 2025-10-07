@@ -13,6 +13,8 @@ import numpy as np
 import trompy as tp
 import matplotlib.pyplot as plt
 
+from test_helpers import create_gcamp_kernel, create_data_stream, create_stream_with_events
+
 # %matplotlib inline
 
 np.random.seed(222)
@@ -29,34 +31,6 @@ def test_output():
     snipper = tp.Snipper(data, events, pre=10, post=20)
     output = snipper.get_snips()
     assert np.shape(output) == (3, 30) #checks that nans and infs removed
-
-def create_gcamp_kernel(t, tau=2.6):
-    K = (1/tau)*(np.exp(-t/tau))
-    return K
-
-def create_data_stream(n_samples, fs, kernel_process, events):
-
-    # to create gcamp kernel
-    x=np.arange(0, 30, 1/fs)
-    kernel=[kernel_process(t) for t in x]
-
-    # converts events into sample numbers
-    events_in_samples = [int(event*fs) for event in events]
-
-    # creates stream
-    stream = np.zeros(n_samples- len(kernel) + 1 )
-    stream[events_in_samples] = [np.abs(np.random.normal(scale=20)) for e in range(len(events))]
-
-    simulated_data_stream = np.convolve(stream, kernel, "full")
-
-    return simulated_data_stream
-
-def create_stream_with_events(n_samples=8000, fs=123.456, kernel_process=create_gcamp_kernel, n_events=3):  # Further reduced with lower fs
-
-    events = np.random.randint(300, high=2000, size=n_events) / 100  # Events between 3-20s to fit with kernel
-    simulated_gcamp = create_data_stream(n_samples, fs, create_gcamp_kernel, events)
-
-    return simulated_gcamp, events, fs
 
 def test_peaks():
     np.random.seed(222)

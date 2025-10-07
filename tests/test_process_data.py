@@ -9,46 +9,12 @@ import pytest
 import numpy as np
 import trompy as tp
 import matplotlib.pyplot as plt
+from test_helpers import (create_gcamp_kernel, create_data_stream, 
+                          add_noise, add_drift, double_exponential)
 
 # %matplotlib inline
 
 np.random.seed(222)
-
-def create_gcamp_kernel(t, tau=2.6):
-    K = (1/tau)*(np.exp(-t/tau))
-    return K
-
-def create_data_stream(n_samples, fs, kernel_process, events, add_noise=False):
-
-    # to create gcamp kernel
-    x=np.arange(0, 30, 1/fs)
-    kernel=[kernel_process(t) for t in x]
-
-    # converts events into sample numbers
-    events_in_samples = [int(event*fs) for event in events]
-
-    # creates stream
-    stream = np.zeros(n_samples- len(kernel) + 1 )
-    stream[events_in_samples] = [np.abs(np.random.normal(scale=20))+1 for e in range(len(events))]
-
-    simulated_data_stream = np.convolve(stream, kernel, "full")
-
-    if add_noise:
-        simulated_data_stream = simulated_data_stream + np.random.normal(0,0.1,n_samples)
-
-    return simulated_data_stream
-
-def add_noise(data_stream, magnitude=0.5):
-    return data_stream + np.random.normal(0,magnitude,len(data_stream))
-
-def add_drift(data_stream, freq=0.0001, magnitude=10):
-    x = np.arange(len(data_stream))
-    low_freq_signal = magnitude * np.sin(x/(1/freq))
-    
-    return data_stream + low_freq_signal
-
-def double_exponential(t, a1, b1, a2, b2):
-    return a1 * np.exp(-t/b1) + a2 * np.exp(-t/b2)
 
 def test_length():
     n_samples = 12000  # Further reduced with lower fs for faster testing
