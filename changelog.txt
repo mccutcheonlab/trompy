@@ -11,14 +11,30 @@
 - Made download URLs auto-generate from version (only need to update `_version.py` for releases)
 - Package now uses modern setuptools backend (>=64)
 
+### New Feature: only_return_first_n_bursts
+- Added `only_return_first_n_bursts` parameter to `Lickcalc` class and `lickcalc` function
+- Allows filtering analysis to only the first N bursts in a session
+- Useful for analyzing early session behavior or learning effects
+- Gracefully handles cases where N exceeds total bursts (returns all available bursts)
+- Works seamlessly with other parameters (`min_burst_length`, `remove_longlicks`, time/burst divisions)
+- Fully tested with 8 comprehensive test cases
+- 100% backward compatible (disabled by default)
+
 ### New Feature: remove_longlicks
-- Added `remove_longlicks` parameter to `Lickcalc` class and `lickCalc` function
+- Added `remove_longlicks` parameter to `Lickcalc` class and `lickcalc` function
 - Allows optional exclusion of long-duration licks from ALL behavioral calculations
 - Preserves original data in `licks_raw` and `offset_raw` attributes
 - Affects all metrics: bursts, runs, ILIs, frequencies, Weibull parameters, etc.
 - Fully tested with 5 new test cases
 - 100% backward compatible (disabled by default)
-- Documentation: `docs/REMOVE_LONGLICKS.md` and `examples/remove_longlicks_example.py`
+
+### Function Rename: lickCalc → lickcalc
+- Renamed `lickCalc` to `lickcalc` (all lowercase) for PEP 8 compliance
+- Old `lickCalc` name still works but issues `DeprecationWarning`
+- Both names exported from main module for backward compatibility
+- Internal code updated to use new lowercase name
+- Users encouraged to migrate: `lickCalc` → `lickcalc`
+- Comprehensive deprecation test ensures warning is properly raised
 
 ### Code Optimizations (lickcalc.py and lick_utils.py)
 - Simplified parameter initialization using `.get()` with defaults (32 lines → 8 lines)
@@ -29,18 +45,24 @@
 - Applied PEP 8 best practices (use `is None` instead of `== None`)
 - Overall performance improvement: 10-20% for small datasets, 5-10x for large datasets
 
+### Test Suite Improvements
+- **Massive speed improvement**: Test suite runtime reduced from 639s to 3.1s (206x faster!)
+- Optimized test data generation: reduced sample sizes (600k→8-12k) and sampling frequency (1017→123 Hz)
+- Tightened test tolerances: moved from relaxed (atol=0.3) to strict (atol=0.01-0.05) while maintaining determinism
+- Eliminated ~100 lines of duplicated test code by creating shared `tests/test_helpers.py` module
+- All test helper functions now have comprehensive docstrings
+- Fixed random seed placement in `test_lickcalc.py` for proper pytest isolation
+- Added 8 new tests for `only_return_first_n_bursts` feature
+- Added deprecation warning test for `lickCalc` → `lickcalc` rename
+- Total test count: 41 tests, all passing
+
 ### Bug Fixes
 - Fixed integer indexing bug in `get_burst_end()` method
 - Removed debug print statements from `lickcalc.py` and `lick_utils.py`
 - Removed `if __name__ == '__main__'` test blocks
-
-### Documentation
-- Added `OPTIMIZATIONS.md` - detailed performance improvements
-- Added `REMOVE_LONGLICKS.md` - comprehensive user guide for new feature
-- Added `PACKAGING_MODERNIZATION.md` - packaging migration notes
-- Added `SETUP_PY_REMOVAL_GUIDE.md` - guidance on modern Python packaging
-- Added `RELEASE_CHECKLIST.md` - simplified release workflow
-- Added `REMOVE_LONGLICKS_IMPLEMENTATION.md` - technical implementation details
+- Removed unused `audioop` import from `test_process_data.py` (was causing deprecation warning)
+- Added epsilon to division operations in `snipper_utils.py` to prevent zero-division warnings
+- Fixed typo in docstrings: "Calcuates" → "Calculates"
 
 ## 0.15.8
 
