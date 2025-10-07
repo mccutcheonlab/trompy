@@ -20,6 +20,7 @@ def make_toy_data():
     return timestamps
 
 def test_burstcalc():
+    np.random.seed(1234)  # Set seed inside function for pytest compatibility
     licks = make_toy_data()
     # import matplotlib.pyplot as plt
     # plt.plot(licks)
@@ -36,6 +37,7 @@ def test_burstcalc():
     print(lc.runs_start)
 
 def test_runcalc():
+    np.random.seed(1234)  # Set seed inside function for pytest compatibility
     licks = make_toy_data()
 
     # testing if correct number of runs identified
@@ -43,6 +45,7 @@ def test_runcalc():
     assert lc.runs_number == 4
 
 def test_longlicks():
+    np.random.seed(1234)  # Set seed inside function for pytest compatibility
     licks = make_toy_data()
     licklengths = np.random.normal(0.06, 0.01, len(licks))
     licklengths[10] = 3
