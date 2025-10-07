@@ -246,7 +246,26 @@ def calculate_burst_prob(bursts):
 
 def weib_davis(x, alpha, beta):
     '''Weibull function as used in Davis (1998) DOI: 10.1152/ajpregu.1996.270.4.R793'''
-    return (np.exp(-(alpha*x)**beta))
+    try:
+        # Ensure inputs are arrays for vectorized operations
+        x = np.asarray(x)
+        
+        # Handle edge cases
+        if alpha <= 0 or beta <= 0:
+            return np.full_like(x, np.nan, dtype=float)
+        
+        # Calculate the exponent, handling potential overflow
+        exponent = -(alpha * x)**beta
+        
+        # Clip very large negative exponents to prevent underflow to 0
+        # exp(-700) is approximately the smallest representable positive float
+        exponent = np.clip(exponent, -700, 0)
+        
+        return np.exp(exponent)
+        
+    except (ValueError, OverflowError, ZeroDivisionError):
+        # Return NaN for invalid inputs
+        return np.full_like(np.asarray(x), np.nan, dtype=float)
 
 def fit_weibull(xdata, ydata):
     '''Fits Weibull function to xdata and ydata and returns fit parameters.'''
