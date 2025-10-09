@@ -1,5 +1,26 @@
 # trompy changelog
 
+## 0.16.1
+
+09/10/2025
+
+### Function Rename: lickCalc → lickcalc
+- Renamed `lickCalc` to `lickcalc` (all lowercase) for PEP 8 compliance
+- Old `lickCalc` name still works but issues `DeprecationWarning`
+- Both names exported from main module for full backward compatibility
+- Internal code updated to use new lowercase name
+- Users encouraged to migrate: `lickCalc` → `lickcalc`
+- Comprehensive deprecation test added to ensure warning is properly raised
+
+### Additional Bug Fixes
+- Removed unused `audioop` import from `test_process_data.py` (was causing Python 3.13 deprecation warning)
+- Added epsilon (1e-10) to division operations in `snipper_utils.py` to prevent zero-division warnings with test data
+- Fixed typo in `lickcalc` function docstring: "Calcuates" → "Calculates"
+
+### Test Suite Polish
+- Test suite now runs cleanly with only 1 intentional warning (test of invalid kwargs)
+- All 41 tests pass in ~3 seconds
+
 ## 0.16.0
 
 07/10/2025
