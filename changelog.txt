@@ -1,5 +1,13 @@
 # trompy changelog
 
+## 0.16.2
+
+02/03/2026
+
+### Bug Fixes
+- Fixed #71 bug in processdata resulting in very small values
+- Fixed bug in lickcalc when using time and burst divisions
+
 ## 0.16.1
 
 09/10/2025
