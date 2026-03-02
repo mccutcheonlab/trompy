@@ -61,6 +61,17 @@ def test_df():
     # TODO improve konanur function and checking, maybe using real data to examine freqs and fits
     # TODO check with reduced sampling frequencies
 
+def test_konanur_normalization_preserves_scale_for_tiny_signals():
+    np.random.seed(0)
+    n_samples = 12000
+
+    blue = np.random.normal(0, 1, n_samples)
+    uv = blue * 0.95 + np.random.normal(0, 0.2, n_samples)
+
+    processed = tp.processdata(blue, uv, method="konanur", normalize=True, fs=123.456)
+
+    assert np.std(processed) > 0.01
+
 def future_test_process_data_with_drift():
     n_samples = 600000
     fs = 1017.324

@@ -84,16 +84,24 @@ def processdata(data, datauv, method='konanur', normalize=True, normalize_time_c
         mean=np.mean(df[cutoff_range])
         sd=np.std(df[cutoff_range])
         
-        # Avoid division by zero or near-zero values
         epsilon = 1e-10
         
         if normalize_method == "zscore":
             df_corr = np.subtract(df, mean)
-            df=np.divide(df_corr, sd + epsilon)
+            if sd == 0:
+                df=np.divide(df_corr, epsilon)
+            else:
+                df=np.divide(df_corr, sd)
         elif normalize_method == "df":
-            df=np.divide(df, np.abs(mean) + epsilon)*100
+            if np.abs(mean) == 0:
+                df=np.divide(df, epsilon)*100
+            else:
+                df=np.divide(df, np.abs(mean))*100
         elif normalize_method == "old":
-            df=np.divide(df, sd*3 + epsilon)
+            if sd == 0:
+                df=np.divide(df, epsilon)
+            else:
+                df=np.divide(df, sd*3)
     
     return df
 
