@@ -46,3 +46,12 @@ packages = ["trompy"]
 
 [tool.setuptools.dynamic]
 version = {attr = "trompy._version.__version__"}
+
+[tool.pixi.workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[tool.pixi.pypi-dependencies]
+trompy = { path = ".", editable = true }
+
+[tool.pixi.tasks]
