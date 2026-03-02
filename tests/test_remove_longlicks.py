@@ -101,6 +101,25 @@ def test_remove_longlicks_affects_ilis():
     assert len(lickdata_remove.ilis) == len(lickdata_remove.licks) - 1
 
 
+def test_time_divisions_reports_zero_longlicks_when_none_present():
+    """Time divisions should report 0 long licks when no long licks are present."""
+    licks = np.array([0.10, 0.25, 0.41, 30.0, 30.2, 60.0])
+    offsets = licks + np.array([0.05, 0.06, 0.07, 0.08, 0.09, 0.10])
+
+    result = lickcalc(
+        licks,
+        offset=offsets,
+        time_divisions=3,
+        session_length=90,
+        longlickThreshold=0.3,
+    )
+
+    divisions = result['time_divisions']
+    assert len(divisions) == 3
+    for division in divisions:
+        assert division['n_long_licks'] == 0
+
+
 if __name__ == '__main__':
     test_remove_longlicks_basic()
     test_remove_longlicks_affects_bursts()

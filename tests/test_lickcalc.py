@@ -3,7 +3,7 @@ import pytest
 import unittest
 import numpy as np
 np.random.seed(1234)
-from trompy import Lickcalc
+from trompy import Lickcalc, lickcalc
 
 def make_toy_data():
     import numpy as np
@@ -54,6 +54,18 @@ def test_longlicks():
     # testing if long lick can be identified
     lc = Lickcalc(licks=licks, offset=offsets)
     assert lc.longlicks[0] == 3.0
+
+
+def test_time_divisions_weibull_none_when_not_fittable():
+    licks = np.array([0.10, 0.25, 0.41, 30.0, 30.2, 60.0])
+    result = lickcalc(licks, time_divisions=3, session_length=90)
+
+    assert len(result['time_divisions']) == 3
+    for division in result['time_divisions']:
+        if division['total_licks'] <= 1:
+            assert division['weibull_alpha'] is None
+            assert division['weibull_beta'] is None
+            assert division['weibull_rsq'] is None
 
 if __name__ == "__main__":
     test_burstcalc()

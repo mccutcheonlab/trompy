@@ -167,10 +167,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': np.nan,
             'n_bursts': 0,
             'mean_licks_per_burst': np.nan,
-            'weibull_alpha': np.nan,
-            'weibull_beta': np.nan,
-            'weibull_rsq': np.nan,
-            'n_long_licks': np.nan,
+            'weibull_alpha': None,
+            'weibull_beta': None,
+            'weibull_rsq': None,
+            'n_long_licks': 0,
             'max_lick_duration': np.nan
         }
     
@@ -197,10 +197,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': segment_calc.intraburst_freq,
             'n_bursts': segment_calc.burst_number,
             'mean_licks_per_burst': segment_calc.burst_mean,
-            'weibull_alpha': segment_calc.weibull_params[0] if segment_calc.weibull_params else np.nan,
-            'weibull_beta': segment_calc.weibull_params[1] if segment_calc.weibull_params else np.nan,
-            'weibull_rsq': segment_calc.weibull_params[2] if segment_calc.weibull_params else np.nan,
-            'n_long_licks': len(segment_calc.longlicks) if segment_calc.longlicks else np.nan,
+            'weibull_alpha': segment_calc.weibull_params[0] if segment_calc.weibull_params else None,
+            'weibull_beta': segment_calc.weibull_params[1] if segment_calc.weibull_params else None,
+            'weibull_rsq': segment_calc.weibull_params[2] if segment_calc.weibull_params else None,
+            'n_long_licks': len(segment_calc.longlicks) if segment_calc.longlicks is not None else 0,
             'max_lick_duration': np.max(segment_calc.licklength) if segment_calc.licklength is not None and len(segment_calc.licklength) > 0 else np.nan
         }
         
@@ -211,10 +211,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': np.nan,
             'n_bursts': 0,
             'mean_licks_per_burst': np.nan,
-            'weibull_alpha': np.nan,
-            'weibull_beta': np.nan,
-            'weibull_rsq': np.nan,
-            'n_long_licks': np.nan,
+            'weibull_alpha': None,
+            'weibull_beta': None,
+            'weibull_rsq': None,
+            'n_long_licks': 0,
             'max_lick_duration': np.nan
         }
     
@@ -235,10 +235,10 @@ def _create_empty_burst_division(lickdata, division_number):
         'intraburst_freq': np.nan,
         'n_bursts': 0,
         'mean_licks_per_burst': np.nan,
-        'weibull_alpha': np.nan,
-        'weibull_beta': np.nan,
-        'weibull_rsq': np.nan,
-        'n_long_licks': np.nan,
+        'weibull_alpha': None,
+        'weibull_beta': None,
+        'weibull_rsq': None,
+        'n_long_licks': 0,
         'max_lick_duration': np.nan
     }
 
