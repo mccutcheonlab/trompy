@@ -5,6 +5,7 @@ Created on Fri Apr 17 16:18:05 2020
 
 @author: James Edgar McCutcheon
 """
+from pathlib import Path
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as mc
@@ -152,8 +153,52 @@ def get_violinstats(dataset, points=100, bw_method=None):
     vpstats = cbook.violin_stats(dataset, _kde_method, points=points)
     return vpstats
 
+def save_figure_atomic(
+    fig,
+    filename,
+    folder,
+    save_pdf=True,
+    save_png=True,
+    png_dpi=300,
+    temp_folder=None,
+):
+    """
+    Save figure to a temporary folder, then move into place.
+
+    This avoids downstream tools reading partially written files.
+
+    :param fig: matplotlib figure object
+    :param filename: filename without extension (e.g., "fig1_heatmap_replete")
+    :param folder: Path object or string pointing to output folder
+    :param save_pdf: if True, save as PDF
+    :param save_png: if True, save as PNG
+    :param png_dpi: DPI for PNG export
+    :param temp_folder: optional temp folder (defaults to folder / "_tmp")
+    """
+    folder = Path(folder)
+    folder.mkdir(parents=True, exist_ok=True)
+
+    if temp_folder is None:
+        temp_folder = folder / "_tmp"
+    temp_folder = Path(temp_folder)
+    temp_folder.mkdir(parents=True, exist_ok=True)
+
+    if save_pdf:
+        temp_pdf = temp_folder / f"{filename}.pdf"
+        final_pdf = folder / f"{filename}.pdf"
+        fig.savefig(temp_pdf, bbox_inches='tight')
+        temp_pdf.replace(final_pdf)
+
+    if save_png:
+        temp_png = temp_folder / f"{filename}.png"
+        final_png = folder / f"{filename}.png"
+        fig.savefig(temp_png, bbox_inches='tight', dpi=png_dpi)
+        temp_png.replace(final_png)
+
 if __name__ == "__main__":
     data = np.random.random([50,100])
     f, ax = plt.subplots()
     shadedError(ax, data, linestyle="--")
+    
+
 # %%
