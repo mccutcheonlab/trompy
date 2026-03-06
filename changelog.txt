@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.16.3
+
+06/03/2026
+
+### Added save_figure_atomic
+
 ## 0.16.2
 
 02/03/2026
