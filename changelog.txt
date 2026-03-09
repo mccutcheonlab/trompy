@@ -1,5 +1,14 @@
 # trompy changelog
 
+## 0.16.4
+
+09/03/2026
+
+### Updated save_figure_atomic
+- Made save_png=False the Default
+- Got rid of tight bounding bbox
+- Made folder an optional argument
+
 ## 0.16.3
 
 06/03/2026
