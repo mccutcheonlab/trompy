@@ -156,10 +156,10 @@ def get_violinstats(dataset, points=100, bw_method=None):
 def save_figure_atomic(
     fig,
     filename,
-    folder,
+    folder=None,
     save_pdf=True,
-    save_png=True,
-    png_dpi=300,
+    save_png=False,
+    dpi=300,
     temp_folder=None,
 ):
     """
@@ -175,8 +175,11 @@ def save_figure_atomic(
     :param png_dpi: DPI for PNG export
     :param temp_folder: optional temp folder (defaults to folder / "_tmp")
     """
-    folder = Path(folder)
-    folder.mkdir(parents=True, exist_ok=True)
+    if folder is None:
+        folder = Path.cwd()
+    else:
+        folder = Path(folder)
+        folder.mkdir(parents=True, exist_ok=True)
 
     if temp_folder is None:
         temp_folder = folder / "_tmp"
@@ -186,13 +189,13 @@ def save_figure_atomic(
     if save_pdf:
         temp_pdf = temp_folder / f"{filename}.pdf"
         final_pdf = folder / f"{filename}.pdf"
-        fig.savefig(temp_pdf, bbox_inches='tight')
+        fig.savefig(temp_pdf, dpi=dpi)
         temp_pdf.replace(final_pdf)
 
     if save_png:
         temp_png = temp_folder / f"{filename}.png"
         final_png = folder / f"{filename}.png"
-        fig.savefig(temp_png, bbox_inches='tight', dpi=png_dpi)
+        fig.savefig(temp_png, dpi=dpi)
         temp_png.replace(final_png)
 
 if __name__ == "__main__":

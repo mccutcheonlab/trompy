@@ -130,3 +130,7 @@ launch.json
 # pixi environments
 .pixi/*
 !.pixi/config.toml
+
+
+notebooks/test_figures/*
+
