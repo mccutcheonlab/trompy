@@ -1,5 +1,11 @@
 # trompy changelog
 
+## 0.16.5
+
+10/03/2026
+
+### Fixing auto-release settings
+
 ## 0.16.4
 
 09/03/2026
