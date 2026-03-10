@@ -141,6 +141,11 @@ _import_map = {
 
 import importlib
 
+# Keep the public `trompy.lickcalc` symbol bound to the legacy function, not the
+# `trompy.lickcalc` submodule that may be imported while resolving `Lickcalc`.
+from .lick_utils import lickcalc as lickcalc
+from .lick_utils import lickCalc as lickCalc
+
 def __getattr__(name: str):
 	# Lazy-load the attribute from the mapped module on first access
 	if name in _import_map:
