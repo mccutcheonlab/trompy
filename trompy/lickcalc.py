@@ -259,6 +259,19 @@ class Lickcalc:
         self.ilis_in_bursts = pd.concat(all_rows, ignore_index=True)
         
         return self.ilis_in_bursts
+    
+    def get_first_n_ilis_in_bursts(self, n_ilis=5, pre_ili=4, min_ili=0.06):
+
+        burst_df = self.get_ilis_in_bursts()
+        
+        return (burst_df
+                .query("pre_ili > @pre_ili")
+                .query("ili > @min_ili")
+                .groupby("ili_index")
+                .mean()
+                .query("ili_index < @n_ilis")
+                .ili
+                )
 
     def get_total_licks(self):
         return len(self.licks)
