@@ -288,16 +288,20 @@ def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     Returns
     -------
     lickdata, a dictionary with the following keys
-    'licklength' : List of floats
-        Lick lengths (empty if offset times not given)
-    'longlicks' : List of floats
-        Licks that are greater than `longlickThreshold`
+    'licklength' : List of floats or None
+        Lick lengths (None if offset times not given)
+    'licklength_mode' : Float or None
+        Modal (most common) lick duration (None if offset times not given)
+    'longlicks' : List of floats or None
+        Licks that are greater than `longlickThreshold` (None if none found)
     'licks' : List of floats
         Lick onset times
     'ilis' : List of floats
         Interlick intervals
-    'freq' : Float
-        Mean frequency (in Hz) of intraburst licking
+    'freq' : Float or None
+        Mean frequency (in Hz) of intraburst licking (None if no bursts)
+    'intraburst_mode' : Float or None
+        Modal inter-lick interval within bursts (None if no bursts)
     'total' : Int
         Number of licks
     'bStart' : List of floats
@@ -308,60 +312,81 @@ def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         Timestamps of licks that end a burst
     'bLicks' : List of ints
         Numbers of licks in each burst
-    'bTime' : Array of floats
+    'bNum' : Int
+        Total number of bursts
+    'bTime' : List of floats
         Duration (in seconds) of each burst
-    'bMean' : Float
-        Mean number of licks in all bursts
-    'bMean-first3' : Float
-        Mean number of licks in first three bursts
-    'IBIs' : List of floats
-        Interburst intervals
+    'bMean' : Float or None
+        Mean number of licks in all bursts (None if no bursts)
+    'bMean-first3' : Float or None
+        Mean number of licks in first three bursts (None if fewer than 3 bursts)
+    'IBIs' : List of floats or None
+        Interburst intervals (None if no bursts)
     'rStart' : List of floats
-        Timestamps for licks that start a run. Runs designated by `runThreshold`
+        Timestamps for licks that start a run (runs designated by `runThreshold`)
     'rInd' : List of ints
         Indices of licks that start a run
-    'rEnd' : List of ints
+    'rEnd' : List of floats
         Timestamps of licks that end a run
     'rLicks' : List of ints
         Number of licks per run
-    'rTime' : Array of floats
+    'rTime' : List of floats
         Duration (in seconds) of each run
     'rNum' : Int
         Number of runs
-    'weib_alpha' : Float
-        Alpha parameter from fitted Weibull function
-    'weib_beta' : Float
-        Beta parameter from fitted Weibull function
-    'weib_rsq' : Float
-        Rsquared value from fitted Weibull function
-    'burstprob' : List
-        xdata and ydata of cumulative burst probability
+    'weib_alpha' : Float or None
+        Alpha parameter from fitted Weibull function (None if no bursts or fit failed)
+    'weib_beta' : Float or None
+        Beta parameter from fitted Weibull function (None if no bursts or fit failed)
+    'weib_rsq' : Float or None
+        R-squared value from fitted Weibull function (None if no bursts or fit failed)
+    'burstprob' : Tuple or None
+        (xdata, ydata) of cumulative burst probability (None if no bursts)
     'hist' : List
         Histogram of licks over time
     'time_divisions' : List of dicts, optional
-        Time-based division analysis results (if time_divisions specified)
+        Time-based division analysis results (if time_divisions specified).
+        Each dict contains:
+            - division_type : str ('time')
+            - division_number : int (1-indexed)
+            - start_time : float, end_time : float (time boundaries)
+            - duration : float (division duration in seconds)
+            - total_licks : int
+            - n_bursts : int (number of bursts in division)
+            - mean_licks_per_burst : float
+            - intraburst_freq : float
+            - weibull_alpha, weibull_beta, weibull_rsq : float or None
+            - n_long_licks : int
+            - max_lick_duration : float
     'burst_divisions' : List of dicts, optional
-        Burst-based division analysis results (if burst_divisions specified)
-    
+        Burst-based division analysis results (if burst_divisions specified).
+        Each dict contains same statistics as time_divisions, plus:
+            - start_burst : int, end_burst : int (burst indices)
+            - start_time : float, end_time : float (estimated time boundaries)
+
     Notes
     ----------
-    For more information on appropriate thresholds (e.g. numbers of licks or interlick intervals) see Naneix et al (2019) for more info.
+    For more information on appropriate thresholds (e.g. numbers of licks or interlick intervals) see Naneix et al (2019).
         https://doi.org/10.1016/j.neuroscience.2019.10.036
-    
-    For more information on the Weibull function used to model burst probability see Davis (1998) DOI: 10.1152/ajpregu.1996.270.4.R793
-    
+
+    For more information on the Weibull function used to model burst probability see Davis (1998).
+        DOI: 10.1152/ajpregu.1996.270.4.R793
+
     Examples
     --------
     Basic usage (backward compatible):
     >>> results = lickcalc(lick_times)
-    
+
     With temporal divisions:
     >>> results = lickcalc(lick_times, time_divisions=4)
     >>> for div in results['time_divisions']:
     ...     print(f"Division {div['division_number']}: {div['total_licks']} licks")
-    
+
     With both time and burst divisions:
     >>> results = lickcalc(lick_times, time_divisions=3, burst_divisions=2)
+
+    With session length and divisions:
+    >>> results = lickcalc(lick_times, time_divisions=4, session_length=600)
     """
 
     lickdata = Lickcalc(licks=licks,
@@ -382,10 +407,12 @@ def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     
     # Standard results dictionary
     results = {'licklength' : lickdata.licklength,
+               'licklength_mode' : lickdata.licklength_mode,
             'longlicks' : lickdata.longlicks,
             'licks' : lickdata.licks,
             'ilis' : lickdata.ilis,
             'freq' : lickdata.intraburst_freq,
+            'intraburst_mode' : lickdata.intraburst_mode,
             'total' : lickdata.total,
             'bStart' : lickdata.burst_start,
             'bInd' : lickdata.burst_inds,
@@ -395,7 +422,7 @@ def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
             'bTime' : lickdata.burst_lengths,
             'bMean' : lickdata.burst_mean,
             'bMean-first3' : lickdata.burst_mean_first3,
-            'IBIs' : lickdata.interburst_intervals,
+            'IBIs' : lickdata.interburst_intervals,    
             'rStart' : lickdata.runs_start,
             'rInd' : lickdata.runs_inds,
             'rEnd' : lickdata.runs_end,

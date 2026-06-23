@@ -1,10 +1,135 @@
 
 from pathlib import Path
 import numpy as np
+import pandas as pd
 from scipy import stats
 import scipy.optimize as opt
 
 class Lickcalc:
+    """
+    Analyzes licking behavior data to compute bursts, runs, and related statistics.
+
+    This class processes raw lick onset and offset times to extract comprehensive
+    behavioral metrics including burst structure, lick runs, inter-lick intervals,
+    and burst probability distributions.
+
+    Parameters
+    ----------
+    licks : array_like
+        Lick onset times (in seconds or arbitrary time units).
+    offset : array_like, optional
+        Lick offset times. Required for lick length analysis.
+    longlick_threshold : float, default 0.3
+        Duration threshold (seconds) above which licks are classified as "long".
+    burst_threshold : float, default 0.5
+        Inter-lick interval threshold (seconds) for burst boundaries.
+    min_burst_length : int, default 1
+        Minimum number of licks to define a burst. Shorter bursts are filtered.
+    run_threshold : float, default 10
+        Time threshold (seconds) for lick run boundaries.
+    min_run_length : int, default 1
+        Minimum number of licks to define a run. Shorter runs are filtered.
+    binsize : int, default 60
+        Bin size (seconds) for histogram computation.
+    hist_density : bool, default False
+        If True, normalize histogram to density. If False, return counts.
+    ignorelongilis : bool, default False
+        If True, exclude inter-lick intervals > burst_threshold from ILI calculations.
+    remove_longlicks : bool, default False
+        If True, filter out licks exceeding longlick_threshold before analysis.
+    only_return_first_n_bursts : int or False, default False
+        If an integer, keep only the first N bursts. Useful for fixed-duration sessions.
+
+    Attributes (Burst Analysis)
+    ---------------------------
+    burst_inds : list
+        Indices where bursts begin.
+    burst_licks : list
+        Number of licks per burst.
+    burst_start : list
+        Onset time of each burst.
+    burst_end : list
+        Offset time of each burst (last lick in burst).
+    burst_lengths : list
+        Duration of each burst (burst_end - burst_start).
+    burst_number : int
+        Total number of bursts.
+    burst_mean : float
+        Mean licks per burst.
+    burst_mean_first3 : float
+        Mean licks for first 3 bursts.
+    intraburst_freq : float
+        Mean frequency (licks/sec) of licks within bursts.
+    intraburst_mode : float
+        Modal inter-lick interval within bursts.
+    interburst_intervals : array_like
+        Time gaps between consecutive bursts.
+    burst_prob : tuple
+        (x, y) cumulative burst probability distribution [Davis et al. 1996].
+    weibull_params : tuple or None
+        (alpha, beta, r_squared) Weibull fit to burst probability.
+
+    Attributes (Run Analysis)
+    -------------------------
+    runs : list of array_like
+        Arrays of lick times for each run.
+    runs_start : list
+        Onset time of each run.
+    runs_inds : list
+        Indices where runs begin.
+    runs_end : list
+        Offset time of each run (last lick in run).
+    runs_licks : list
+        Number of licks per run.
+    runs_length : list
+        Duration of each run (runs_end - runs_start).
+    runs_number : int
+        Total number of runs.
+
+    Attributes (Lick-level Metrics)
+    --------------------------------
+    licks : array_like
+        Processed lick onset times (filtered if remove_longlicks=True).
+    offset : array_like or None
+        Processed lick offset times (filtered if remove_longlicks=True).
+    total : int
+        Total number of licks.
+    licklength : array_like or None
+        Duration of each lick (offset - onset).
+    licklength_mode : float or None
+        Modal lick duration.
+    longlicks : array_like or None
+        Lick durations exceeding longlick_threshold.
+    ilis : array_like
+        Inter-lick intervals (differences between consecutive lick onsets).
+    ilis_in_bursts : DataFrame
+        Detailed breakdown of inter-lick intervals within bursts.
+
+    Attributes (Other)
+    -------------------
+    histogram : array_like
+        Histogram of lick times using binsize.
+
+    Methods
+    -------
+    get_burst_mean(number=None) : float
+        Mean licks per burst, optionally for first N bursts.
+    keep_first_n_bursts(n) : None
+        Truncate burst data to keep only first N bursts.
+    remove_short_bursts() : None
+        Filter out bursts with fewer licks than min_burst_length.
+    remove_short_runs() : None
+        Filter out runs with fewer licks than min_run_length.
+    get_ilis_in_bursts() : DataFrame
+        Compute inter-lick intervals with burst context and surrounding gaps.
+
+    Examples
+    --------
+    >>> licks = np.array([0.5, 0.6, 0.7, 5.0, 5.1, 5.2])
+    >>> offsets = np.array([0.52, 0.62, 0.72, 5.02, 5.12, 5.22])
+    >>> calc = Lickcalc(licks=licks, offset=offsets, burst_threshold=0.5, run_threshold=2.0)
+    >>> print(f"Bursts: {calc.burst_number}, Licks: {calc.total}")
+    """
     def __init__(self, **kwargs):
         ## Set default parameters
         self.longlick_threshold = kwargs.get('longlick_threshold', 0.3)
@@ -44,9 +169,11 @@ class Lickcalc:
                 
                 # Calculate final licklength on filtered data
                 self.licklength = self.get_licklengths()
+                self.licklength_mode = get_mode(self.licklength)
             else:
                 self.longlicks = None
                 self.licklength = temp_licklength
+                self.licklength_mode = None
         else:
             self.offset_raw = None
             self.offset = None
@@ -73,6 +200,7 @@ class Lickcalc:
         self.burst_mean = self.get_burst_mean()
         self.burst_mean_first3 = self.get_burst_mean(number=3)
         self.intraburst_freq = self.get_intraburst_freq()
+        self.intraburst_mode = self.get_intraburst_mode()
         self.interburst_intervals = self.get_interburstintervals()
         
         # then lick runs
@@ -109,6 +237,28 @@ class Lickcalc:
             return ilis[ilis < self.burst_threshold]
         else:
             return ilis
+        
+    def get_ilis_in_bursts(self):
+        tmp_burst = []
+        all_rows = []
+        burst_idx = 0
+        for idx, ili in enumerate(np.diff(self.licks)):
+            if ili < self.burst_threshold:
+                tmp_burst.append(ili)
+            else:
+                df_temp = pd.DataFrame({"burst_index": burst_idx,
+                                        "ili_index": np.arange(len(tmp_burst)),
+                        "ili": tmp_burst,
+                        "pre_ili": np.diff(self.licks)[idx-1-len(tmp_burst)],
+                        "post_ili": ili
+                        })
+                all_rows.append(df_temp)
+                burst_idx += 1
+                tmp_burst = []
+
+        self.ilis_in_bursts = pd.concat(all_rows, ignore_index=True)
+        
+        return self.ilis_in_bursts
 
     def get_total_licks(self):
         return len(self.licks)
@@ -167,6 +317,12 @@ class Lickcalc:
             return None
         else:
             return 1/np.mean([x for x in self.get_ilis() if x < self.burst_threshold])
+        
+    def get_intraburst_mode(self):
+        if self.burst_number == 0 or np.max(self.burst_licks) < 2:
+            return None
+        else:
+            return get_mode([x for x in self.get_ilis() if x < self.burst_threshold])
 
     def get_interburstintervals(self):
         if self.burst_number == 0:
@@ -277,6 +433,11 @@ def fit_weibull(xdata, ydata):
     r_squared=r_value**2
     
     return alpha, beta, r_squared
+
+def get_mode(data, binsize=0.001, smooth_window=20):
+    hist = np.histogram(data, bins=np.arange(0, np.max(data) + binsize, binsize))
+    hist_smoothed = pd.Series(hist[0]).rolling(smooth_window, center=True).mean()
+    return hist_smoothed.idxmax() * binsize
 
     # need to test with different files and times when zero licks are given etc
         # and when licks are gtiven but no bursts
