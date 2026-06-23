@@ -6,6 +6,7 @@ Created on Fri Apr 17 13:40:05 2020
 """
 from pathlib import Path
 import numpy as np
+import warnings
 from trompy.lickcalc import Lickcalc
 
 
@@ -145,20 +146,15 @@ def _get_corresponding_offsets(lickdata, segment_licks):
     if lickdata.offset is None or not segment_licks:
         return []
     
-    # Find indices of segment licks in original lick list
-    segment_indices = []
-    licks_list = list(lickdata.licks)
-    
-    for seg_lick in segment_licks:
-        try:
-            idx = licks_list.index(seg_lick)
-            segment_indices.append(idx)
-        except ValueError:
-            continue
+    # Use numpy boolean indexing for O(n) performance instead of O(n²) .index() loop
+    segment_licks_array = np.array(segment_licks)
+    mask = np.isin(lickdata.licks, segment_licks_array)
+    segment_indices = np.where(mask)[0]
     
     # Return corresponding offsets
-    if segment_indices and len(lickdata.offset) > max(segment_indices):
-        return [lickdata.offset[i] for i in segment_indices if i < len(lickdata.offset)]
+    valid_indices = segment_indices[segment_indices < len(lickdata.offset)]
+    if len(valid_indices) > 0:
+        return lickdata.offset[valid_indices].tolist()
     
     return []
 
@@ -171,10 +167,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': np.nan,
             'n_bursts': 0,
             'mean_licks_per_burst': np.nan,
-            'weibull_alpha': np.nan,
-            'weibull_beta': np.nan,
-            'weibull_rsq': np.nan,
-            'n_long_licks': np.nan,
+            'weibull_alpha': None,
+            'weibull_beta': None,
+            'weibull_rsq': None,
+            'n_long_licks': 0,
             'max_lick_duration': np.nan
         }
     
@@ -187,6 +183,8 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             longlick_threshold=lickdata.longlick_threshold,
             min_burst_length=lickdata.min_burst_length,
             ignorelongilis=lickdata.ignorelongilis,
+            remove_longlicks=lickdata.remove_longlicks,
+            only_return_first_n_bursts=lickdata.only_return_first_n_bursts,
             run_threshold=lickdata.run_threshold,
             min_run_length=lickdata.min_run_length,
             binsize=lickdata.binsize,
@@ -199,10 +197,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': segment_calc.intraburst_freq,
             'n_bursts': segment_calc.burst_number,
             'mean_licks_per_burst': segment_calc.burst_mean,
-            'weibull_alpha': segment_calc.weibull_params[0] if segment_calc.weibull_params else np.nan,
-            'weibull_beta': segment_calc.weibull_params[1] if segment_calc.weibull_params else np.nan,
-            'weibull_rsq': segment_calc.weibull_params[2] if segment_calc.weibull_params else np.nan,
-            'n_long_licks': len(segment_calc.longlicks) if segment_calc.longlicks else np.nan,
+            'weibull_alpha': segment_calc.weibull_params[0] if segment_calc.weibull_params else None,
+            'weibull_beta': segment_calc.weibull_params[1] if segment_calc.weibull_params else None,
+            'weibull_rsq': segment_calc.weibull_params[2] if segment_calc.weibull_params else None,
+            'n_long_licks': len(segment_calc.longlicks) if segment_calc.longlicks is not None else 0,
             'max_lick_duration': np.max(segment_calc.licklength) if segment_calc.licklength is not None and len(segment_calc.licklength) > 0 else np.nan
         }
         
@@ -213,10 +211,10 @@ def _calculate_segment_stats(lickdata, segment_licks, segment_offsets):
             'intraburst_freq': np.nan,
             'n_bursts': 0,
             'mean_licks_per_burst': np.nan,
-            'weibull_alpha': np.nan,
-            'weibull_beta': np.nan,
-            'weibull_rsq': np.nan,
-            'n_long_licks': np.nan,
+            'weibull_alpha': None,
+            'weibull_beta': None,
+            'weibull_rsq': None,
+            'n_long_licks': 0,
             'max_lick_duration': np.nan
         }
     
@@ -237,20 +235,21 @@ def _create_empty_burst_division(lickdata, division_number):
         'intraburst_freq': np.nan,
         'n_bursts': 0,
         'mean_licks_per_burst': np.nan,
-        'weibull_alpha': np.nan,
-        'weibull_beta': np.nan,
-        'weibull_rsq': np.nan,
-        'n_long_licks': np.nan,
+        'weibull_alpha': None,
+        'weibull_beta': None,
+        'weibull_rsq': None,
+        'n_long_licks': 0,
         'max_lick_duration': np.nan
     }
 
-def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
+def lickcalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
              ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
              minrunlength=1,
-             binsize=60, histDensity = False, time_divisions=None, 
-             burst_divisions=None, session_length=None):
+             binsize=60, histDensity = False, remove_longlicks=False,
+             only_return_first_n_bursts=False,
+             time_divisions=None, burst_divisions=None, session_length=None):
     """
-    Calcuates various parameters for a train of licking data including bursting 
+    Calculates various parameters for a train of licking data including bursting 
     parameters and returns as a dictionary. Legacy function that returns a dictionary.
 
     Parameters
@@ -275,6 +274,10 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
         Size of bins for constructing histogram. The default is 60.
     histDensity : Boolean, optional
         Converts histogram into a density plot rather than absolute. The default is False.
+    remove_longlicks : Boolean, optional
+        If True, removes longlicks (duration > longlickThreshold) from all calculations. The default is False.
+    only_return_first_n_bursts : Int or Boolean, optional
+        If an integer N, only returns statistics for the first N bursts. If fewer than N bursts exist, all are returned without error. The default is False.
     time_divisions : Int, optional
         Number of equal time divisions to create for temporal analysis. The default is None.
     burst_divisions : Int, optional
@@ -350,15 +353,15 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     Examples
     --------
     Basic usage (backward compatible):
-    >>> results = lickCalc(lick_times)
+    >>> results = lickcalc(lick_times)
     
     With temporal divisions:
-    >>> results = lickCalc(lick_times, time_divisions=4)
+    >>> results = lickcalc(lick_times, time_divisions=4)
     >>> for div in results['time_divisions']:
     ...     print(f"Division {div['division_number']}: {div['total_licks']} licks")
     
     With both time and burst divisions:
-    >>> results = lickCalc(lick_times, time_divisions=3, burst_divisions=2)
+    >>> results = lickcalc(lick_times, time_divisions=3, burst_divisions=2)
     """
 
     lickdata = Lickcalc(licks=licks,
@@ -367,6 +370,8 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
                         longlick_threshold=longlickThreshold,
                         min_burst_length=minburstlength,
                         ignorelongilis=ignorelongilis,
+                        remove_longlicks=remove_longlicks,
+                        only_return_first_n_bursts=only_return_first_n_bursts,
                         run_threshold=runThreshold,
                         min_run_length=minrunlength,
                         binsize=binsize,
@@ -417,18 +422,30 @@ def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
     
     return results
 
-if __name__ == '__main__':
-    print('Testing functions')
-    import trompy as tp
-    filename = Path("C:/Github/trompy/tests/test_data/03_W.med")
 
-    data = tp.medfilereader(filename, vars_to_extract=["e", "f"], remove_var_header=True)
-
-    lickdata = lickCalc(data[0], offset=data[1], minburstlength=1)
+def lickCalc(licks, offset = [], burstThreshold = 0.5, runThreshold = 10,
+             ignorelongilis=True, longlickThreshold=0.3, minburstlength=1,
+             minrunlength=1,
+             binsize=60, histDensity = False, remove_longlicks=False,
+             only_return_first_n_bursts=False,
+             time_divisions=None, burst_divisions=None, session_length=None):
+    """
+    Deprecated: Use `lickcalc` (lowercase) instead.
     
-    print(lickdata["rEnd"])
-
-    # print(lickdata['freq'])
+    This function is maintained for backward compatibility but will be removed
+    in a future version. Please update your code to use `lickcalc`.
+    """
+    warnings.warn(
+        "lickCalc is deprecated and will be removed in a future version. "
+        "Please use lickcalc (all lowercase) instead.",
+        DeprecationWarning,
+        stacklevel=2
+    )
+    return lickcalc(licks, offset, burstThreshold, runThreshold,
+                   ignorelongilis, longlickThreshold, minburstlength,
+                   minrunlength, binsize, histDensity, remove_longlicks,
+                   only_return_first_n_bursts, time_divisions, burst_divisions,
+                   session_length)
 
 
 

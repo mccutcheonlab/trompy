@@ -7,55 +7,48 @@ import scipy.optimize as opt
 class Lickcalc:
     def __init__(self, **kwargs):
         ## Set default parameters
-
-        if "longlick_threshold" in kwargs:
-            self.longlick_threshold = kwargs['longlick_threshold']
-        else:
-            self.longlick_threshold = 0.3
-
-        if "burst_threshold" in kwargs:
-            self.burst_threshold = kwargs['burst_threshold']
-        else:
-            self.burst_threshold = 0.5
-
-        if "min_burst_length" in kwargs:
-            self.min_burst_length = kwargs['min_burst_length']
-        else:
-            self.min_burst_length = 1
-
-        if "run_threshold" in kwargs:
-            self.run_threshold = kwargs['run_threshold']
-        else:
-            self.run_threshold = 10
-
-        if "min_run_length" in kwargs:
-            self.min_run_length = kwargs['min_run_length']
-        else:
-            self.min_run_length = 1
-
-        if "binsize" in kwargs:
-            self.binsize = kwargs['binsize']
-        else:
-            self.binsize = 60
-
-        if "hist_density" in kwargs:
-            self.hist_density = kwargs['hist_density']
-        else:
-            self.hist_density = False     
-
+        self.longlick_threshold = kwargs.get('longlick_threshold', 0.3)
+        self.burst_threshold = kwargs.get('burst_threshold', 0.5)
+        self.min_burst_length = kwargs.get('min_burst_length', 1)
+        self.run_threshold = kwargs.get('run_threshold', 10)
+        self.min_run_length = kwargs.get('min_run_length', 1)
+        self.binsize = kwargs.get('binsize', 60)
+        self.hist_density = kwargs.get('hist_density', False)
         self.ignorelongilis = kwargs.get('ignorelongilis', False)
+        self.remove_longlicks = kwargs.get('remove_longlicks', False)
+        self.only_return_first_n_bursts = kwargs.get('only_return_first_n_bursts', False)
         
         ## Read in and process data
-        self.licks = np.array(kwargs.get('licks', None))
+        self.licks_raw = np.array(kwargs.get('licks', None))  # Store original licks
+        self.licks = self.licks_raw.copy()
 
         if "offset" in kwargs:
-            self.offset = np.array(kwargs['offset'])
-            self.licklength = self.get_licklengths()
-            if len(self.licklength) > 0:
-                self.longlicks = self.get_longlicks()
+            self.offset_raw = np.array(kwargs['offset'])  # Store original offsets
+            self.offset = self.offset_raw.copy()
+            
+            # Calculate lick lengths first (before any filtering)
+            temp_licklength = self.get_licklengths()
+            
+            if len(temp_licklength) > 0:
+                # Identify longlicks before filtering
+                temp_longlicks = temp_licklength[temp_licklength > self.longlick_threshold]
+                self.longlicks = temp_longlicks if len(temp_longlicks) > 0 else None
+                
+                # Remove longlicks if requested
+                if self.remove_longlicks and self.longlicks is not None:
+                    # Create mask to keep only non-longlicks
+                    keep_mask = temp_licklength <= self.longlick_threshold
+                    n_to_keep = min(len(self.licks), len(keep_mask))
+                    self.licks = self.licks[:n_to_keep][keep_mask[:n_to_keep]]
+                    self.offset = self.offset[:n_to_keep][keep_mask[:n_to_keep]]
+                
+                # Calculate final licklength on filtered data
+                self.licklength = self.get_licklengths()
             else:
                 self.longlicks = None
+                self.licklength = temp_licklength
         else:
+            self.offset_raw = None
             self.offset = None
             self.licklength = None
             self.longlicks = None
@@ -71,6 +64,10 @@ class Lickcalc:
 
         if self.min_burst_length > 1:
             self.remove_short_bursts()
+        
+        # Keep only first N bursts if requested
+        if self.only_return_first_n_bursts and isinstance(self.only_return_first_n_bursts, int):
+            self.keep_first_n_bursts(self.only_return_first_n_bursts)
 
         self.burst_number = self.get_burst_number()
         self.burst_mean = self.get_burst_mean()
@@ -100,36 +97,35 @@ class Lickcalc:
         return self.offset - onsets
 
     def get_longlicks(self):
-        if min(self.licklength) < 0:
+        if np.min(self.licklength) < 0:
             print("One or more offsets precede onsets. Not doing lick length analysis.")
             return None
         else:
-            return [x for x in self.licklength if x > self.longlick_threshold]
+            return self.licklength[self.licklength > self.longlick_threshold]
 
     def get_ilis(self):
+        ilis = np.diff(self.licks)
         if self.ignorelongilis:
-            return [x for x in np.diff(self.licks) if x < self.burst_threshold]
+            return ilis[ilis < self.burst_threshold]
         else:
-            return np.diff(self.licks)
+            return ilis
 
     def get_total_licks(self):
         return len(self.licks)
 
     def get_burst_inds(self):
         burst_inds = (np.where(np.diff(self.licks) > self.burst_threshold)[0] + 1).tolist()
-        print("yay")
         burst_inds = [0] + burst_inds
-        print(burst_inds)
         return burst_inds
     
     def get_burst_licks(self):
-        return [int(x) for x in np.diff(self.burst_inds + [self.get_total_licks()])]
+        return np.diff(self.burst_inds + [self.total]).tolist()
     
     def get_burst_start(self):
         return self.licks[self.burst_inds].tolist()
     
     def get_burst_end(self):
-        end = self.licks[np.array(self.burst_inds[1:]) - 1]
+        end = self.licks[np.array(self.burst_inds[1:], dtype=int) - 1]
         return end.tolist() + [self.licks[-1]]
     
     def get_burst_lengths(self):
@@ -139,6 +135,19 @@ class Lickcalc:
         inds_to_keep = [i for i, val in enumerate(self.burst_licks) if val >= self.min_burst_length]
         for burst_var in ['burst_inds', 'burst_licks', 'burst_start', 'burst_end', 'burst_lengths']:
             setattr(self, burst_var, [getattr(self, burst_var)[i] for i in inds_to_keep])
+    
+    def keep_first_n_bursts(self, n):
+        """Keep only the first N bursts. If fewer than N bursts exist, keeps all."""
+        if n <= 0:
+            return  # Do nothing if n is 0 or negative
+        
+        # Determine how many bursts to keep (min of n or total bursts)
+        n_to_keep = min(n, len(self.burst_inds))
+        
+        # Slice all burst-related lists to keep only first n bursts
+        for burst_var in ['burst_inds', 'burst_licks', 'burst_start', 'burst_end', 'burst_lengths']:
+            current_list = getattr(self, burst_var)
+            setattr(self, burst_var, current_list[:n_to_keep])
 
     def get_burst_number(self):
         return len(self.burst_inds)
@@ -146,10 +155,10 @@ class Lickcalc:
     def get_burst_mean(self, number=None):
         if self.burst_number == 0:
             return None
-        if number == None:
+        if number is None:
             return np.mean(self.burst_licks)
         elif number < self.burst_number:
-            return np.mean(self.burst_licks[number])
+            return np.mean(self.burst_licks[:number])
         else:
             return np.mean(self.burst_licks)
 
@@ -237,7 +246,26 @@ def calculate_burst_prob(bursts):
 
 def weib_davis(x, alpha, beta):
     '''Weibull function as used in Davis (1998) DOI: 10.1152/ajpregu.1996.270.4.R793'''
-    return (np.exp(-(alpha*x)**beta))
+    try:
+        # Ensure inputs are arrays for vectorized operations
+        x = np.asarray(x)
+        
+        # Handle edge cases
+        if alpha <= 0 or beta <= 0:
+            return np.full_like(x, np.nan, dtype=float)
+        
+        # Calculate the exponent, handling potential overflow
+        exponent = -(alpha * x)**beta
+        
+        # Clip very large negative exponents to prevent underflow to 0
+        # exp(-700) is approximately the smallest representable positive float
+        exponent = np.clip(exponent, -700, 0)
+        
+        return np.exp(exponent)
+        
+    except (ValueError, OverflowError, ZeroDivisionError):
+        # Return NaN for invalid inputs
+        return np.full_like(np.asarray(x), np.nan, dtype=float)
 
 def fit_weibull(xdata, ydata):
     '''Fits Weibull function to xdata and ydata and returns fit parameters.'''
@@ -258,20 +286,6 @@ def fit_weibull(xdata, ydata):
 # to make it easier to for example do calculations of each quarter of a session - by licks, or by time
 # or to do calculations for different types of licks (e.g. licks during reward vs licks during non-reward)
 
-
-if __name__ == '__main__':
-    print('Testing functions')
-    import trompy as tp
-    filename = Path("C:/Users/jmc010/Github/trompy/tests/test_data/03_W.med")
-
-    data = tp.medfilereader(filename, vars_to_extract=["e", "f"], remove_var_header=True)
-
-    lickdata = Lickcalc(licks=data[0], offset=data[1], min_burst_length=3)
-
-    # print(dir(lickdata))
-
-
-    lickdata = Lickcalc(licks=[2.3,5.6,10.2])
 
 
     # lickdata = Lickcalc(licks="hello")

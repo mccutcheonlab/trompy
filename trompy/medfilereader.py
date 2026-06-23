@@ -4,39 +4,12 @@ Created on Fri Apr 17 10:12:10 2020
 
 @author: James Edgar McCutcheon
 """
+import re
 from pathlib import Path
 import numpy as np
 import string
 import datetime
 
-def medfilereader(filename, vars_to_extract='all', session_to_extract=1, verbose=False, remove_var_header=False, dictionary_output=False, **kwargs):
-    """
-    Reads in Med Associates file stored as single column and returns variables as lists.
-
-    Parameters
-    ----------
-    filename : str
-        File to be read in.
-    vars_to_extract : str or list of str, optional
-        Variables to extract from the file. Default is 'all'.
-    session_to_extract : int, optional
-        Specifies the session to extract from the file. Default is 1.
-    verbose : bool, optional
-        If True, prints statements with file information. Default is False.
-    remove_var_header : bool, optional
-        If True, removes the first value in each variable array. Useful when negative numbers are used as markers to signal array start. Default is False.
-    dictionary_output : bool, optional
-        If True, returns the variables as a dictionary with variable names as keys. Default is False.
-    **kwargs : dict, optional
-        Additional keyword arguments.
-
-    Returns
-    -------
-    vars_to_return : list or dict
-        Variables extracted from the medfile. If dictionary_output is False, returns a list of lists of numbers (int or float). If dictionary_output is True, returns a dictionary with variable names as keys and lists of numbers as values.
-    """
-    # Function code goes here
-    pass
 def medfilereader(filename, vars_to_extract = 'all',
                   session_to_extract = 1,
                   verbose = False,
@@ -196,6 +169,43 @@ def medfilereader_licks(filename,
             val.pop(0)
 
     return medvars
+
+def medfilereader_arrays(filename):
+
+    """Parser for Med-PC format arrays, i.e. not column-based.
+    
+    Args:
+        filename: File-like object (e.g., StringIO) or file path string
+    """
+    # Handle both file paths and file-like objects
+    if isinstance(filename, str):
+        with open(filename, 'r') as file:
+            lines = file.readlines()
+    else:
+        # filename is already a file-like object (StringIO)
+        filename.seek(0)  # Reset to beginning
+        lines = filename.readlines()
+
+    arrays = {}
+    current_array = None
+    
+    for line in lines:
+        # Check for array label (e.g., "L:" or "R:")
+        if re.match(r'^[A-Z]:$', line.strip()):
+            current_array = line.strip()[0]  # Get just the letter
+            arrays[current_array] = []
+        # Check for data lines (start with spaces and numbers)
+        elif current_array and re.match(r'^\s+\d+:', line):
+            # Extract all decimal numbers from the line
+            numbers = re.findall(r'\d+\.\d+', line)
+            arrays[current_array].extend([float(n) for n in numbers])
+    
+    # Remove trailing zeros
+    for key in arrays:
+        while arrays[key] and arrays[key][-1] == 0.0:
+            arrays[key].pop()
+    
+    return arrays
 
 if __name__ == '__main__':
     print('Testing functions')
