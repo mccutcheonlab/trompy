@@ -1,0 +1,11 @@
+[workspace]
+channels = ["conda-forge"]
+platforms = ["win-64"]
+
+[dependencies]
+python = "3.12.*"
+
+[pypi-dependencies]
+trompy = { path = ".", editable = true }
+
+[tasks]
