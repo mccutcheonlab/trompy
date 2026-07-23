@@ -310,7 +310,7 @@ class Lickcalc:
     
     def get_intercontact_time(self):
         if self.offset is not None:
-            return np.array(self.offset) - np.array(self.licks)
+            return np.array(self.licks)[1:] - np.array(self.offset)[:-1]
         else:
             return None
 
