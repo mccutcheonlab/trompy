@@ -237,39 +237,65 @@ class Lickcalc:
             return ilis[ilis < self.burst_threshold]
         else:
             return ilis
-        
+    
     def get_ilis_in_bursts(self):
         tmp_burst = []
         all_rows = []
         burst_idx = 0
-        for idx, ili in enumerate(np.diff(self.licks)):
+        diffs = np.diff(self.licks)
+    
+        for idx, ili in enumerate(diffs):
             if ili < self.burst_threshold:
                 tmp_burst.append(ili)
             else:
-                df_temp = pd.DataFrame({"burst_index": burst_idx,
-                                        "ili_index": np.arange(len(tmp_burst)),
-                        "ili": tmp_burst,
-                        "pre_ili": np.diff(self.licks)[idx-1-len(tmp_burst)],
-                        "post_ili": ili
-                        })
+                # Safe indexing for pre_ili
+                pre_idx = idx - len(tmp_burst) - 1
+                pre_ili = diffs[pre_idx] if pre_idx >= 0 else np.nan
+                
+                df_temp = pd.DataFrame({
+                    "burst_index": burst_idx,
+                    "ili_index": np.arange(len(tmp_burst)),
+                    "ili": tmp_burst,
+                    "pre_ili": pre_ili,
+                    "post_ili": ili
+                })
                 all_rows.append(df_temp)
                 burst_idx += 1
                 tmp_burst = []
-
-        self.ilis_in_bursts = pd.concat(all_rows, ignore_index=True)
+        
+        # Handle final burst if it exists
+        if tmp_burst:
+            pre_idx = len(diffs) - len(tmp_burst) - 1
+            pre_ili = diffs[pre_idx] if pre_idx >= 0 else np.nan
+            df_temp = pd.DataFrame({
+                "burst_index": burst_idx,
+                "ili_index": np.arange(len(tmp_burst)),
+                "ili": tmp_burst,
+                "pre_ili": pre_ili,
+                "post_ili": np.nan
+            })
+            all_rows.append(df_temp)
+        
+        # Handle empty case
+        if not all_rows:
+            self.ilis_in_bursts = pd.DataFrame(columns=["burst_index", "ili_index", "ili", "pre_ili", "post_ili"])
+        else:
+            self.ilis_in_bursts = pd.concat(all_rows, ignore_index=True)
         
         return self.ilis_in_bursts
+
     
-    def get_first_n_ilis_in_bursts(self, n_ilis=5, pre_ili=4, min_ili=0.06):
+    def get_first_n_ilis_in_bursts(self, n_ilis=5, pre_ili=4, min_ili=0.06, burst_index=None):
 
         burst_df = self.get_ilis_in_bursts()
-        
+
         return (burst_df
                 .query("pre_ili > @pre_ili")
                 .query("ili > @min_ili")
+                .query("burst_index < @burst_index" if burst_index is not None else "burst_index >= 0")
                 .groupby("ili_index")
                 .mean()
-                .query("ili_index < @n_ilis")
+                .iloc[:n_ilis]
                 .ili
                 )
 
