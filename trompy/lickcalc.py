@@ -174,11 +174,17 @@ class Lickcalc:
                 self.longlicks = None
                 self.licklength = temp_licklength
                 self.licklength_mode = None
+                
+            self.intercontact_time = self.get_intercontact_time()
+            self.intercontact_mode = get_mode(self.intercontact_time)
         else:
             self.offset_raw = None
             self.offset = None
             self.licklength = None
             self.longlicks = None
+            self.licklength_mode = None
+            self.intercontact_time = None
+            self.intercontact_mode = None
         
         self.ilis = self.get_ilis()
         self.total = self.get_total_licks()
@@ -301,6 +307,12 @@ class Lickcalc:
 
     def get_total_licks(self):
         return len(self.licks)
+    
+    def get_intercontact_time(self):
+        if self.offset is not None:
+            return np.array(self.offset) - np.array(self.licks)
+        else:
+            return None
 
     def get_burst_inds(self):
         burst_inds = (np.where(np.diff(self.licks) > self.burst_threshold)[0] + 1).tolist()
@@ -474,6 +486,8 @@ def fit_weibull(xdata, ydata):
     return alpha, beta, r_squared
 
 def get_mode(data, binsize=0.001, smooth_window=20):
+    if data is None or len(data) == 0:
+        return None
     hist = np.histogram(data, bins=np.arange(0, np.max(data) + binsize, binsize))
     hist_smoothed = pd.Series(hist[0]).rolling(smooth_window, center=True).mean()
     return hist_smoothed.idxmax() * binsize
