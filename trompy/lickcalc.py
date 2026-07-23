@@ -147,9 +147,12 @@ class Lickcalc:
         self.licks_raw = np.array(kwargs.get('licks', None))  # Store original licks
         self.licks = self.licks_raw.copy()
 
-        if "offset" in kwargs:
+        if "offset" in kwargs and kwargs['offset'] is not None and len(kwargs['offset']) > 0:
             self.offset_raw = np.array(kwargs['offset'])  # Store original offsets
             self.offset = self.offset_raw.copy()
+
+            self.intercontact_time = self.get_intercontact_time()
+            self.intercontact_mode = get_mode(self.intercontact_time)
             
             # Calculate lick lengths first (before any filtering)
             temp_licklength = self.get_licklengths()
@@ -175,8 +178,7 @@ class Lickcalc:
                 self.licklength = temp_licklength
                 self.licklength_mode = None
                 
-            self.intercontact_time = self.get_intercontact_time()
-            self.intercontact_mode = get_mode(self.intercontact_time)
+
         else:
             self.offset_raw = None
             self.offset = None
