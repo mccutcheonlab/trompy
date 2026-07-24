@@ -207,8 +207,8 @@ class Lickcalc:
         self.burst_number = self.get_burst_number()
         self.burst_mean = self.get_burst_mean()
         self.burst_mean_first3 = self.get_burst_mean(number=3)
-        self.intraburst_freq = self.get_intraburst_freq()
         self.intraburst_mode = self.get_intraburst_mode()
+        self.intraburst_freq = self.get_intraburst_freq()
         self.interburst_intervals = self.get_interburstintervals()
         
         # then lick runs
@@ -369,7 +369,7 @@ class Lickcalc:
         if self.burst_number == 0 or np.max(self.burst_licks) < 2:
             return None
         else:
-            return 1/np.mean([x for x in self.get_ilis() if x < self.burst_threshold])
+            return 1/self.get_intraburst_mode() if self.get_intraburst_mode() is not None else None
         
     def get_intraburst_mode(self):
         if self.burst_number == 0 or np.max(self.burst_licks) < 2:
