@@ -1,5 +1,24 @@
 # trompy changelog
 
+## 0.17.1
+
+24/07/2026
+
+### Lick analysis enhancements
+- Added intraburst mode, lick-length mode, and expanded ILI analysis.
+- Added `get_ilis_in_burst` utility.
+- Added `burst_index` support to `get_first_nilis`.
+- Added intercontact time metric and associated mode handling.
+- Updated intraburst frequency calculations to support mode-based behavior.
+
+### Bug fixes
+- Fixed handling when offsets are not provided.
+- Fixed a bug in intercontact time calculations.
+
+### Tooling and release/docs updates
+- Updated release instructions/documentation.
+- Updated docs environment/dependencies (`pyopenssl`, `requests`, `pygments`, `cryptography`, `pip`, `urllib3`, `idna`).
+
 ## 0.16.5
 
 10/03/2026
